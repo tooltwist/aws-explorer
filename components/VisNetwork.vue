@@ -99,7 +99,21 @@ export default {
         })
         resolve(parsedData)
       }).then((parsedData) => {
-        let visdata = { nodes: [], edges: [], test: {} }
+        let parentGrp = {
+          'Virtual': 1,
+          'Availability': 2,
+          'Subnets': 3,
+          'Internet': 4,
+          'Route': 5,
+          'Elastic': 6,
+          'Public': 7,
+          'EC2': 8,
+          'AMI': 9,
+          'Key': 10,
+          'Load': 11,
+          'Target': 12
+        }
+        let visdata = { nodes: [], edges: [], container: {} }
         new Promise((resolve) => {
           visdata.nodes.push({ id: 0, label: 'aws-explorer', group: 0 })
           let ctr = 1
@@ -118,32 +132,12 @@ export default {
               return
             }
 
-            let group = 0
-            if (key.indexOf('Virtual') === 0) {
-              group = 1
-            } else if (key.indexOf('Availability') === 0) {
-              group = 2
-            } else if (key.indexOf('Subnets') === 0) {
-              group = 3
-            } else if (key.indexOf('Internet') === 0) {
-              group = 4
-            } else if (key.indexOf('Route') === 0) {
-              group = 5
-            } else if (key.indexOf('Elastic') === 0) {
-              group = 6
-            } else if (key.indexOf('Public') === 0) {
-              group = 7
-            } else if (key.indexOf('EC2') === 0) {
-              group = 8
-            } else if (key.indexOf('AMI') === 0) {
-              group = 9
-            } else if (key.indexOf('Key') === 0) {
-              group = 10
-            } else if (key.indexOf('Load') === 0) {
-              group = 11
-            } else if (key.indexOf('Target') === 0) {
-              group = 12
-            }
+            let group
+            Object.keys(parentGrp).forEach(function (groupKey) {
+              if (key.indexOf(groupKey) === 0) {
+                group = parentGrp[groupKey]
+              }
+            })
 
             visdata.nodes.push({ id: ctr, label: key, group: group })
             visdata.edges.push({ from: 0, to: ctr })
@@ -159,12 +153,12 @@ export default {
                 if (key.indexOf('Subnet') === 0 || key.indexOf('Route') === 0 || key.indexOf('NAT') === 0 || key.indexOf('Network') === 0 || key.indexOf('Security') === 0) {
                   return
                 }
-                if (visdata.test.hasOwnProperty(key)) {
-                  // console.log(visdata.test[key])
+                if (visdata.container.hasOwnProperty(key)) {
+                  // console.log(visdata.container[key])
                   // visdata.nodes.push({ id: ctr, label: key })
-                  visdata.edges.push({ from: visdata.test[key], to: parentCtr })
+                  visdata.edges.push({ from: visdata.container[key], to: parentCtr })
                 } else {
-                  visdata.test[key] = ctr
+                  visdata.container[key] = ctr
                   visdata.nodes.push({ id: ctr, label: key, group: group })
                   visdata.edges.push({ from: parentCtr, to: ctr })
                 }
@@ -217,11 +211,7 @@ export default {
       })
     },
     onchange (_value) {
-      if (this[_value]) {
-        this.$set(this, _value, false)
-      } else {
-        this.$set(this, _value, true)
-      }
+      this.$set(this, _value, !this[_value])
     }
   },
   created () {
