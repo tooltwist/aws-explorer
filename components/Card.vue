@@ -44,6 +44,9 @@ export default {
       }
       return desc
     }
+  },
+  created: function () {
+    console.log(this.node)
   }
 }
 </script>

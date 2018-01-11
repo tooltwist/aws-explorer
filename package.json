@@ -22,9 +22,11 @@
     "cross-env": "^5.0.1",
     "exec-sh": "^0.2.1",
     "express": "^4.15.3",
+    "lodash": "^4.17.4",
     "lru-cache": "^4.1.1",
     "nuxt": "^1.0.0-rc3",
-    "source-map-support": "^0.4.15"
+    "source-map-support": "^0.4.15",
+    "vis": "^4.21.0"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
