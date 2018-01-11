@@ -26,7 +26,8 @@
     "lru-cache": "^4.1.1",
     "nuxt": "^1.0.0-rc3",
     "source-map-support": "^0.4.15",
-    "vis": "^4.21.0"
+    "vis": "^4.21.0",
+    "vue-blu": "^0.1.9"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
