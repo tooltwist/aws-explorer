@@ -3,11 +3,8 @@ const path = require('path')
 const execSh = require('exec-sh')
 
 // CLI - Command Line Interface
+var program = require('commander');
 const CLI = require('../cli/CLI')
-
-
-
-console.log('HERE WE ARE, IN aws-explorer-nuxt')
 
 
 CLI.parseCommandLine((unknownCommand, useDefault) => {

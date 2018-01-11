@@ -28,6 +28,9 @@
               a.navbar-item(href='/cluster') Clusters
               a.navbar-item(href='/vpc') Networks
               a.navbar-item(href='/environment') Environment
+              a.navbar-item(href='/network') Graph
+              a.navbar-item(href='/awslinks') AWS Links
+              a.navbar-item(href='/help') Help
               //- a
             //- navbar-end
           //- navbar-menu
