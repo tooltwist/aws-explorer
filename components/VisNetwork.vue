@@ -1,4 +1,4 @@
-<template lang="pug" track-by="$index">
+<template lang="pug">
   .columns
     .column.is-four-fifths
       div#mynetwork
@@ -67,6 +67,7 @@
 
 <script>
 import vis from 'vis'
+import _ from 'lodash'
 
 export default {
   name: 'VisNetwork',
@@ -98,18 +99,21 @@ export default {
     init () {
       let _self = this
       let parentGrp = {
-        'Virtual': 1,
-        'Availability': 2,
-        'Subnets': 3,
-        'Internet': 4,
-        'Route': 5,
-        'Elastic': 6,
-        'Public': 7,
-        'EC2': 8,
-        'AMI': 9,
-        'Key': 10,
-        'Load': 11,
-        'Target': 12
+        'virtual_private_cloud': 'virtual_private_cloud',
+        'availability_zone': 'availability_zone',
+        'subnet': 'subnet',
+        'internet_gateway': 'internet_gateway',
+        'route_table': 'route_table',
+        'nat_gateway::': 'nat_gateway',
+        'network_interface': 'network_interface',
+        'security_group': 'security_group',
+        'elastic_ip': 'elastic_ip',
+        'public_ip_address': 'public_ip_address',
+        'ec2_instance': 'ec2_instance',
+        'ami_image': 'ami_image',
+        'key_pair': 'key_pair',
+        'load_balancer': 'load_balancer',
+        'target_group': 'target_group'
       }
 
       const version = 2
@@ -331,11 +335,11 @@ export default {
             // Choose the group based on the node type
             Object.keys(parentGrp).forEach(function (groupKey) {
               if (key.indexOf(groupKey) === 0) {
-                group = parentGrp[groupKey]
+                group = parentGrp[_.replace(_.split(key, '::')[0], /\s+/g, '_').toLowerCase()]
               }
             })
           }
-          visdata.nodes.push({ id: def.visId, label: label, group: group })
+          visdata.nodes.push({ id: def.visId, label: label, title: 'I have a popup!', group: group })
         })
         Object.keys(edgesForGraph).forEach(function (key) {
           var def = edgesForGraph[key]
@@ -356,7 +360,12 @@ export default {
           edges: edges
         }
         var options = {
-          interaction: { hover: true },
+          interaction: {
+            hover: true
+          },
+          manipulation: {
+            enabled: true
+          },
           nodes: {
             shape: 'dot',
             size: 16
@@ -372,6 +381,28 @@ export default {
             solver: 'forceAtlas2Based',
             timestep: 0.35,
             stabilization: {iterations: 150}
+          },
+          groups: {
+            virtual: {
+              shape: 'triangle',
+              color: '#FF9900' // orange
+            },
+            availability: {
+              shape: 'dot',
+              color: '#2B7CE9' // blue
+            },
+            subnets: {
+              shape: 'dot',
+              color: '#5A1E5C' // purple
+            },
+            internet: {
+              shape: 'square',
+              color: '#C5000B' // red
+            },
+            routetable: {
+              shape: 'square',
+              color: '#109618' // green
+            }
           }
         }
 
@@ -380,6 +411,12 @@ export default {
           var ids = params.nodes
           var clickedNodes = nodes.get(ids)
           _self.$nuxt.$router.replace({ path: `/node/${clickedNodes[0].label}` })
+        })
+        network.on('hoverNode', function (params) {
+          console.log('hoverNode Event:', params)
+        })
+        network.on('hoverEdge', function (params) {
+          console.log('hoverEdge Event:', params)
         })
 
         return
@@ -535,5 +572,28 @@ export default {
   width: 100%;
   height: 600px;
   border: 1px solid lightgray;
+}
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
 }
 </style>
