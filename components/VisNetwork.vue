@@ -93,7 +93,9 @@ export default {
   components: {
   },
   props: [
-    'index'
+    'index',
+    'initialNodesFn', // Function to select initial nodes
+    'rulesFn' // Function to determine what should be displayed
   ],
   methods: {
     init () {
@@ -125,7 +127,7 @@ export default {
          *  parents of an initial set of nodes. The way this is done is controlled
          *  by user-provided functions:
          *
-         *  useAsInitialNode(key) - bool
+         *  initialNodesSelector(key) - bool
          *      This function is called with every node, so is given the chance
          *      to decide which nodes are used as the starting point for the
          *      recursive creating of the Vis network. For example, it can be
@@ -156,7 +158,7 @@ export default {
          *  none are provided we'll use defaults that use all nodes as
          *  initialNodes, and selects nodes to display using a user interface.
          */
-        let useAsInitialNode = null
+        let initialNodesSelector = null
         let getRuleForNode = null
 
         // Keep a list of vis 'nodes'
@@ -193,64 +195,52 @@ export default {
           }
         }
 
-        // If no getRuleForNode function was provided use a default,
-        // that uses our UI selection to select node types
-        if (!getRuleForNode) {
-          getRuleForNode = function (key) {
-            let ignore = false
-            if (
-              (_self.vpcs === false && key.indexOf('Virtual') === 0) ||
-              (_self.availability === false && key.indexOf('Availability') === 0) ||
-              (_self.subnets === false && key.indexOf('Subnet') === 0) ||
-              (_self.internet === false && key.indexOf('Internet') === 0) ||
-              (_self.route === false && key.indexOf('Route Table') === 0) ||
-              (_self.natGateways === false && key.indexOf('NAT Gateway::') === 0) ||
-              (_self.networkInterfaces === false && key.indexOf('Network Interface') === 0) ||
-              (_self.secgrp === false && key.indexOf('Security Group::') === 0) ||
-              (_self.elastic === false && key.indexOf('Elastic') === 0) ||
-              (_self.public === false && key.indexOf('Public') === 0) ||
-              (_self.instances === false && key.indexOf('EC2') === 0) ||
-              (_self.ami === false && key.indexOf('AMI') === 0) ||
-              (_self.key === false && key.indexOf('Key') === 0) ||
-              (_self.load === false && key.indexOf('Load') === 0) ||
-              (_self.target === false && key.indexOf('Target') === 0)
-            ) {
-              ignore = true
-            }
-
-            let testHack = true
-            if (testHack) {
-              if (key.indexOf('Virtual') === 0) {
-                return ignore ? 'hide' : 'show'
-              }
-              if (key.startsWith('Availability')) {
-                return ignore ? 'hide' : 'show'
-              }
-              if (key.startsWith('Load')) {
-                return ignore ? 'hide' : 'show'
-              }
-            }
-
-            return ignore ? 'hide' : 'expand'
+        // Return a rule, based on the UI
+        let getRuleForNodeFromUI = function (key) {
+          let ignore = false
+          if (
+            (_self.vpcs === false && key.indexOf('Virtual') === 0) ||
+            (_self.availability === false && key.indexOf('Availability') === 0) ||
+            (_self.subnets === false && key.indexOf('Subnet') === 0) ||
+            (_self.internet === false && key.indexOf('Internet') === 0) ||
+            (_self.route === false && key.indexOf('Route Table') === 0) ||
+            (_self.natGateways === false && key.indexOf('NAT Gateway::') === 0) ||
+            (_self.networkInterfaces === false && key.indexOf('Network Interface') === 0) ||
+            (_self.secgrp === false && key.indexOf('Security Group::') === 0) ||
+            (_self.elastic === false && key.indexOf('Elastic') === 0) ||
+            (_self.public === false && key.indexOf('Public') === 0) ||
+            (_self.instances === false && key.indexOf('EC2') === 0) ||
+            (_self.ami === false && key.indexOf('AMI') === 0) ||
+            (_self.key === false && key.indexOf('Key') === 0) ||
+            (_self.load === false && key.indexOf('Load') === 0) ||
+            (_self.target === false && key.indexOf('Target') === 0)
+          ) {
+            ignore = true
           }
+
+          return ignore ? 'hide' : 'expand'
         }
 
-        // If no 'useAsInitialNode' function was provided, use our
+        // If no 'rulesFn' prop was provided use our default,
+        // that uses our UI selection to select node types
+        if (this.rulesFn) {
+          // Use the user-provided rules function
+          getRuleForNode = this.rulesFn
+        } else {
+          // Use default rules, which come from the UI
+          getRuleForNode = getRuleForNodeFromUI
+        }
+
+        // If no 'initialNodesFn' prop was provided, use our
         // default, that adds all nodes to the Vis network.
         let highlightInitialNodes = true
-        if (!useAsInitialNode) {
+        if (this.initialNodesFn) {
+          // Use the user-provided initial nodes selector
+          initialNodesSelector = this.initialNodesFn
+        } else {
+          // Default initialNodesFn - all nodes added to the Vis graph
           highlightInitialNodes = false
-          useAsInitialNode = function (key, index) {
-            // return (index < 10)
-            // return (key.indexOf('Virtual') === 0)
-            let testHack = true
-            if (testHack) {
-              // Only add a single instance
-              highlightInitialNodes = true
-              return (key === 'EC2 Instance::i-0894431bed795481d')
-            }
-
-            // Add ALL nodes to the display
+          initialNodesSelector = function (key, index) {
             return true
           }
         }
@@ -298,7 +288,7 @@ export default {
         // Here we go... add the initial nodes, and let it
         // add other nodes recuresively from there.
         Object.keys(this.index).forEach(function (key, cnt) {
-          if (useAsInitialNode(key, cnt)) {
+          if (initialNodesSelector(key, cnt)) {
             // console.log('Adding initial node: ' + key)
             if (highlightInitialNodes) {
               addNode(key, true)
@@ -410,7 +400,9 @@ export default {
         network.on('click', function (params) {
           var ids = params.nodes
           var clickedNodes = nodes.get(ids)
-          _self.$nuxt.$router.replace({ path: `/node/${clickedNodes[0].label}` })
+          if (clickedNodes[0].label) {
+            _self.$nuxt.$router.replace({ path: `/node/${clickedNodes[0].label}` })
+          }
         })
         network.on('hoverNode', function (params) {
           console.log('hoverNode Event:', params)

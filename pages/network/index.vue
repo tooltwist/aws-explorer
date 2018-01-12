@@ -6,7 +6,7 @@
       h2.info
       hr
       br
-    vis-network(v-bind:index="index")
+    vis-network(v-bind:index="index" ZZZv-bind:initialNodesFn="useAsInitialNode" ZZZv-bind:rulesFn="getRuleForNode")
 </template>
 
 <script>
@@ -31,6 +31,29 @@ export default {
     console.log('LOADING NODE ', context.params)
 
     return GraphClient(context.params.id, context.error)
+  },
+  methods: {
+    useAsInitialNode: function (key, index) {
+      let testHack = true
+      if (testHack) {
+        // Only add a single instance
+        return (key === 'EC2 Instance::i-0894431bed795481d')
+        // return (index < 10)
+        // return (key.indexOf('Virtual') === 0)
+      }
+
+      // Add ALL nodes to the display
+      return true // All Nodes
+    },
+    getRuleForNode: function (key) {
+      console.log(`getRuleForNode(${key})`)
+      // if (key.startsWith('Availability')) return 'show'
+      if (key.startsWith('AMI ')) return 'hide'
+      if (key.startsWith('Security ')) return 'expand'
+      if (key.startsWith('EC2 ')) return 'expand'
+      // return 'expand' // Show everything
+      return 'show'
+    }
   }
 }
 </script>
