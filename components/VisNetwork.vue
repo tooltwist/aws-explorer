@@ -323,13 +323,9 @@ export default {
             label = '>>>  ' + def.key + '  <<<'
           } else {
             // Choose the group based on the node type
-            Object.keys(parentGrp).forEach(function (groupKey) {
-              if (key.indexOf(groupKey) === 0) {
-                group = parentGrp[_.replace(_.split(key, '::')[0], /\s+/g, '_').toLowerCase()]
-              }
-            })
+            group = parentGrp[_.replace(_.split(key, '::')[0], /\s+/g, '_').toLowerCase()]
           }
-          visdata.nodes.push({ id: def.visId, label: label, title: 'I have a popup!', group: group })
+          visdata.nodes.push({ id: def.visId, label: label, title: label, group: group })
         })
         Object.keys(edgesForGraph).forEach(function (key) {
           var def = edgesForGraph[key]
@@ -342,6 +338,7 @@ export default {
         let edges = new vis.DataSet(visdata.edges)
 
         // console.log(nodes)
+        // console.log(edges)
 
         // create a network
         var container = document.getElementById('mynetwork')
