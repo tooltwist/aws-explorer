@@ -2,7 +2,7 @@
   <section class="container">
     <div>
       <h1 class="title">
-        EnvironmentZZZ
+        Environments
       </h1>
       <h2 class="subtitle">
         {{environment}}

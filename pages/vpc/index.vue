@@ -5,15 +5,35 @@
     h1.title Node
     hr
     br
-
+    hr
   .content
-    h3 Here are our vpcs
-    .vpc(v-for="node in list" style="display:block;")
-      div(v-if="node.type == 'Virtual Private Cloud'")
-        // | {{node.key}} ,{{node.type}}.
-        // br
-        node-card(v-bind:node="node")
-        // node-card(v-if="node.type === 'Virtual Private Cloud' v-bind:node="node")
+    h3 Virtual Private Clouds (VPCs)
+    .columns
+      .column.vpc(v-for="vpc in list" v-if="vpc.type == 'Virtual Private Cloud'")
+        .top
+          .card(style="min-width: 0%;")
+            router-link(v-bind:to="'/node/' + vpc.key") {{ vpc.key }}
+            br
+            | {{ vpc.id }}
+            br
+            //.name {{ label }}
+            //.desc {{ description }}
+
+            div(v-for="az in list" v-if="az.type == 'Availability Zone'")
+              .card
+                | Availability Zone ({{az.data.ZoneName}})
+                br
+
+                div(v-for="subnet in keysToNodesFilteredByType(vpc.children, 'Subnet')" v-if="subnetInAvailabilityZone(subnet, az)")
+                  .card
+                    | {{subnet.id}}
+                    //br
+                    //| {{subnet.data.AvailabilityZone}}
+            //node-card(v-bind:node="vpc" id-as-label)
+            //.column.vpc(v-for="vpcChild in list" v-if="node.type == 'Virtual Private Cloud'")
+            //.subnet(v-for="vpcChild in vpc.children")
+            //  | child {{vpcChild}}
+            //  br
 </template>
 
 <script>
@@ -35,6 +55,31 @@ export default {
   head () {
     // Set Meta Tags for this Page
   },
+  methods: {
+    keysToNodesFilteredByType: function (keys, type) {
+      // keys is array is keys
+      // console.log('index type=' + typeof (this.index))
+      let theNodeIndex = this.index
+
+      // console.log(`keysToNodesFilteredByType(${keys}, ${type})`)
+      let list = [ ] // Array of child nodes
+      keys.forEach(function (key) {
+        // console.log(`- key=${key}`)
+        let child = theNodeIndex[key]
+        // console.log(`---> `, child)
+        if (!type || child.type === type) {
+          list.push(child)
+        }
+      })
+      console.log(`RETURNING ${list.length} CHILD RECORDS`)
+      return list
+    },
+    subnetInAvailabilityZone: function (subnetNode, azNode) {
+      console.log('azNode=', azNode.id)
+      console.log('subnetNode=', subnetNode.data)
+      return subnetNode.data.AvailabilityZone === azNode.id
+    }
+  },
   validate ({ params }) {
     // Must be a number
     console.log('validate params:', params)
@@ -46,6 +91,12 @@ export default {
 </script>
 
 <style>
+.card {
+  border: solid 1px #666;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 10px;
+}
 .container {
   //min-height: 100vh;
   display: flex;
