@@ -97,6 +97,20 @@ export default {
   methods: {
     init () {
       let _self = this
+      let parentGrp = {
+        'Virtual': 1,
+        'Availability': 2,
+        'Subnets': 3,
+        'Internet': 4,
+        'Route': 5,
+        'Elastic': 6,
+        'Public': 7,
+        'EC2': 8,
+        'AMI': 9,
+        'Key': 10,
+        'Load': 11,
+        'Target': 12
+      }
 
       const version = 2
       if (version === 2) {
@@ -278,6 +292,11 @@ export default {
           var def = nodesForGraph[key]
           // console.log('-- node --> ' + key + ' --> ', def)
           let group = 0
+          Object.keys(parentGrp).forEach(function (groupKey) {
+            if (key.indexOf(groupKey) === 0) {
+              group = parentGrp[groupKey]
+            }
+          })
           visdata.nodes.push({ id: def.visId, label: def.key, group: group })
         })
         Object.keys(edgesForGraph).forEach(function (key) {
@@ -317,8 +336,13 @@ export default {
             stabilization: {iterations: 150}
           }
         }
-        // var network =
-        new vis.Network(container, data, options)
+
+        var network = new vis.Network(container, data, options)
+        network.on('click', function (params) {
+          var ids = params.nodes
+          var clickedNodes = nodes.get(ids)
+          _self.$nuxt.$router.replace({ path: `/node/${clickedNodes[0].label}` })
+        })
 
         return
       }
