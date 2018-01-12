@@ -218,7 +218,7 @@ export default {
               ignore = true
             }
 
-            let testHack = true
+            let testHack = false
             if (testHack) {
               if (key.indexOf('Virtual') === 0) {
                 return ignore ? 'hide' : 'show'
@@ -243,11 +243,11 @@ export default {
           useAsInitialNode = function (key, index) {
             // return (index < 10)
             // return (key.indexOf('Virtual') === 0)
-            let testHack = true
+            let testHack = false
             if (testHack) {
               // Only add a single instance
               highlightInitialNodes = true
-              return (key === 'EC2 Instance::i-0894431bed795481d')
+              return (key === 'EC2 Instance::i-0c1264c8a4c4a400a')
             }
 
             // Add ALL nodes to the display
@@ -333,11 +333,7 @@ export default {
             label = '>>>  ' + def.key + '  <<<'
           } else {
             // Choose the group based on the node type
-            Object.keys(parentGrp).forEach(function (groupKey) {
-              if (key.indexOf(groupKey) === 0) {
-                group = parentGrp[_.replace(_.split(key, '::')[0], /\s+/g, '_').toLowerCase()]
-              }
-            })
+            group = parentGrp[_.replace(_.split(key, '::')[0], /\s+/g, '_').toLowerCase()]
           }
           visdata.nodes.push({ id: def.visId, label: label, title: 'I have a popup!', group: group })
         })
@@ -351,7 +347,7 @@ export default {
         let nodes = new vis.DataSet(visdata.nodes)
         let edges = new vis.DataSet(visdata.edges)
 
-        // console.log(nodes)
+        console.log(nodes)
 
         // create a network
         var container = document.getElementById('mynetwork')
