@@ -128,20 +128,24 @@ export default {
          *      used to restrict the starting point to a specific node, or
          *      specific types of nodes.
          *
-         *  getRulesForNode(key) - { ignore:boolean, recurse:boolean }
-         *      If ignore returned as true, the node will be completely ignored.
-         *      The recurse booleans controls whether we recursively add the
-         *      children and parents of this node to the Vis network. This is
-         *      useful to prevent expanding into unrelated branches of the
+         *  getRuleForNode(key) - 'hide', 'show' or 'expand'
+         *      If 'hide' is returned the node will be completely ignored.
+         *      If 'show' is returned the node will be shown, but we won't
+         *      recurse to show it's parents or children.
+         *      If 'expand' is returned we display the node and show the
+         *      parents and children (subject to their own rule).
+         *
+         *      Typically 'expand' is used to show a node, but the 'show' rule
+         *      is useful to prevent expanding into unrelated branches of the
          *      network.
          *
          *      For example, if we are looking at a specific EC2 instance, we
-         *      may wish to see it's VPC on the network, but we don't want that
-         *      VPC to pull in the details of every other EC2 instance, just
-         *      because they are in the same VPC.
+         *      may wish to see it's VPC on the Vis network, but we don't want
+         *      that VPC to pull in the details of every other EC2 instance,
+         *      just because they are in the same VPC.
          *
          *          if (key.startsWith('Virtual')) {
-         *            return { ignore: false, recurse: false }
+         *            return 'show'
          *          }
          *
          *  These functions may be provided by props to this component. If
@@ -149,20 +153,23 @@ export default {
          *  initialNodes, and selects nodes to display using a user interface.
          */
         let useAsInitialNode = null
-        let getRulesForNode = null
+        let getRuleForNode = null
 
         // Keep a list of vis 'nodes'
         var nodesForGraph = [ ] // [key] -> { key, visId }
         var nextVisId = 0
-        let findVisId = (key, markAsLoaded) => {
+        let findVisId = (key, markAsLoaded, markAsInitialNode) => {
           var obj = nodesForGraph[key]
           if (!obj) {
-            obj = { key: key, visId: nextVisId++, loaded: false }
+            obj = { key: key, visId: nextVisId++, loaded: false, isInitialNode: false }
             nodesForGraph[key] = obj
           }
           let alreadyLoaded = obj.loaded
           if (markAsLoaded) {
             obj.loaded = true
+          }
+          if (markAsInitialNode) {
+            obj.isInitialNode = true
           }
           return { id: obj.visId, alreadyLoaded }
         }
@@ -173,23 +180,20 @@ export default {
           const compoundKey = (key1 < key2) ? `${key1}:${key2}` : `${key2}:${key1}`
           let definition = edgesForGraph[compoundKey]
           if (!definition) {
-            let visId1 = findVisId(key1, false).id
-            let visId2 = findVisId(key2, false).id
+            let markAsLoaded = false
+            let markAsInitialNode = false
+            let visId1 = findVisId(key1, markAsLoaded, markAsInitialNode).id
+            let visId2 = findVisId(key2, markAsLoaded, markAsInitialNode).id
             definition = { key1, key2, visId1, visId2 }
             edgesForGraph[compoundKey] = definition
           }
         }
 
-        // If no getRulesForNode function was provided use a default,
+        // If no getRuleForNode function was provided use a default,
         // that uses our UI selection to select node types
-        if (!getRulesForNode) {
-          getRulesForNode = function (key) {
+        if (!getRuleForNode) {
+          getRuleForNode = function (key) {
             let ignore = false
-            if (_self.subnets === false && key.indexOf('Subnet') === 0) {
-              console.log(`
-                IGNORE SUBNET ${key}
-              `)
-            }
             if (
               (_self.vpcs === false && key.indexOf('Virtual') === 0) ||
               (_self.availability === false && key.indexOf('Availability') === 0) ||
@@ -209,36 +213,56 @@ export default {
             ) {
               ignore = true
             }
-            let recurse = true
-            // if (key.indexOf('Virtual') === 0) {
-            //   recurse = false
-            // }
-            return { ignore, recurse }
+
+            let testHack = true
+            if (testHack) {
+              if (key.indexOf('Virtual') === 0) {
+                return ignore ? 'hide' : 'show'
+              }
+              if (key.startsWith('Availability')) {
+                return ignore ? 'hide' : 'show'
+              }
+              if (key.startsWith('Load')) {
+                return ignore ? 'hide' : 'show'
+              }
+            }
+
+            return ignore ? 'hide' : 'expand'
           }
         }
 
         // If no 'useAsInitialNode' function was provided, use our
         // default, that adds all nodes to the Vis network.
+        let highlightInitialNodes = true
         if (!useAsInitialNode) {
+          highlightInitialNodes = false
           useAsInitialNode = function (key, index) {
             // return (index < 10)
-            return true
-            // return (key === 'EC2 Instance::i-0894431bed795481d')
             // return (key.indexOf('Virtual') === 0)
+            let testHack = true
+            if (testHack) {
+              // Only add a single instance
+              highlightInitialNodes = true
+              return (key === 'EC2 Instance::i-0894431bed795481d')
+            }
+
+            // Add ALL nodes to the display
+            return true
           }
         }
 
         // Recursively add nodes to the graph
-        let addNode = (key) => {
+        let addNode = (key, markAsInitialNode) => {
           // console.log('key is ' + key)
-          let rule = getRulesForNode(key)
-          if (rule.ignore) {
+          let rule = getRuleForNode(key)
+          if (rule === 'hide') {
             return
           }
 
           //  If this is already loaded, don't do it again.
           //  (We don't want an infinite loop)
-          let { alreadyLoaded } = findVisId(key, true)
+          let markAsLoaded = true
+          let { alreadyLoaded } = findVisId(key, markAsLoaded, markAsInitialNode)
           if (alreadyLoaded) {
             return
           }
@@ -246,22 +270,22 @@ export default {
           // Add edges to the children
           let node = theNodeIndex[key]
           let children = node.children
-          if (children && rule.recurse) {
+          if (children && rule === 'expand') {
             children.forEach((childKey) => {
-              let ignoreChild = getRulesForNode(childKey).ignore
-              if (!ignoreChild) {
+              let ruleForChild = getRuleForNode(childKey)
+              if (ruleForChild !== 'hide') {
                 registerEdge(key, childKey)
-                addNode(childKey)
+                addNode(childKey, false, false)
               }
             })
           }
           let parents = node.parents
-          if (parents && rule.recurse) {
+          if (parents && rule === 'expand') {
             parents.forEach((parentKey) => {
-              let ignoreParent = getRulesForNode(parentKey).ignore
-              if (!ignoreParent) {
+              let ruleForParent = getRuleForNode(parentKey)
+              if (ruleForParent !== 'hide') {
                 registerEdge(parentKey, key)
-                addNode(parentKey)
+                addNode(parentKey, false, false)
               }
             })
           }
@@ -272,7 +296,11 @@ export default {
         Object.keys(this.index).forEach(function (key, cnt) {
           if (useAsInitialNode(key, cnt)) {
             // console.log('Adding initial node: ' + key)
-            addNode(key)
+            if (highlightInitialNodes) {
+              addNode(key, true)
+            } else {
+              addNode(key, false)
+            }
           }
         })
 
@@ -291,13 +319,23 @@ export default {
         Object.keys(nodesForGraph).forEach(function (key) {
           var def = nodesForGraph[key]
           // console.log('-- node --> ' + key + ' --> ', def)
+
+          // Decide on the node appearance (group) and it's label
           let group = 0
-          Object.keys(parentGrp).forEach(function (groupKey) {
-            if (key.indexOf(groupKey) === 0) {
-              group = parentGrp[groupKey]
-            }
-          })
-          visdata.nodes.push({ id: def.visId, label: def.key, group: group })
+          let label = def.key
+          if (def.isInitialNode) {
+            // This node was one of those initially loaded.
+            group = 999
+            label = '>>>  ' + def.key + '  <<<'
+          } else {
+            // Choose the group based on the node type
+            Object.keys(parentGrp).forEach(function (groupKey) {
+              if (key.indexOf(groupKey) === 0) {
+                group = parentGrp[groupKey]
+              }
+            })
+          }
+          visdata.nodes.push({ id: def.visId, label: label, group: group })
         })
         Object.keys(edgesForGraph).forEach(function (key) {
           var def = edgesForGraph[key]
@@ -366,6 +404,7 @@ export default {
         resolve(parsedData)
       }).then((parsedData) => {
         let parentGrp = {
+          'InitialNode': 99,
           'Virtual': 1,
           'Availability': 2,
           'Subnets': 3,
