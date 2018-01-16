@@ -43,6 +43,9 @@
         h3 Instances
           .vpc(v-for="node in list" v-if="node.type === 'EC2 Instance'")
             node-card(v-bind:node="node" id-as-label)
+        h3 Jump Boxes
+          .vpc(v-for="node in list" v-if="node.type === 'Jumpbox'")
+            node-card(v-bind:node="node" id-as-label)
         h3 AMI Images
           .vpc(v-for="node in list" v-if="node.type === 'AMI Image'")
             node-card(v-bind:node="node" id-as-label)
@@ -104,6 +107,7 @@ export default {
         n.type !== 'Network Interface' &&
 
         n.type !== 'EC2 Instance' &&
+        n.type !== 'Jumpbox' &&
         n.type !== 'AMI Image' &&
         n.type !== 'Key Pair' &&
         n.type !== 'Security Group' &&

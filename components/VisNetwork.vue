@@ -48,6 +48,10 @@
         |  Instances ({{instances}})
         br
       label.checkbox
+        input(type='checkbox', :checked="jumpboxMode" v-on:click='onchange("jumpboxMode")')
+        |  Jumpboxes ({{jumpboxMode}})
+        br
+      label.checkbox
         input(type='checkbox', :checked="ami" v-on:click='onchange("ami")')
         |  AMI Images ({{ami}})
         br
@@ -93,6 +97,7 @@ export default {
       elastic: false,
       public: false,
       instances: true,
+      jumpboxMode: true,
       ami: false,
       key: false,
       load: true,
@@ -220,6 +225,7 @@ export default {
             (_self.networkInterfaces === false && key.indexOf('Network Interface') === 0) ||
             (_self.secgrp === false && key.indexOf('Security Group::') === 0) ||
             (_self.elastic === false && key.indexOf('Elastic') === 0) ||
+            (_self.jumpboxMode === false && key.indexOf('Jumpbox') === 0) ||
             (_self.public === false && key.indexOf('Public') === 0) ||
             (_self.instances === false && key.indexOf('EC2') === 0) ||
             (_self.ami === false && key.indexOf('AMI') === 0) ||

@@ -32,7 +32,7 @@ function findInstanceById(id) {
     // if (node.type === graph.INSTANCE) {
     //   console.log('  instance: ', node.data.InstanceId);
     // }
-    if (node.type === graph.INSTANCE && node.data.InstanceId === id) {
+    if ((node.type === graph.INSTANCE || node.type === graph.JUMPBOX) && node.data.InstanceId === id) {
       // console.log('FOUND THE INSTANCE!');
       return node;
     }
@@ -80,8 +80,16 @@ function downloadInstances(callback) {
     // console.log('data=', data);
     data.Reservations.forEach(res => {
       res.Instances.forEach(instance => {
+
+        // See if it is a jumpbox
         // console.log('instance=', instance);
-        let i = graph.findNode(graph.INSTANCE, instance.InstanceId, instance, describe)
+        let type = graph.INSTANCE;
+        instance.Tags.forEach(tag => {
+          if (tag.Key === 'Name' && tag.Value.indexOf('-jumpbox-') >= 0) {
+            type = graph.JUMPBOX;
+          }
+        });
+        let i = graph.findNode(type, instance.InstanceId, instance, describe)
 
         // ImageId
         let img = graph.findNode(graph.IMAGE, instance.ImageId, null)

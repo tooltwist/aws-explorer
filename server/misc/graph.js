@@ -10,6 +10,7 @@ const VPC = 'Virtual Private Cloud'
 const NAT = 'NAT Gateway'
 const IGW = 'Internet Gateway'
 const INSTANCE = 'EC2 Instance'
+const JUMPBOX = 'Jumpbox' // EC2 Instance, with Tag Name = '*-jumpbox-*'
 const IMAGE = 'AMI Image'
 const AZ = 'Availability Zone'
 const ADDR = 'Elastic IP'
@@ -294,6 +295,7 @@ module.exports.VPC = VPC;
 module.exports.NAT = NAT;
 module.exports.IGW = IGW;
 module.exports.INSTANCE = INSTANCE;
+module.exports.JUMPBOX = JUMPBOX;
 module.exports.IMAGE = IMAGE;
 module.exports.AZ = AZ;
 module.exports.ADDR = ADDR;
