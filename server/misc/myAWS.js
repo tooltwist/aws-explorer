@@ -8,6 +8,11 @@ var regions = [ ]
 var currentRegion = null;
 var awsRegion = null; // Region we are currently looking at
 
+var ec2 = null
+var elbv2 = null
+var autoscaling = null
+var ecs = null
+
 
 function downloadRegions(callback) {
   console.log('  downloadRegions()');
@@ -99,6 +104,10 @@ function checkAwsRegion(region) {
       apiVersion: '2011-01-01',
       region: currentRegion
     });
+    ecs = new AWS.ECS({
+      apiVersion: '2014-11-13',
+      region: currentRegion
+    });
   }
 
   return currentRegion;
@@ -110,6 +119,10 @@ module.exports.cloudformation = function() {
 
 module.exports.ec2 = function() {
   return ec2;
+}
+
+module.exports.ecs = function() {
+  return ecs;
 }
 
 module.exports.elbv2 = function() {

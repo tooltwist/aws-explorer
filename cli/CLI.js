@@ -9,6 +9,9 @@ const CliNbt = require('./CliNbt')
 const CliSummary = require('./CliSummary')
 const CliProvision = require('./CliProvision')
 const CliInstances = require('./CliInstances')
+const CliClusters = require('./CliClusters')
+const CliALBs = require('./CliALBs')
+const StartWebServer = require('../bin/startWebServer')
 
 
 
@@ -31,10 +34,10 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
     .description('Interactive website (this is the default)')
     .action(function(ip) {
       haveCommand = true
-      startWebServer() // Never returns
+      StartWebServer() // Never returns
     });
 
-  // Show IP Addresses
+  // Show EC2 instances
   program
     .command('instances')
     .description('List EC2 instances')
@@ -42,6 +45,26 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
       haveCommand = true
       let r = program.region || myAWS.INITIAL_REGION;
       CliInstances(r)
+    });
+
+  // Show ECS clusters
+  program
+    .command('clusters')
+    .description('List ECS Clusters, Services and Tasks')
+    .action(function(ip) {
+      haveCommand = true
+      let r = program.region || myAWS.INITIAL_REGION;
+      CliClusters(r)
+    });
+
+  // Show ECS clusters
+  program
+    .command('albs')
+    .description('List Application Load Balancers')
+    .action(function(ip) {
+      haveCommand = true
+      let r = program.region || myAWS.INITIAL_REGION;
+      CliALBs(r)
     });
 
     // Login to a server via a jump box

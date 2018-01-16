@@ -62,6 +62,15 @@
       label.checkbox
         input(type='checkbox', :checked="target" v-on:click='onchange("target")')
         |  Target Groups ({{target}})
+      label.checkbox
+        input(type='checkbox', :checked="clusterMode" v-on:click='onchange("clusterMode")')
+        |  Clusters ({{clusterMode}})
+      label.checkbox
+        input(type='checkbox', :checked="serviceMode" v-on:click='onchange("serviceMode")')
+        |  Services ({{serviceMode}})
+      label.checkbox
+        input(type='checkbox', :checked="taskMode" v-on:click='onchange("taskMode")')
+        |  Tasks ({{taskMode}})
     div
 </template>
 
@@ -87,7 +96,10 @@ export default {
       ami: false,
       key: false,
       load: true,
-      target: false
+      target: false,
+      clusterMode: false,
+      serviceMode: false,
+      taskMode: false
     }
   },
   components: {
@@ -213,7 +225,10 @@ export default {
             (_self.ami === false && key.indexOf('AMI') === 0) ||
             (_self.key === false && key.indexOf('Key') === 0) ||
             (_self.load === false && key.indexOf('Load') === 0) ||
-            (_self.target === false && key.indexOf('Target') === 0)
+            (_self.target === false && key.indexOf('Target') === 0) ||
+            (_self.clusterMode === false && key.startsWith('Cluster::')) ||
+            (_self.serviceMode === false && key.startsWith('Service::')) ||
+            (_self.taskMode === false && key.startsWith('Task::'))
           ) {
             ignore = true
           }
@@ -330,7 +345,7 @@ export default {
         Object.keys(edgesForGraph).forEach(function (key) {
           var def = edgesForGraph[key]
           // console.log('-- edge --> ' + key + ' --> ', def)
-          visdata.edges.push({ from: def.visId1, to: def.visId2 })
+          visdata.edges.push({ from: def.visId1, to: def.visId2, arrows: 'to' })
         })
 
         // Get Vis to create the network

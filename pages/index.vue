@@ -63,6 +63,15 @@
         h3 Target Groups
           .vpc(v-for="node in list" v-if="node.type === 'Target Group'")
             node-card(v-bind:node="node" id-as-label)
+        h3 Clusters
+          .vpc(v-for="node in list" v-if="node.type === 'Cluster'")
+            node-card(v-bind:node="node" id-as-label)
+        h3 Services
+          .vpc(v-for="node in list" v-if="node.type === 'Service'")
+            node-card(v-bind:node="node" id-as-label)
+        h3 Tasks
+          .vpc(v-for="node in list" v-if="node.type === 'Task'")
+            node-card(v-bind:node="node" id-as-label)
     hr
 
 </template>
@@ -101,7 +110,9 @@ export default {
 
         n.type !== 'Load Balancer' &&
         n.type !== 'Target Group' &&
-        n.type !== 'ZZZZZ' &&
+        n.type !== 'Cluster' &&
+        n.type !== 'Service' &&
+        n.type !== 'Task' &&
         n.type !== 'ZZZZZ'
       )
     }

@@ -23,6 +23,9 @@ const ALB = 'Load Balancer'
 const TARGETGRP = 'Target Group'
 const LISTENER = 'Listener'
 const RULE = 'Rule'
+const CLUSTER = 'Cluster'
+const SERVICE = 'Service'
+const TASK = 'Task'
 
 
 
@@ -304,6 +307,9 @@ module.exports.ALB = ALB;
 module.exports.TARGETGRP = TARGETGRP;
 module.exports.LISTENER = LISTENER;
 module.exports.RULE = RULE;
+module.exports.CLUSTER = CLUSTER;
+module.exports.SERVICE = SERVICE;
+module.exports.TASK = TASK;
 
 // Functions
 module.exports.downloadRegion = downloadRegion;

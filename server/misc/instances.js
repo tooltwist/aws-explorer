@@ -1,75 +1,16 @@
 
 const myAWS = require('./myAWS')
 const graph = require('./graph')
+const download = require('./download')
 const pad = require('./util').pad
 const capitalize = require('./util').capitalize
-
-function downloadInstances(callback) {
-  // console.log('  downloadInstances()');
-  let describe = node => {
-    let desc = ''
-    let name = node.findTag('Name')
-    if (name) {
-      desc += '  Name: ' + name + '\n';
-    }
-    return desc
-  }
-
-  ec2.describeInstances({}, (err, data) => {
-    if (err) return callback(err);
-    // console.log('data=', data);
-    data.Reservations.forEach(res => {
-      res.Instances.forEach(instance => {
-        // console.log('instance=', instance);
-        let i = graph.findNode(graph.INSTANCE, instance.InstanceId, instance, describe)
-
-        // ImageId
-        let img = graph.findNode(graph.IMAGE, instance.ImageId, null)
-        img.addChild(i)
-
-        // Availability zone
-        if (instance.Placement && instance.Placement.AvailabilityZone) {
-          let az = graph.findNode(graph.AZ, instance.Placement.AvailabilityZone, null, node => {
-            // Return a description
-            let desc = 'Availability Zone (' + node.id + ')\n'
-            return desc
-          })
-          az.addChild(i)
-        }
-
-        // Remember if it has a public IP
-        if (instance.PublicIpAddress) {
-          let ip = graph.findNode(graph.PUBLICIP, instance.PublicIpAddress)
-          ip.addChild(i)
-        }
-
-        // Subnet
-        //ZZZ Can an instance have multiple subnets?
-        let sn = graph.findNode(graph.SUBNET, instance.SubnetId)
-        sn.addChild(i)
-
-        // VPC
-        let vpc = graph.findNode(graph.VPC, instance.VpcId)
-        vpc.addChild(i)
-
-        // Security groups
-        instance.SecurityGroups.forEach(sg => {
-          let g = graph.findNode(graph.SECGRP, sg.GroupId)
-          g.addChild(i)
-          i.addChild(g)
-        })
-      })
-    })
-    return callback(null)
-  })
-}
 
 function cliInstances(region) {
   region = myAWS.checkAwsRegion(region)
 
   // Clear existing list of nodes and reload everything
   graph.reset();
-  downloadInstances(err => {
+  download.downloadInstances(err => {
     if (err) {
       console.log('Error: ', err)
     }
@@ -134,4 +75,3 @@ function cliInstances(region) {
 
 
 module.exports.cliInstances = cliInstances;
-module.exports.downloadInstances = downloadInstances;
