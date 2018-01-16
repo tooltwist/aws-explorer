@@ -37,7 +37,7 @@ export default {
       let testHack = true
       if (testHack) {
         // Only add a single instance
-        return (key === 'EC2 Instance::i-0894431bed795481d')
+        return (key === 'EC2 Instance::i-0c1264c8a4c4a400a')
         // return (index < 10)
         // return (key.indexOf('Virtual') === 0)
       }
@@ -52,7 +52,7 @@ export default {
       if (key.startsWith('Security ')) return 'expand'
       if (key.startsWith('EC2 ')) return 'expand'
       // return 'expand' // Show everything
-      return 'show'
+      return 'expand'
     }
   }
 }
