@@ -370,26 +370,26 @@ export default {
             stabilization: {iterations: 150}
           },
           groups: {
-            virtual: {
+            999: {
               shape: 'triangle',
               color: '#FF9900' // orange
-            },
-            availability: {
-              shape: 'dot',
-              color: '#2B7CE9' // blue
-            },
-            subnets: {
-              shape: 'dot',
-              color: '#5A1E5C' // purple
-            },
-            internet: {
-              shape: 'square',
-              color: '#C5000B' // red
-            },
-            routetable: {
-              shape: 'square',
-              color: '#109618' // green
             }
+            // availability: {
+            //   shape: 'dot',
+            //   color: '#2B7CE9' // blue
+            // },
+            // subnets: {
+            //   shape: 'dot',
+            //   color: '#5A1E5C' // purple
+            // },
+            // internet: {
+            //   shape: 'square',
+            //   color: '#C5000B' // red
+            // },
+            // routetable: {
+            //   shape: 'square',
+            //   color: '#109618' // green
+            // }
           }
         }
 
