@@ -365,6 +365,7 @@ export default {
           interaction: {
             hover: true
           },
+          layout: { randomSeed: 2 },
           manipulation: {
             enabled: true
           },
