@@ -677,8 +677,10 @@ function downloadClusters(callback) {
   *
   *   See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#listClusters-property
   */
+  if (debug) console.log('- getting list of clusters');
   myAWS.ecs().listClusters({ }, function(err, clusterList) {
     if (err) return callback(err);
+    if (debug) console.log('- getting cluster details');
     myAWS.ecs().describeClusters({
       clusters: clusterList.clusterArns
     }, function(err, clusterDefinitions) {
@@ -701,6 +703,7 @@ function downloadClusters(callback) {
         /*
         *   Get the container instances for this cluster.
         */
+        if (debug) console.log(`- getting list of container instances (cluster=${clusterDef.clusterName})`);
         myAWS.ecs().listContainerInstances({
           cluster: clusterDef.clusterName
         }, function(err, containerInstanceList) {
@@ -709,6 +712,7 @@ function downloadClusters(callback) {
             cluster: clusterDef.clusterName,
             containerInstances: containerInstanceList.containerInstanceArns
           };
+          if (debug) console.log(`- getting container instance details (cluster=${clusterDef.clusterName}, ${containerInstanceList.containerInstanceArns.length} container instances)`);
           myAWS.ecs().describeContainerInstances(params, function(err, containerDefinitions) {
             if (err) return callback(err);
 
@@ -728,10 +732,12 @@ function downloadClusters(callback) {
             *
             *   https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#describeServices-property
             */
+            if (debug) console.log('- getting list of services');
             myAWS.ecs().listServices({
               cluster: clusterDef.clusterName
             }, function(err, serviceListData) {
               if (err) return callback(err);
+              if (debug) console.log('- getting service details');
               myAWS.ecs().describeServices({
                 services: serviceListData.serviceArns,
                 cluster: clusterDef.clusterArn
@@ -763,6 +769,7 @@ function downloadClusters(callback) {
                 *   Get the tasks for this cluster.
                 */
                 // console.log(`Getting tasks for cluster ${clusterDef.clusterName}`);
+                if (debug) console.log(`- getting list of tasks (cluster=${clusterDef.clusterName})`);
                 myAWS.ecs().listTasks({
                   cluster: clusterDef.clusterName
                 }, function(err, taskList) {
@@ -772,6 +779,7 @@ function downloadClusters(callback) {
                     tasks: taskList.taskArns,
                     cluster: clusterDef.clusterName
                   };
+                  if (debug) console.log('- getting task details');
                   myAWS.ecs().describeTasks(params, function(err, taskDefinitions) {
                     if (err) return callback(err);
 

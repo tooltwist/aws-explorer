@@ -52,7 +52,7 @@ router.get('/graph/:region', function (req, res, next) {
 
   graph.downloadRegion('ap-southeast-1', false, err => {
     if (err) {
-      console.log('Error downloading region', err);
+      console.log('Error downloading region', err, err.stack);
       res.sendStatus(500)
       return;
     }
