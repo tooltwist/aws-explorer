@@ -1,5 +1,6 @@
 const myAWS = require('../server/misc/myAWS')
 const graph = require('../server/misc/graph')
+const types = require('../lib/types')
 const pad = require('../server/misc/util').pad
 const capitalize = require('../server/misc/util').capitalize
 const download = require('../server/misc/download')
@@ -31,37 +32,37 @@ function clusterReport() {
   console.log();
   console.log('ECS Clusters');
   console.log('------------');
-  graph.nodesByType(graph.CLUSTER).forEach(cluster => {
+  graph.nodesByType(types.CLUSTER).forEach(cluster => {
     console.log();
     console.log(`Cluster ${cluster.id}:`);
 
     // Instances
     cluster.children.forEach(childKey => {
-      if (childKey.startsWith(graph.INSTANCE)) {
+      if (childKey.startsWith(types.INSTANCE)) {
         console.log(`  ${childKey}`);
       }
     });
 
     // Services
     cluster.children.forEach(childKey => {
-      if (childKey.startsWith(graph.SERVICE)) {
+      if (childKey.startsWith(types.SERVICE)) {
         console.log(`  ${childKey}`);
 
         let service = graph.nodeWithKey(childKey);
         service.children.forEach(childKey => {
-          if (childKey.startsWith(graph.TASK)) {
+          if (childKey.startsWith(types.TASK)) {
             console.log(`    ${childKey}`);
           }
         });
 
         // Target groups
         service.parents.forEach(key => {
-          if (key.startsWith(graph.TARGETGRP)) {
+          if (key.startsWith(types.TARGETGRP)) {
             console.log(`    ${key}`);
 
             let tg = graph.nodeWithKey(key);
             tg.parents.forEach(key => {
-              if (key.startsWith(graph.ALB)) {
+              if (key.startsWith(types.ALB)) {
                 console.log(`      ${key}`);
               }
             });
@@ -72,7 +73,7 @@ function clusterReport() {
 
     // Other
     cluster.children.forEach(childKey => {
-      if ( !childKey.startsWith(graph.INSTANCE) && !childKey.startsWith(graph.SERVICE)) {
+      if ( !childKey.startsWith(types.INSTANCE) && !childKey.startsWith(types.SERVICE)) {
         console.log(`  ${childKey}`);
       }
     });

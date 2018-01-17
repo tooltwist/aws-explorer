@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import graph from '../misc/graph'
+// import types from '../misc/types'
 import LRU from 'lru-cache'
+import download from '../misc/download'
 
 
 // , options = { max: 500
@@ -50,7 +52,7 @@ router.get('/graph/:region', function (req, res, next) {
   }
 
 
-  graph.downloadRegion('ap-southeast-1', false, err => {
+  download.downloadEverything('ap-southeast-1', false, err => {
     if (err) {
       console.log('Error downloading region', err, err.stack);
       res.sendStatus(500)

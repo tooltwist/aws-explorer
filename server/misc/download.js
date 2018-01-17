@@ -1,22 +1,23 @@
 var myAWS = require('./myAWS')
 const graph = require('./graph')
 const instances = require('./instances')
+const types = require('../../lib/types')
 
 var loadBalancersAreLoaded = false;
 var targetGroupsAreLoaded = false;
 var instancesAreLoaded = false;
 
-const debug = false;
+const debug = true;
 
 function findTargetGroupByARN(arn) {
   // console.log('findTargetGroupByARN(' + arn + ')');
   let all = graph.nodes();
   for (var i = 0; i < all.length; i++) {
     let node = all[i];
-    // if (node.type === graph.TARGETGRP) {
+    // if (node.type === types.TARGETGRP) {
     //   console.log('  tg: ', node.data.TargetGroupArn);
     // }
-    if (node.type === graph.TARGETGRP && node.data.TargetGroupArn === arn) {
+    if (node.type === types.TARGETGRP && node.data.TargetGroupArn === arn) {
       // console.log('FOUND THE TARGET GROUP!');
       return node;
     }
@@ -29,10 +30,10 @@ function findInstanceById(id) {
   let all = graph.nodes();
   for (var i = 0; i < all.length; i++) {
     let node = all[i];
-    // if (node.type === graph.INSTANCE) {
+    // if (node.type === types.INSTANCE) {
     //   console.log('  instance: ', node.data.InstanceId);
     // }
-    if ((node.type === graph.INSTANCE || node.type === graph.JUMPBOX) && node.data.InstanceId === id) {
+    if ((node.type === types.INSTANCE || node.type === types.JUMPBOX) && node.data.InstanceId === id) {
       // console.log('FOUND THE INSTANCE!');
       return node;
     }
@@ -57,7 +58,7 @@ function downloadVpcs(callback) {
     // console.log('data=', data);
     data.Vpcs.forEach(rec => {
       // console.log('rec=', rec);
-      graph.findNode(graph.VPC, rec.VpcId, rec, describe)
+      graph.findNode(types.VPC, rec.VpcId, rec, describe)
     })
     return callback(null)
   })
@@ -83,21 +84,21 @@ function downloadInstances(callback) {
 
         // See if it is a jumpbox
         // console.log('instance=', instance);
-        let type = graph.INSTANCE;
+        let type = types.INSTANCE;
         instance.Tags.forEach(tag => {
           if (tag.Key === 'Name' && tag.Value.indexOf('-jumpbox-') >= 0) {
-            type = graph.JUMPBOX;
+            type = types.JUMPBOX;
           }
         });
         let i = graph.findNode(type, instance.InstanceId, instance, describe)
 
         // ImageId
-        let img = graph.findNode(graph.IMAGE, instance.ImageId, null)
+        let img = graph.findNode(types.IMAGE, instance.ImageId, null)
         img.addChild(i)
 
         // Availability zone
         if (instance.Placement && instance.Placement.AvailabilityZone) {
-          let az = graph.findNode(graph.AZ, instance.Placement.AvailabilityZone, null, node => {
+          let az = graph.findNode(types.AZ, instance.Placement.AvailabilityZone, null, node => {
             // Return a description
             let desc = 'Availability Zone (' + node.id + ')\n'
             return desc
@@ -107,22 +108,22 @@ function downloadInstances(callback) {
 
         // Remember if it has a public IP
         if (instance.PublicIpAddress) {
-          let ip = graph.findNode(graph.PUBLICIP, instance.PublicIpAddress)
+          let ip = graph.findNode(types.PUBLICIP, instance.PublicIpAddress)
           ip.addChild(i)
         }
 
         // Subnet
         //ZZZ Can an instance have multiple subnets?
-        let sn = graph.findNode(graph.SUBNET, instance.SubnetId)
+        let sn = graph.findNode(types.SUBNET, instance.SubnetId)
         sn.addChild(i)
 
         // VPC
-        let vpc = graph.findNode(graph.VPC, instance.VpcId)
+        let vpc = graph.findNode(types.VPC, instance.VpcId)
         vpc.addChild(i)
 
         // Security groups
         instance.SecurityGroups.forEach(sg => {
-          let g = graph.findNode(graph.SECGRP, sg.GroupId)
+          let g = graph.findNode(types.SECGRP, sg.GroupId)
           g.addChild(i)
           i.addChild(g)
         })
@@ -142,7 +143,7 @@ function downloadSubnets(callback) {
     // See if the subnet's routing table connects to an Internet Gateway
     let isPublicSubnet = false
     node.parents.forEach(parent => {
-      if (parent.type === graph.ROUTETABLE && parent.hasPublicRoutes) {
+      if (parent.type === types.ROUTETABLE && parent.hasPublicRoutes) {
         isPublicSubnet = true
       }
     })
@@ -158,7 +159,7 @@ function downloadSubnets(callback) {
     // Route table?
     let useVpcRouteTable = true
     node.parents.forEach(parent => {
-      if (parent.type === graph.ROUTETABLE) {
+      if (parent.type === types.ROUTETABLE) {
         useVpcRouteTable = false
       }
     })
@@ -175,14 +176,14 @@ function downloadSubnets(callback) {
 
     // console.log('data=', data);
     data.Subnets.forEach(rec => {
-      let sn = graph.findNode(graph.SUBNET, rec.SubnetId, rec, describe)
+      let sn = graph.findNode(types.SUBNET, rec.SubnetId, rec, describe)
 
       // Add this to it's VPC
-      let v = graph.findNode(graph.VPC, rec.VpcId, null)
+      let v = graph.findNode(types.VPC, rec.VpcId, null)
       v.addChild(sn)
 
       // Add this to it's AvailabilityZone
-      let az = graph.findNode(graph.AZ, rec.AvailabilityZone, null)
+      let az = graph.findNode(types.AZ, rec.AvailabilityZone, null)
       az.addChild(sn)
     })
     return callback(null)
@@ -202,10 +203,10 @@ function downloadSecurityGroups(callback) {
     if (err) return callback(err);
     data.SecurityGroups.forEach(grp => {
       // console.log('grp=', grp);
-      let g = graph.findNode(graph.SECGRP, grp.GroupId, grp, describe)
+      let g = graph.findNode(types.SECGRP, grp.GroupId, grp, describe)
 
       // Add this to it's VPC
-      let v = graph.findNode(graph.VPC, grp.VpcId, null)
+      let v = graph.findNode(types.VPC, grp.VpcId, null)
       v.addChild(g)
     })
     return callback(null)
@@ -225,15 +226,15 @@ function downloadNatGateways(callback) {
 
     // console.log('data=', data);
     data.NatGateways.forEach(grp => {
-      let g = graph.findNode(graph.NAT, grp.NatGatewayId, grp, describe)
+      let g = graph.findNode(types.NAT, grp.NatGatewayId, grp, describe)
 
       if (grp.State !== 'deleted') {
         // Add this to it's subnet
-        let sn = graph.findNode(graph.SUBNET, grp.SubnetId, null)
+        let sn = graph.findNode(types.SUBNET, grp.SubnetId, null)
         sn.addChild(g)
 
         // Add this to it's VPC
-        let v = graph.findNode(graph.VPC, grp.VpcId, null)
+        let v = graph.findNode(types.VPC, grp.VpcId, null)
         v.addChild(g)
       }
     })
@@ -257,12 +258,12 @@ function downloadInternetGateways(callback) {
 
     // console.log('data=', data);
     data.InternetGateways.forEach(rec => {
-      let igw = graph.findNode(graph.IGW, rec.InternetGatewayId, rec, describe)
+      let igw = graph.findNode(types.IGW, rec.InternetGatewayId, rec, describe)
 
       // See where it is attached
       rec.Attachments.forEach(attachment => {
         if (attachment.VpcId) {
-          let vpc = graph.findNode(graph.VPC, attachment.VpcId)
+          let vpc = graph.findNode(types.VPC, attachment.VpcId)
           vpc.addChild(igw)
         }
       })
@@ -286,11 +287,11 @@ function downloadAddresses(callback) {
 
     // console.log('data=', data);
     data.Addresses.forEach(rec => {
-      let addr = graph.findNode(graph.ADDR, rec.AllocationId, rec, describe)
+      let addr = graph.findNode(types.ADDR, rec.AllocationId, rec, describe)
 
       // Remember if it has a public IP
       if (rec.PublicIp) {
-        let ip = graph.findNode(graph.PUBLICIP, rec.PublicIp)
+        let ip = graph.findNode(types.PUBLICIP, rec.PublicIp)
         ip.addChild(addr)
       }
     })
@@ -311,7 +312,7 @@ function downloadAvailabilityZones(callback) {
 
     // console.log('data=', data);
     data.AvailabilityZones.forEach(rec => {
-      let g = graph.findNode(graph.AZ, rec.ZoneName, rec, describe)
+      let g = graph.findNode(types.AZ, rec.ZoneName, rec, describe)
     })
     return callback(null)
   })
@@ -329,7 +330,7 @@ function downloadKeyPairs(callback) {
 
     // console.log('data=', data);
     data.KeyPairs.forEach(rec => {
-      let g = graph.findNode(graph.KEYPAIR, rec.KeyName, rec, describe)
+      let g = graph.findNode(types.KEYPAIR, rec.KeyName, rec, describe)
     })
     return callback(null)
   })
@@ -349,24 +350,24 @@ function downloadNetworkInterfaces(callback) {
     // console.log('data=', data);
     data.NetworkInterfaces.forEach(rec => {
       // console.log('\nNETWORK INTERFACE:', rec);
-      let ni = graph.findNode(graph.NETIFACE, rec.NetworkInterfaceId, rec, describe)
+      let ni = graph.findNode(types.NETIFACE, rec.NetworkInterfaceId, rec, describe)
 
       // Public IP via association
       if (rec.Association && rec.Association.PublicIp) {
-        let ip = graph.findNode(graph.PUBLICIP, rec.Association.PublicIp)
+        let ip = graph.findNode(types.PUBLICIP, rec.Association.PublicIp)
         ip.addChild(ni)
       }
 
       // AvailabilityZone
-      let az = graph.findNode(graph.AZ, rec.AvailabilityZone)
+      let az = graph.findNode(types.AZ, rec.AvailabilityZone)
       az.addChild(ni)
 
       // Subnet
-      let subnet = graph.findNode(graph.SUBNET, rec.SubnetId)
+      let subnet = graph.findNode(types.SUBNET, rec.SubnetId)
       subnet.addChild(ni)
 
       // VPC
-      let vpc = graph.findNode(graph.VPC, rec.VpcId)
+      let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(ni)
     })
     return callback(null)
@@ -399,7 +400,7 @@ function downloadRouteTables(callback) {
       if (route.GatewayId === 'local') {
         desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;local</td></tr>\n'
       } else {
-        let key = graph.keyForNode(graph.IGW, route.GatewayId)
+        let key = graph.keyForNode(types.IGW, route.GatewayId)
         desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;<a href="?node=' + key + '">' + route.GatewayId + '</a></td></tr>\n'
       }
     })
@@ -413,14 +414,14 @@ function downloadRouteTables(callback) {
     // console.log('routeTables=', data);
     data.RouteTables.forEach(rec => {
       // console.log('\nRoute table:', rec);
-      let rt = graph.findNode(graph.ROUTETABLE, rec.RouteTableId, rec, describe)
+      let rt = graph.findNode(types.ROUTETABLE, rec.RouteTableId, rec, describe)
 
       // Look for routes to Internet Gateways
       let gateways = [] // Only add each gateway it once
       rec.Routes.forEach(route => {
         if (route.GatewayId != 'local') {
           if (!gateways[route.GatewayId]) {
-            let igw = graph.findNode(graph.IGW, route.GatewayId)
+            let igw = graph.findNode(types.IGW, route.GatewayId)
             igw.addChild(rt)
             // Having a route to an Internet Gateway is the definition of a "Public Subnet"
             rt.hasPublicRoutes = true
@@ -432,13 +433,13 @@ function downloadRouteTables(callback) {
       // Subnets mapped to this routing table
       rec.Associations.forEach(assoc => {
         if (assoc.SubnetId) {
-          let sn = graph.findNode(graph.SUBNET, assoc.SubnetId)
+          let sn = graph.findNode(types.SUBNET, assoc.SubnetId)
           rt.addChild(sn)
         }
       })
 
       // VPC
-      let vpc = graph.findNode(graph.VPC, rec.VpcId)
+      let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(rt)
     })
     return callback(null)
@@ -451,7 +452,7 @@ function describeTargets(targetGroup, withHealthchecks) {
     if (targetGroup._health && targetGroup._health.length > 0) {
       targetGroup._health.forEach(health => {
         // console.log('health=', health);
-        let key = graph.keyForNode(graph.INSTANCE, health.Target.Id)
+        let key = graph.keyForNode(types.INSTANCE, health.Target.Id)
         desc += '    -->> Instance '
         desc += '<a href="?node=' + key + '">' + health.Target.Id + '</a>'
         desc += ', port ' + health.Target.Port + '   (' + health.TargetHealth.State + ')\n'
@@ -524,25 +525,25 @@ function downloadLoadBalancers(withHealthchecks, callback) {
         return callback(null)
       }
       let rec = data.LoadBalancers[index]
-      let alb = graph.findNode(graph.ALB, rec.LoadBalancerName, rec, describe)
+      let alb = graph.findNode(types.ALB, rec.LoadBalancerName, rec, describe)
 
       // Availability Zones and Subnets
       rec.AvailabilityZones.forEach(az => {
-        let az2 = graph.findNode(graph.AZ, az.ZoneName)
+        let az2 = graph.findNode(types.AZ, az.ZoneName)
         az2.addChild(alb)
 
-        let subnet = graph.findNode(graph.SUBNET, az.SubnetId)
+        let subnet = graph.findNode(types.SUBNET, az.SubnetId)
         subnet.addChild(alb)
       })
 
       // Security Groups
       rec.SecurityGroups.forEach(sgid => {
-        let sg = graph.findNode(graph.SECGRP, sgid)
+        let sg = graph.findNode(types.SECGRP, sgid)
         sg.addChild(alb)
       })
 
       // VPC
-      let vpc = graph.findNode(graph.VPC, rec.VpcId)
+      let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(alb)
 
       // Get the listeners for this load Balancer
@@ -601,7 +602,7 @@ function downloadLoadBalancers(withHealthchecks, callback) {
               healthData.TargetHealthDescriptions.forEach(health => {
                 // Instance
                 // console.log('health=', health);
-                let instance = graph.findNode(graph.INSTANCE, health.Target.Id)
+                let instance = graph.findNode(types.INSTANCE, health.Target.Id)
                 alb.addChild(instance)
               }) //- next health
               return nextListener(listenerIndex + 1);
@@ -634,15 +635,127 @@ function downloadTargetGroups(withHealthchecks, callback) {
     // console.log('data=', data);
     data.TargetGroups.forEach(rec => {
       // console.log('tg=', rec);
-      let tg = graph.findNode(graph.TARGETGRP, rec.TargetGroupName, rec, describe)
+      let tg = graph.findNode(types.TARGETGRP, rec.TargetGroupName, rec, describe)
 
       // VPC
-      let vpc = graph.findNode(graph.VPC, rec.VpcId)
+      let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(tg)
     })
     targetGroupsAreLoaded = true;
     return callback(null)
   })
+}
+
+/*
+*   Get the container instances for a cluster.
+*/
+function loadContainerInstancesForCluster(cluster, callback/* (err, instanceForContainer) */) {
+  let clusterName = cluster.data.clusterName;
+  if (debug) console.log(`  - getting list of container instances (cluster=${clusterName})`);
+  let instanceForContainer = [ ]; // containerInstanceArn -> node of EC2 instance
+  myAWS.ecs().listContainerInstances({
+    cluster: clusterName
+  }, function(err, containerInstanceList) {
+    if (err) return callback(err);
+    if (containerInstanceList.containerInstanceArns.length == 0) {
+      return callback(null, instanceForContainer);
+    }
+    var params = {
+      cluster: clusterName,
+      containerInstances: containerInstanceList.containerInstanceArns
+    };
+    if (debug) console.log(`  - getting container instance details (cluster=${clusterName}, ${containerInstanceList.containerInstanceArns.length} container instances)`);
+    myAWS.ecs().describeContainerInstances(params, function(err, containerDefinitions) {
+      if (err) return callback(err);
+
+      // Add the container instances to our graph
+      // console.log(`containerDefinitions=`, containerDefinitions);
+      containerDefinitions.containerInstances.forEach(function(containerDef) {
+        let instance = findInstanceById(containerDef.ec2InstanceId)
+        cluster.addChild(instance);
+
+        // Remember this, so we can create a link between tasks and this EC2 instance
+        instanceForContainer[containerDef.containerInstanceArn] = instance;
+      }); // next containerInstance
+      return callback(null, instanceForContainer);
+    });//- describeContainerInstances
+  });//- listContainerInstances
+};//- function loadContainerInstancesForCluster()
+
+/*
+*   Get the services for this cluster.
+*
+*   https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#describeServices-property
+*/
+function loadServicesForCluster(cluster, callback/* (err) */) {
+  if (debug) console.log(`  - getting list of services for cluster ${cluster.data.clusterName}`);
+
+  let clusterName = cluster.data.clusterName;
+  let clusterArn = cluster.data.clusterArn;
+  myAWS.ecs().listServices({
+    cluster: clusterName
+  }, function(err, serviceListData) {
+    if (err) return callback(err);
+    if (serviceListData.serviceArns.length === 0) {
+      return callback(null)
+    }
+    if (debug) console.log('  - getting service details');
+    myAWS.ecs().describeServices({
+      services: serviceListData.serviceArns,
+      cluster: clusterArn
+    }, function(err, serviceDefinitions) {
+      if (err) return callback(err);
+
+      // console.log('serviceDefinitions=', serviceDefinitions);
+      // console.log(`Got services`);
+      serviceDefinitions.services.forEach(serviceDef => {
+
+        // Next Service
+        // console.log('serviceDef=', serviceDef);
+        let service = graph.findNode(types.SERVICE, serviceDef.serviceName, serviceDef)
+        cluster.addChild(service);
+
+        // Find the load balancer nodes for this service.
+        serviceDef.loadBalancers.forEach(lb => {
+          let tg = findTargetGroupByARN(lb.targetGroupArn);
+          if (tg) {
+            tg.addChild(service);
+            // service.addChild(tg);
+          } else {
+            console.log(`ERROR: Service ${service.key} refers to unknown target group ${lb.targetGroupArn}`);
+          }
+        }); //- next load balancer
+      }); //- next service
+      return callback(null);
+    }); //- describeServices
+  }); //- listServices
+}//- loadServicesForCluster
+
+/*
+*   Get the task definitions for a cluster.
+*/
+function loadTasksForCluster(clusterName, callback/* (err,taskDefinitions) */) {
+  if (debug) console.log(`  - getting list of tasks (cluster=${clusterName})`);
+  myAWS.ecs().listTasks({
+    cluster: clusterName
+  }, function(err, taskList) {
+    if (err) return callback(err);
+    // console.log('taskList=', taskList); // successful response
+    if (taskList.taskArns.length === 0) {
+      return callback(null, [ ]); // No tasks
+    }
+    var params = {
+      tasks: taskList.taskArns,
+      cluster: clusterName
+    };
+    if (debug) console.log('- getting task details');
+    myAWS.ecs().describeTasks(params, function(err, taskDefinitions) {
+      if (err) return callback(err);
+
+      // Have the task definitions
+      return callback(null, taskDefinitions.tasks);
+    }); //- describeTasks
+  }); //- listTasks
 }
 
 function downloadClusters(callback) {
@@ -677,10 +790,10 @@ function downloadClusters(callback) {
   *
   *   See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#listClusters-property
   */
-  if (debug) console.log('- getting list of clusters');
+  if (debug) console.log('  - getting list of clusters');
   myAWS.ecs().listClusters({ }, function(err, clusterList) {
     if (err) return callback(err);
-    if (debug) console.log('- getting cluster details');
+    if (debug) console.log('  - getting cluster details');
     myAWS.ecs().describeClusters({
       clusters: clusterList.clusterArns
     }, function(err, clusterDefinitions) {
@@ -697,95 +810,24 @@ function downloadClusters(callback) {
 
         // Next Cluster
         let clusterDef = clusterDefinitions.clusters[index]
-        let cluster = graph.findNode(graph.CLUSTER, clusterDef.clusterName, clusterDef)
-        // console.log('Got cluster ' + clusterDef.clusterName);
+        let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
+        console.log('Got cluster ' + clusterDef.clusterName);
 
         /*
         *   Get the container instances for this cluster.
         */
-        if (debug) console.log(`- getting list of container instances (cluster=${clusterDef.clusterName})`);
-        myAWS.ecs().listContainerInstances({
-          cluster: clusterDef.clusterName
-        }, function(err, containerInstanceList) {
+        loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
           if (err) return callback(err);
-          var params = {
-            cluster: clusterDef.clusterName,
-            containerInstances: containerInstanceList.containerInstanceArns
-          };
-          if (debug) console.log(`- getting container instance details (cluster=${clusterDef.clusterName}, ${containerInstanceList.containerInstanceArns.length} container instances)`);
-          myAWS.ecs().describeContainerInstances(params, function(err, containerDefinitions) {
-            if (err) return callback(err);
 
-            // Add the container instances to our graph
-            // console.log(`containerDefinitions=`, containerDefinitions);
-            let instanceForContainer = [ ]; // containerInstanceArn -> node of EC2 instance
-            containerDefinitions.containerInstances.forEach(function(containerDef) {
-              let instance = findInstanceById(containerDef.ec2InstanceId)
-              cluster.addChild(instance);
-
-              // Remember this, so we can create a link between tasks and this EC2 instance
-              instanceForContainer[containerDef.containerInstanceArn] = instance;
-            })
-
-            /*
-            *   Get the services for this cluster.
-            *
-            *   https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#describeServices-property
-            */
-            if (debug) console.log('- getting list of services');
-            myAWS.ecs().listServices({
-              cluster: clusterDef.clusterName
-            }, function(err, serviceListData) {
+            loadServicesForCluster(cluster, (err) => {
               if (err) return callback(err);
-              if (debug) console.log('- getting service details');
-              myAWS.ecs().describeServices({
-                services: serviceListData.serviceArns,
-                cluster: clusterDef.clusterArn
-              }, function(err, serviceDefinitions) {
-                if (err) return callback(err);
 
-                // console.log('serviceDefinitions=', serviceDefinitions);
-                // console.log(`Got services`);
-                serviceDefinitions.services.forEach(serviceDef => {
-
-                  // Next Service
-                  // console.log('serviceDef=', serviceDef);
-                  let service = graph.findNode(graph.SERVICE, serviceDef.serviceName, serviceDef)
-                  cluster.addChild(service);
-
-                  // Find the load balancer nodes for this service.
-                  serviceDef.loadBalancers.forEach(lb => {
-                    let tg = findTargetGroupByARN(lb.targetGroupArn);
-                    if (tg) {
-                      tg.addChild(service);
-                      // service.addChild(tg);
-                    } else {
-                      console.log(`ERROR: Service ${service.key} refers to unknown target group ${lb.targetGroupArn}`);
-                    }
-                  }); //- next load balancer
-                }); //- next service
-
-                /*
-                *   Get the tasks for this cluster.
-                */
-                // console.log(`Getting tasks for cluster ${clusterDef.clusterName}`);
-                if (debug) console.log(`- getting list of tasks (cluster=${clusterDef.clusterName})`);
-                myAWS.ecs().listTasks({
-                  cluster: clusterDef.clusterName
-                }, function(err, taskList) {
+                loadTasksForCluster(clusterDef.clusterName, (err, taskDefinitions) => {
                   if (err) return callback(err);
-                  // console.log('taskList=', taskList); // successful response
-                  var params = {
-                    tasks: taskList.taskArns,
-                    cluster: clusterDef.clusterName
-                  };
-                  if (debug) console.log('- getting task details');
-                  myAWS.ecs().describeTasks(params, function(err, taskDefinitions) {
-                    if (err) return callback(err);
 
                     // Loop through the task definitions.
                     // console.log(`taskDefinitions=`, taskDefinitions);
-                    taskDefinitions.tasks.forEach(taskDef => {
+                    taskDefinitions.forEach(taskDef => {
                       // console.log(`Task ${taskDef.taskDefinitionArn}`);
                       // console.log(`  startedBy:`, taskDef.startedBy);
                       // console.log(`  Containers:`, taskDef.containers);
@@ -806,7 +848,7 @@ function downloadClusters(callback) {
                         // console.log('checking services');
                         cluster.children.forEach(function(childKey) {
                           let child = graph.nodeWithKey(childKey);
-                          if (child.type === graph.SERVICE) {
+                          if (child.type === types.SERVICE) {
                             let service = child;
                             let deployments = service.data.deployments;
                             for (var cnt = 0; cnt < deployments.length; cnt++) {
@@ -822,7 +864,7 @@ function downloadClusters(callback) {
                       }//- startedBy != null
 
                       // Define the task, and add it to it's parent.
-                      let task = graph.findNode(graph.TASK, taskName, taskDef);
+                      let task = graph.findNode(types.TASK, taskName, taskDef);
                       parentOfTask.addChild(task);
 
                       // Link the task to the containerInstance's EC2 instance.
@@ -836,12 +878,9 @@ function downloadClusters(callback) {
                     }); //- next task
 
                     return nextCluster(index + 1)
-                  }); //- describeTasks
-                }); //- listTasks
-              }); //- describeServices
-            }); //- listServices
-          }); //- describeContainerInstances
-        }); //- listContainerInstances
+                }); //- loadTasksForCluster
+            }); //- loadServicesForCluster
+        }); //- loadContainerInstancesForCluster
       })(0); // next cluster
     }); //- describeClusters
   }); //- listClusters

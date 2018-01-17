@@ -88,7 +88,11 @@ export default {
     NodeCard
   },
   async asyncData (context) {
-    return GraphClient(context.params.id, context.error)
+    console.log(`Start asyncData in home page (index.js)`)
+    /* return GraphClient(context.params.id, context.error) */
+    let rv = GraphClient(context.params.id, context.error)
+    console.log(`After asyncData in home page (index.js)`)
+    return rv
   },
   methods: {
     isUnknownType: function (n) {

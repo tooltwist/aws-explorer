@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import graph from '../misc/graph'
 
 const router = Router()
 

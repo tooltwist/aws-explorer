@@ -52,7 +52,7 @@ export default {
     let params = context.params
     let error = context.error
     // called every time before loading the component
-    console.log('\n\n*** asyncData()\n*** Context: ', context)
+    console.log('\n\n*** asyncData() 4\n*** Context: ', context)
     // return axios.get('/api/users/0')
     // return axios.get('/api/graph/Load Balancer::ttcf-dcprd-alb-ch4dcprd')
     let region = 'ap-southeast-1'

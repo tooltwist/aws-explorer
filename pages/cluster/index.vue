@@ -8,8 +8,8 @@
 
   .content
     h3 Here are our vpcs
-    .vpc(v-for="node in list" style="display:block;")
-      div(v-if="node.type == 'Virtual Private Cloud'")
+    .columns
+      .column(v-for="node in list" style="display:block;" v-if="node.type == 'Cluster'")
         // | {{node.key}} ,{{node.type}}.
         // br
         node-card(v-bind:node="node")

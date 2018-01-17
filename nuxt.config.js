@@ -11,7 +11,7 @@ module.exports = {
       { hid: 'description', name: 'description', content: 'Nuxt.js project' }
     ],
     css: [
-      '~/node_modules/bulma/css/bulma.css'
+      // '~/node_modules/bulma/css/bulma.css'
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
@@ -23,7 +23,13 @@ module.exports = {
   /*
   ** Global CSS
   */
-  css: ['~/assets/css/main.css', '~/node_modules/vis/dist/vis-network.min.css'],
+  css: [
+    '~/assets/css/main.css',
+    '~/node_modules/vis/dist/vis-network.min.css',
+    // node.js module but we specify the pre-processor
+    { src: 'bulma/bulma.sass', lang: 'sass' },
+    { src: 'font-awesome/scss/font-awesome.scss', lang: 'scss' },
+  ],
   /*
   ** Add axios globally
   */

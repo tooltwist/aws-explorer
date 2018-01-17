@@ -1,33 +1,8 @@
 const myAWS = require('./myAWS')
 const download = require('./download')
+const types = require('../../lib/types')
 
 var nodeIndex = [ ]; // key -> AWSNode
-
-// AWS Node types
-const SUBNET = 'Subnet'
-const SECGRP = 'Security Group'
-const VPC = 'Virtual Private Cloud'
-const NAT = 'NAT Gateway'
-const IGW = 'Internet Gateway'
-const INSTANCE = 'EC2 Instance'
-const JUMPBOX = 'Jumpbox' // EC2 Instance, with Tag Name = '*-jumpbox-*'
-const IMAGE = 'AMI Image'
-const AZ = 'Availability Zone'
-const ADDR = 'Elastic IP'
-const COSTCD = 'Cost Code'
-const LOGICAL = 'Logical Grouping'
-const PUBLICIP = 'Public IP Address'
-const KEYPAIR = 'Key Pair'
-const NETIFACE = 'Network Interface'
-const ROUTETABLE = 'Route Table'
-const ALB = 'Load Balancer'
-const TARGETGRP = 'Target Group'
-const LISTENER = 'Listener'
-const RULE = 'Rule'
-const CLUSTER = 'Cluster'
-const SERVICE = 'Service'
-const TASK = 'Task'
-
 
 
 class AWSNode {
@@ -76,34 +51,34 @@ class AWSNode {
     let ec2Home = 'https://' + myAWS.region() + '.console.aws.amazon.com/ec2/v2/home?region=' + myAWS.region()
     let vpcHome = 'https://' + myAWS.region() + '.console.aws.amazon.com/vpc/home?region=' + myAWS.region()
     switch (this.type) {
-      case SUBNET:
+      case types.SUBNET:
         return vpcHome + '#subnets:filter=' + this.id
-      case SECGRP:
+      case types.SECGRP:
         return ec2Home + '#SecurityGroups:groupId=' + this.id
-      case VPC:
+      case types.VPC:
         return vpcHome + '#vpcs:filter=' + this.id
-      case NAT:
+      case types.NAT:
         return vpcHome + '#NatGateways:search=' + this.id + ';sort=natGatewayId'
-      case IGW:
+      case types.IGW:
         return vpcHome + '#igws:filter=' + this.id
-      case INSTANCE:
+      case types.INSTANCE:
         return ec2Home + '#Instances:search=' + this.id
-      // case IMAGE = 'AMI Image'
-      // case AZ = 'Availability Zone'
-      case ADDR:
+      // case types.IMAGE = 'AMI Image'
+      // case types.AZ = 'Availability Zone'
+      case types.ADDR:
         return ec2Home + '#Addresses:search=' + this.id
-      // case COSTCD = 'Cost Code'
-      // case LOGICAL = 'Logical Grouping'
-      // case PUBLICIP = 'Public IP Address'
-      case KEYPAIR:
+      // case types.COSTCD = 'Cost Code'
+      // case types.LOGICAL = 'Logical Grouping'
+      // case types.PUBLICIP = 'Public IP Address'
+      case types.KEYPAIR:
         return ec2Home + '#KeyPairs:search=' + this.id
-      case NETIFACE:
+      case types.NETIFACE:
         return ec2Home + '#NIC:networkInterfaceId=' + this.id
-      case ROUTETABLE:
+      case types.ROUTETABLE:
         return vpcHome + '#routetables:filter=' + this.id
-      case ALB:
+      case types.ALB:
         return ec2Home + '#LoadBalancers:search=' + this.id
-      case TARGETGRP:
+      case types.TARGETGRP:
         return ec2Home + '#TargetGroups:search=' + this.id
       default:
         return null
@@ -253,10 +228,10 @@ function sortAlphabetic(arr) {
   return sorted
 }
 
-function downloadRegion(region, withHealthchecks, callback) {
-  console.log(`graph.downloadRegion(${region}, ${withHealthchecks})`);
-  download.downloadEverything(region, withHealthchecks, callback);
-}
+// function downloadRegion(region, withHealthchecks, callback) {
+//   console.log(`graph.downloadRegion(${region}, ${withHealthchecks})`);
+//   download.downloadEverything(region, withHealthchecks, callback);
+// }
 
 /*
  *  Return a list of environments
@@ -289,32 +264,32 @@ function environments() {
 }
 
 // Constants
-module.exports.SUBNET = SUBNET;
-module.exports.SECGRP = SECGRP;
-module.exports.VPC = VPC;
-module.exports.NAT = NAT;
-module.exports.IGW = IGW;
-module.exports.INSTANCE = INSTANCE;
-module.exports.JUMPBOX = JUMPBOX;
-module.exports.IMAGE = IMAGE;
-module.exports.AZ = AZ;
-module.exports.ADDR = ADDR;
-module.exports.COSTCD = COSTCD;
-module.exports.LOGICAL = LOGICAL;
-module.exports.PUBLICIP = PUBLICIP;
-module.exports.KEYPAIR = KEYPAIR;
-module.exports.NETIFACE = NETIFACE;
-module.exports.ROUTETABLE = ROUTETABLE;
-module.exports.ALB = ALB;
-module.exports.TARGETGRP = TARGETGRP;
-module.exports.LISTENER = LISTENER;
-module.exports.RULE = RULE;
-module.exports.CLUSTER = CLUSTER;
-module.exports.SERVICE = SERVICE;
-module.exports.TASK = TASK;
+// module.exports.SUBNET = SUBNET;
+// module.exports.SECGRP = types.SECGRP;
+// module.exports.VPC = types.VPC;
+// module.exports.NAT = types.NAT;
+// module.exports.IGW = types.IGW;
+// module.exports.INSTANCE = types.INSTANCE;
+// module.exports.JUMPBOX = types.JUMPBOX;
+// module.exports.IMAGE = types.IMAGE;
+// module.exports.AZ = types.AZ;
+// module.exports.ADDR = types.ADDR;
+// module.exports.COSTCD = types.COSTCD;
+// module.exports.LOGICAL = types.LOGICAL;
+// module.exports.PUBLICIP = types.PUBLICIP;
+// module.exports.KEYPAIR = types.KEYPAIR;
+// module.exports.NETIFACE = types.NETIFACE;
+// module.exports.ROUTETABLE = types.ROUTETABLE;
+// module.exports.ALB = types.ALB;
+// module.exports.TARGETGRP = types.TARGETGRP;
+// module.exports.LISTENER = types.LISTENER;
+// module.exports.RULE = types.RULE;
+// module.exports.CLUSTER = types.CLUSTER;
+// module.exports.SERVICE = types.SERVICE;
+// module.exports.TASK = types.TASK;
 
 // Functions
-module.exports.downloadRegion = downloadRegion;
+// module.exports.downloadRegion = downloadRegion;
 module.exports.findNode = findNode;
 module.exports.nodeWithKey = nodeWithKey;
 module.exports.dumpAll = dumpAll;

@@ -63,6 +63,7 @@ export default {
   text-align: center;
 } */
 
+/*
 .button, .button:visited
 {
   display: inline-block;
@@ -92,4 +93,5 @@ export default {
 .cc {
   background-color: yellow;
 }
+*/
 </style>

@@ -16,7 +16,7 @@ function cliInstances(region) {
     }
 
     // Collect just the EC2 Instances
-    let list = graph.nodes().filter(node => node.type === graph.INSTANCE)
+    let list = graph.nodes().filter(node => node.type === types.INSTANCE)
 
     // Patch on the name and other values
     list.forEach(node => {

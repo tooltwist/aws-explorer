@@ -2,9 +2,11 @@
   .top
     .card(style="min-width: 0%;")
       .link(v-if="idAsLabel === '' || idAsLabel === 'true'" rel="CSS")
-        router-link(v-bind:to="'/node/' + node.key") {{ node.id }}
+        router-link(v-bind:to="urlForNode(node)") {{ node.id }}
       .link(v-else rel="CSS")
-        router-link(v-bind:to="'/node/' + node.key") {{ node.key }}
+        //router-link(v-bind:to="'/node/' + node.key") {{ node.key }}
+        //br
+        router-link(v-bind:to="urlForNode(node)") {{ node.key }}
       .name {{ label }}
       .desc {{ description }}
 
@@ -14,6 +16,8 @@
 </template>
 
 <script>
+import urlForNode from '~/lib/urlForNode.js'
+
 export default {
   name: 'id',
   props: [
@@ -45,8 +49,14 @@ export default {
       return desc
     }
   },
+  methods: {
+    urlForNode: function (node) {
+      /* console.log('urlForNode() method') */
+      return urlForNode(node)
+    }
+  },
   created: function () {
-    console.log(this.node)
+    // console.log(this.node)
   }
 }
 </script>

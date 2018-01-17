@@ -1,6 +1,7 @@
 
 const myAWS = require('../server/misc/myAWS')
 const graph = require('../server/misc/graph')
+const types = require('../lib/types')
 const pad = require('../server/misc/util').pad
 const capitalize = require('../server/misc/util').capitalize
 const download = require('../server/misc/download')
@@ -17,7 +18,7 @@ function CliInstances(region) {
     }
 
     // Collect just the EC2 Instances
-    let list = graph.nodes().filter(node => (node.type === graph.INSTANCE || node.type === graph.JUMPBOX))
+    let list = graph.nodes().filter(node => (node.type === types.INSTANCE || node.type === types.JUMPBOX))
 
     // Patch on the name and other values
     list.forEach(node => {
@@ -29,7 +30,7 @@ function CliInstances(region) {
         if (tag.Key == 'Description') { node._description = tag.Value };
         if (tag.Key == 'Environment') { node._environment = tag.Value };
       })
-      node._isJumpbox = (node.type === graph.JUMPBOX) ? 1 : 0;
+      node._isJumpbox = (node.type === types.JUMPBOX) ? 1 : 0;
     });
 
     // Sort the instance nodes

@@ -1,12 +1,12 @@
 import { Router } from 'express'
 
 import users from './users'
-import graph from './graph'
+import graphApi from './graphApi'
 
 const router = Router()
 
 // Add USERS Routes
 router.use(users)
-router.use(graph)
+router.use(graphApi)
 
 export default router
