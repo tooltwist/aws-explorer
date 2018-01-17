@@ -6,7 +6,7 @@ var loadBalancersAreLoaded = false;
 var targetGroupsAreLoaded = false;
 var instancesAreLoaded = false;
 
-const debug = false;
+const debug = true;
 
 function findTargetGroupByARN(arn) {
   // console.log('findTargetGroupByARN(' + arn + ')');
@@ -698,7 +698,7 @@ function downloadClusters(callback) {
         // Next Cluster
         let clusterDef = clusterDefinitions.clusters[index]
         let cluster = graph.findNode(graph.CLUSTER, clusterDef.clusterName, clusterDef)
-        // console.log('Got cluster ' + clusterDef.clusterName);
+        console.log('Got cluster ' + clusterDef.clusterName);
 
         /*
         *   Get the container instances for this cluster.
