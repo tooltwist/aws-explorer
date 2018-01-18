@@ -14,36 +14,22 @@ let cache = LRU(10) // sets just the max size to 10 items (actually size, but de
 
 const router = Router()
 
-// // Mock Users
-// const users = [
-//   { name: 'Alexandre', stuff: 'Chicken shit' },
-//   { name: 'Pooya', stuff: 'Likes frisbee' },
-//   { name: 'Sébastien', stuff: 'Sleeps a lot' },
-//   { name: 'Phil', stuff: 'Likes VueJS' },
-// ]
-//
-// /* GET users listing. */
-// router.get('/graph', function (req, res, next) {
-//   console.log('API /graph')
-//   res.json(users)
-// })
-
 /* GET user by ID. */
 router.get('/graph/:region', function (req, res, next) {
-  console.log('API /graph/:region')
-  // const id = parseInt(req.params.id)
-  // const id = 0
-  // if (id >= 0 && id < users.length) {
-  //   res.json(users[id])
-  // } else {
-  //   res.sendStatus(404)
-  // }
+  console.log('API /graph/:region', req.params)
+  let region = req.params.region
 
   // See if we already have what we need.
 
-  console.log(`Region is ${req.params.region}`);
+  console.log(`API: Region is ${region}`);
 
-  let value = cache.get("key") // "value"
+  let cacheKey = region
+
+  let value = cache.get(cacheKey) // "value"
+  if (req.query.reload) {
+    console.log('Reloading cache')
+    value = null
+  }
   if (value) {
     // console.log('Have value in cache:\n', value)
     // console.log('RETURNING CACHED VALUE');
@@ -52,9 +38,9 @@ router.get('/graph/:region', function (req, res, next) {
   }
 
 
-  download.downloadEverything('ap-southeast-1', false, err => {
+  download.downloadEverything(region, false, err => {
     if (err) {
-      console.log('Error downloading region', err, err.stack);
+      console.log(`Error downloading region ${region}`, err, err.stack);
       res.sendStatus(500)
       return;
     }
@@ -66,10 +52,7 @@ router.get('/graph/:region', function (req, res, next) {
     }
 
     console.log('Setting value in the cache')
-    cache.set("key", obj)
-
-    // let node = index['Load Balancer::ttcf-dcprd-alb-ch4dcprd']
-    // console.log('\n\nlode on server:', node);
+    cache.set(cacheKey, obj)
 
     res.json(obj)
   });

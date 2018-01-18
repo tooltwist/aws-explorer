@@ -52,7 +52,8 @@ export default {
   methods: {
     urlForNode: function (node) {
       /* console.log('urlForNode() method') */
-      return urlForNode(node)
+      let region = this.$store.state.region
+      return urlForNode(region, node)
     }
   },
   created: function () {

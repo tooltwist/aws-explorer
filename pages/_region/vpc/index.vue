@@ -12,7 +12,7 @@
       .column.vpc(v-for="vpc in list" v-if="vpc.type == 'Virtual Private Cloud'")
         .top
           .card(style="min-width: 0%;")
-            router-link(v-bind:to="'/node/' + vpc.key") {{ vpc.key }}
+            router-link(v-bind:to="'/' + $store.state.region + '/node/' + vpc.key") {{ vpc.key }}
             br
             | {{ vpc.id }}
             br
@@ -46,8 +46,10 @@ export default {
     NodeCard
   },
   asyncData (context) {
-    // called every time before loading the component
-    return GraphClient(context.params.id, context.error)
+    let region = context.params.region
+    let nodeId = null
+    context.store.commit('setRegion', region)
+    return GraphClient(region, nodeId, false, context.error)
   },
   fetch () {
     // The `fetch` method is used to fill the store before rendering the page

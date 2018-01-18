@@ -55,8 +55,11 @@ export default {
   components: {
   },
   data: function () {
+    let region = this.$route.params.region
+    // context.store.commit('setRegion', region)
+
     return {
-      region: 'ap-southeast-1'
+      region: region
     }
   },
   head () {

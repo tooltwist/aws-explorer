@@ -8,11 +8,11 @@
     .tabs
       ul
         li
-          nuxt-link(v-bind:to="'/instance/' + node.key") Relationships
+          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id") Relationships
         li.is-active
-          nuxt-link(v-bind:to="'/instance/' + node.key + '/ecs'") ECS
+          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/ecs'") ECS
         li
-          nuxt-link(v-bind:to="'/instance/' + node.key + '/network'") Network
+          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/network'") Network
     .container
       //  .columns
       //    .column.has-text-centered(style="min-width: 0;")
@@ -49,13 +49,15 @@ export default {
     VisNetwork
   },
   asyncData (context) {
+    let region = context.params.region
     let nodeId = context.params.id
     let prefix = types.INSTANCE + '::'
     if (!nodeId.startsWith(prefix)) {
       nodeId = prefix + nodeId
     }
     console.log('nodeId=' + nodeId)
-    return GraphClient(nodeId, context.error)
+    context.store.commit('setRegion', region)
+    return GraphClient(region, nodeId, false, context.error)
   },
   // fetch () {
   //   // The `fetch` method is used to fill the store before rendering the page

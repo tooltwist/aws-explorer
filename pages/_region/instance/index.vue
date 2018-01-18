@@ -2,23 +2,18 @@
 .page
   .container.has-text-centered
     //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-    h1.title Node
+    h1.title EC2 Instances
     hr
     br
 
   .content
-    h3 Here are our vpcs
-    .columns
-      .column(v-for="node in list" style="display:block;" v-if="node.type == 'Cluster'")
-        // | {{node.key}} ,{{node.type}}.
-        // br
-        node-card(v-bind:node="node")
-        // node-card(v-if="node.type === 'Virtual Private Cloud' v-bind:node="node")
+    .vpc(v-for="node in list" style="display:block;")
+      div(v-if="node.type == 'EC2 Instance'")
+        node-card(v-bind:node="node" id-as-label)
 </template>
 
 <script>
 import NodeCard from '~/components/Card.vue'
-// import Logo from '~/components/Logo.vue'
 import GraphClient from '~/lib/graphClient.js'
 
 export default {
@@ -26,8 +21,10 @@ export default {
     NodeCard
   },
   asyncData (context) {
-    // called every time before loading the component
-    return GraphClient(context.params.id, context.error)
+    let region = context.params.region
+    let nodeId = null
+    context.store.commit('setRegion', region)
+    return GraphClient(region, nodeId, false, context.error)
   },
   fetch () {
     // The `fetch` method is used to fill the store before rendering the page

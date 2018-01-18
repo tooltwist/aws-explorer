@@ -21,16 +21,11 @@ export default {
     VisNetwork
   },
   asyncData (context) {
-    // Hack. This page gets loaded when the map file for bulma is loaded.
-    // We don't want to load data in this case.
-    // if (context.params.id === 'bulma.css.map') {
-    //   console.log('Ignoring asyncData (route for bulma.css.map)')
-    //   return
-    // }
-
-    console.log('LOADING NODE ', context.params)
-
-    return GraphClient(context.params.id, context.error)
+    let region = context.params.region
+    console.log('GRAPH PAGE. Region is ' + region)
+    let nodeId = null
+    context.store.commit('setRegion', region)
+    return GraphClient(region, nodeId, false, context.error)
   },
   methods: {
     useAsInitialNode: function (key, index) {

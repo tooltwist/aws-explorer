@@ -1,29 +1,40 @@
-<template lang="pug">
-.page
-  .container.has-text-centered
-    //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-    h1.title EC2 Instances
-    hr
-    br
-
-  .content
-    .vpc(v-for="node in list" style="display:block;")
-      div(v-if="node.type == 'EC2 Instance'")
-        node-card(v-bind:node="node" id-as-label)
+<template>
+  <section class="container">
+    <div>
+      <h1 class="title">
+        Environment ENV
+      </h1>
+      <h2 class="subtitle">
+        {{environment}}
+      </h2>
+      <div class="links">
+        <!--
+        <a href="https://nuxtjs.org/" target="_blank" class="button--green">Option A</a>
+        <a href="https://github.com/nuxt/nuxt.js" target="_blank" class="button--grey">Option B</a>
+      -->
+        <router-link to="/" class="button--grey">Home</router-link>
+        <router-link to="/stuff" class="button--grey">Stuff</router-link>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script>
-import NodeCard from '~/components/Card.vue'
-// import Logo from '~/components/Logo.vue'
 import GraphClient from '~/lib/graphClient.js'
+import Logo from '~/components/Logo.vue'
 
 export default {
   components: {
-    NodeCard
+    Logo
   },
   asyncData (context) {
     // called every time before loading the component
-    return GraphClient(context.params.id, context.error)
+    // console.log('asyncData()', context.route.params.env)
+    // return { environment: context.route.params.env }
+    let region = context.params.region
+    let nodeId = context.params.env
+    context.store.commit('setRegion', region)
+    return GraphClient(region, nodeId, false, context.error)
   },
   fetch () {
     // The `fetch` method is used to fill the store before rendering the page
@@ -43,7 +54,7 @@ export default {
 
 <style>
 .container {
-  //min-height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -54,7 +65,7 @@ export default {
   font-family: "Quicksand", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* 1 */
   display: block;
   font-weight: 300;
-  font-size: 42px;
+  font-size: 100px;
   color: #35495e;
   letter-spacing: 1px;
 }
@@ -65,10 +76,6 @@ export default {
   color: #526488;
   word-spacing: 5px;
   padding-bottom: 15px;
-}
-
-.vpc {
-  max-width: 300px;
 }
 
 .links {

@@ -1,12 +1,15 @@
 <template lang="pug">
 .page
-  h2 Help Topics
-  h3 Overview of AWS
+  br
+  h1.title Help Topics
+  br
+  
+  h3.subtitle Overview of AWS
   | &nbsp;&nbsp;&nbsp;
   a(href="https://aws.amazon.com/ecs/getting-started/" target="_blank") Getting Started
   br
 
-  h3 Security
+  h3.subtitle Security
   | &nbsp;&nbsp;&nbsp;
   a(href="https://cloudacademy.com/blog/aws-security-groups-instance-level-security/" target="_blank")
     | Instance level security (Security groups)
@@ -20,25 +23,25 @@
     | How to build HIPAA compliant applications on AWS
   br
 
-  h3 Load Balancing
+  h3.subtitle Load Balancing
   | &nbsp;&nbsp;&nbsp;
   a(href="https://cloudacademy.com/blog/application-load-balancer-vs-classic-load-balancer/" target="_blank")
     | Application Load Balancer vs Classic Load Balancer
   br
 
-  h3 Containers
+  h3.subtitle Containers
   | &nbsp;&nbsp;&nbsp;
   a(href="https://cloudacademy.com/blog/amazon-ec2-container-service-docker-aws/" target="_blank")
     | Amazon EC2 Container Service and Elastic Beanstalk: Docker on AWS
   br
 
-  h3 Cloudformation
+  h3.subtitle Cloudformation
   | &nbsp;&nbsp;&nbsp;
   a(href="https://cloudacademy.com/blog/cloudformation-deployment-tool/" target="_blank")
     | CloudFormation: the perfect Cloud Deployment tool for AWS?
   br
 
-  h3 Deployment
+  h3.subtitle Deployment
   | &nbsp;&nbsp;&nbsp;
   a(href="https://aws.amazon.com/blogs/compute/continuous-deployment-to-amazon-ecs-using-aws-codepipeline-aws-codebuild-amazon-ecr-and-aws-cloudformation/" target="_blank")
     | Continuous Deployment to Amazon ECS using AWS CodePipeline, AWS CodeBuild, Amazon ECR, and AWS CloudFormation
@@ -64,7 +67,7 @@
     | Introducing the AWS for DevOps Walkthrough
   br
 
-  h3 Tooltwist
+  h3.subtitle Tooltwist
   | &nbsp;&nbsp;&nbsp;
   a(href="http://tooltwist.com" target="_blank")
     | Tooltwist website
@@ -87,11 +90,6 @@
 export default {
   components: {
   },
-  data: function () {
-    return {
-
-    }
-  },
   head () {
     return {
       title: 'Help'
@@ -101,8 +99,12 @@ export default {
 </script>
 
 <style scoped>
+h3.subtitle {
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
 
-h3 {
+zzzh3 {
   margin-top: 10px;
   font-weight: bold;
 }

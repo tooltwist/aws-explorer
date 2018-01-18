@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import axios from '~/plugins/axios'
+import GraphClient from '~/lib/graphClient.js'
 import NodeCard from '~/components/Card.vue'
 
 export default {
@@ -36,50 +36,11 @@ export default {
   components: {
     NodeCard
   },
-  // data: () => {
-  //   return {
-  //     nodeId: null
-  //   }
-  // },
   asyncData (context) {
-    // Hack. This page gets loaded when the map file for bulma is loaded.
-    // We don't want to load data in this case.
-    if (context.params.id === 'bulma.css.map') {
-      console.log('Ignoring asyncData (route for bulma.css.map)')
-      return
-    }
-    // asyncData ({ params, error }) {
-    let params = context.params
-    let error = context.error
-    // called every time before loading the component
-    console.log('\n\n*** asyncData() 2\n*** Context: ', context)
-    // return axios.get('/api/users/0')
-    // return axios.get('/api/graph/Load Balancer::ttcf-dcprd-alb-ch4dcprd')
-    let region = 'ap-southeast-1'
-    return axios.get('/api/graph/' + region)
-      .then((res) => {
-        // return { gnode: { id: 'Hello' } }
-        // // console.log('Have graph data: ', res.data)
-        // let node = res.data['Load Balancer::ttcf-dcprd-alb-ch4dcprd']
-        let node = res.data[params.id]
-        // console.log('\n\nlode on node page:', node)
-        // Create a list
-        let list = [ ]
-        for (var key in res.data) {
-          list.push(res.data[key])
-        }
-
-        return { node: node, index: res.data, list: list }
-        // console.log('asyncData()', context.route.params.node)
-        // return {
-        //   nodeId: context.route.params.node,
-        //   node: node
-        // }
-      })
-      .catch((e) => {
-        console.log('Could not get graph data', e)
-        error({ statusCode: 404, message: 'Graph not found' })
-      })
+    let region = context.params.region
+    let nodeId = context.params.id
+    context.store.commit('setRegion', region)
+    return GraphClient(region, nodeId, false, context.error)
   },
   // fetch () {
   //   // The `fetch` method is used to fill the store before rendering the page

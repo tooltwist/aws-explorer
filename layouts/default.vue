@@ -23,21 +23,33 @@
             //- navbar-start
 
             .navbar-end
-              a.navbar-item(href='/') Index
-              a.navbar-item(href='/instance') Instances
-              a.navbar-item(href='/cluster') Clusters
-              a.navbar-item(href='/vpc') Networks
-              a.navbar-item(href='/environment') Environment
-              a.navbar-item(href='/network') Graph
-              a.navbar-item(href='/awslinks') AWS Links
-              a.navbar-item(href='/help') Help
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/'") Index
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/instance'") Instances
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/cluster'") Clusters
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/vpc'") Networks
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/environment'") Environment
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/graph'") Graph
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/awslinks'") AWS Links
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/help'") Help
+              a.navbar-item(v-on:click="reload")
+                span.icon
+                  i.fas.fa-home
+                | reload
+                //.icon.is-small.fas.fa-redo
+              .navbar-item
+                div.field
+                  //label.label Region
+                  .control
+                    .select
+                      select.my-region-select(v-model="selectedRegion" v-on:change="changeRegion")
+                        option(v-for="region in regions" v-if="region.public" v-bind:value="region.code")
+                          | {{region.code}} ({{region.name}})
               //- a
             //- navbar-end
           //- navbar-menu
         //- container
       //- nav
     //- header
-
 
     .container
       nuxt
@@ -46,10 +58,53 @@
 
 <script>
 import MyFooter from '~/components/Footer.vue'
+import Regions from 'aws-regions'
+import myAWS from '~/server/misc/myAWS'
+
+var reloadCount = 1
 
 export default {
   components: {
     MyFooter
+  },
+  data: function () {
+    let regions = Regions.list()
+    // let currentRegion = myAWS.region()
+    return {
+      regions: regions,
+      selectedRegion: this.$route.params.region
+    }
+  },
+  computed: {
+    currentRegion: () => {
+      let region = myAWS.region()
+      if (region) {
+        console.log('Current region is ' + region)
+        return region
+      }
+      return 'ap-southeast-1'
+      // return ''
+    }
+  },
+  methods: {
+    changeRegion: function () {
+      let region = this.selectedRegion
+      console.log(`Change region to ${region}`)
+      this.$store.commit('setRegion', region)
+
+      let path = `/${region}/`
+      this.$router.push(path)
+      return true
+    },
+    reload: function () {
+      // Reload the current region's data
+      let region = this.$store.state.region
+      let path = `/${region}`
+      console.log('Reload!')
+      console.log('route to', path)
+      this.$router.push({ path: path, query: { reload: true, s: reloadCount++ } })
+      return true
+    }
   }
 }
 </script>
@@ -94,4 +149,12 @@ export default {
   background-color: yellow;
 }
 */
+
+.my-region-select {
+  margin-top: 5px;
+  font-size: 13px !important;
+  //color: red !important;
+  width: 210px;
+}
+
 </style>

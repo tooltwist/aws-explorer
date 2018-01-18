@@ -1,80 +1,231 @@
 <template lang="pug">
   .columns
-    .column.is-four-fifths
+    .column.is-two-thirds
       div#mynetwork
-    .column
-      label.checkbox
-        input(type='checkbox', :checked="vpcs" v-on:click='onchange("vpcs")')
-        |  VPCs ({{vpcs}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="availability" v-on:click='onchange("availability")')
-        |  Availability Zones ({{availability}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="subnets" v-on:click='onchange("subnets")')
-        |  Subnets ({{subnets}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="internet" v-on:click='onchange("internet")')
-        |  Internet Gateway ({{internet}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="route" v-on:click='onchange("route")')
-        |  Route Tables ({{route}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="natGateways" v-on:click='onchange("natGateways")')
-        |  NAT Gateways ({{natGateways}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="networkInterfaces" v-on:click='onchange("networkInterfaces")')
-        |  Network Interfaces ({{networkInterfaces}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="elastic" v-on:click='onchange("elastic")')
-        |  Elastic IPs ({{elastic}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="public" v-on:click='onchange("public")')
-        |  Public IP Addresses ({{public}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="secgrp" v-on:click='onchange("secgrp")')
-        |  Security Group ({{secgrp}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="instances" v-on:click='onchange("instances")')
-        |  Instances ({{instances}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="jumpboxMode" v-on:click='onchange("jumpboxMode")')
-        |  Jumpboxes ({{jumpboxMode}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="ami" v-on:click='onchange("ami")')
-        |  AMI Images ({{ami}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="key" v-on:click='onchange("key")')
-        |  Key Pairs ({{key}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="load" v-on:click='onchange("load")')
-        |  Load Balancers ({{load}})
-        br
-      label.checkbox
-        input(type='checkbox', :checked="target" v-on:click='onchange("target")')
-        |  Target Groups ({{target}})
-      label.checkbox
-        input(type='checkbox', :checked="clusterMode" v-on:click='onchange("clusterMode")')
-        |  Clusters ({{clusterMode}})
-      label.checkbox
-        input(type='checkbox', :checked="serviceMode" v-on:click='onchange("serviceMode")')
-        |  Services ({{serviceMode}})
-      label.checkbox
-        input(type='checkbox', :checked="taskMode" v-on:click='onchange("taskMode")')
-        |  Tasks ({{taskMode}})
+    .column.my-mode-selectors
+      .columns
+        .column
+          |
+          .columns
+            .column
+              | Option
+          .columns
+            .column
+              | VPCs:
+          .columns
+            .column
+              | Subnets:
+          .columns
+            .column
+              | Availability Zone:
+          .columns
+            .column
+              | Internet Gateway:
+          .columns
+            .column
+              | Route Tables:
+          .columns
+            .column
+              | NAT Gateways:
+          .columns
+            .column
+              | Network Interfaces:
+          .columns
+            .column
+              | Elastic IPs:
+          .columns
+            .column
+              | Public IP Addresses:
+          .columns
+            .column
+              | Security Group:
+          .columns
+            .column
+              | Instances:
+          .columns
+            .column
+              | Jumpboxes:
+          .columns
+            .column
+              | AMI Images:
+          .columns
+            .column
+              | Key Pairs:
+          .columns
+            .column
+              | Load Balancers:
+          .columns
+            .column
+              | Target Groups:
+          .columns
+            .column
+              | Clusters:
+          .columns
+            .column
+              | Services:
+          .columns
+            .column
+              | Tasks:
+        .column
+          .columns
+            .column
+              | S
+            .column
+              | H
+            .column
+              | E
+          //- VPCs
+          .columns
+            .column
+              input(type='radio', id='vpcs-show' value='show' v-model='vpcs')
+            .column
+              input(type='radio', id='vpcs-hide' value='hide' v-model='vpcs')
+            .column
+              input(type='radio', id='vpcs-expand' value='expand' v-model='vpcs')
+          //- Subnets
+          .columns
+            .column
+              input(type='radio', id='subnets-show' value='show' v-model='subnets')
+            .column
+              input(type='radio', id='subnets-hide' value='hide' v-model='subnets')
+            .column
+              input(type='radio', id='subnets-expand' value='expand' v-model='subnets')
+          //- Availability Zones
+          .columns
+            .column
+              input(type='radio', id='availability-show' value='show' v-model='availability')
+            .column
+              input(type='radio', id='availability-hide' value='hide' v-model='availability')
+            .column
+              input(type='radio', id='availability-expand' value='expand' v-model='availability')
+          //- Internet Gateway
+          .columns
+            .column
+              input(type='radio', id='internet-show' value='show' v-model='internet')
+            .column
+              input(type='radio', id='internet-hide' value='hide' v-model='internet')
+            .column
+              input(type='radio', id='internet-expand' value='expand' v-model='internet')
+          //- Route Tables
+          .columns
+            .column
+              input(type='radio', id='route-show' value='show' v-model='route')
+            .column
+              input(type='radio', id='route-hide' value='hide' v-model='route')
+            .column
+              input(type='radio', id='route-expand' value='expand' v-model='route')
+          //- NAT Gateways
+          .columns
+            .column
+              input(type='radio', id='natGateways-show' value='show' v-model='natGateways')
+            .column
+              input(type='radio', id='natGateways-hide' value='hide' v-model='natGateways')
+            .column
+              input(type='radio', id='natGateways-expand' value='expand' v-model='natGateways')
+          //- Network Interfaces
+          .columns
+            .column
+              input(type='radio', id='networkInterfaces-show' value='show' v-model='networkInterfaces')
+            .column
+              input(type='radio', id='networkInterfaces-hide' value='hide' v-model='networkInterfaces')
+            .column
+              input(type='radio', id='networkInterfaces-expand' value='expand' v-model='networkInterfaces')
+          //- Elastic IPs
+          .columns
+            .column
+              input(type='radio', id='elastic-show' value='show' v-model='elastic')
+            .column
+              input(type='radio', id='elastic-hide' value='hide' v-model='elastic')
+            .column
+              input(type='radio', id='elastic-expand' value='expand' v-model='elastic')
+          //- Public IP Addresses
+          .columns
+            .column
+              input(type='radio', id='public-show' value='show' v-model='public')
+            .column
+              input(type='radio', id='public-hide' value='hide' v-model='public')
+            .column
+              input(type='radio', id='public-expand' value='expand' v-model='public')
+          //- Security Group
+          .columns
+            .column
+              input(type='radio', id='secgrp-show' value='show' v-model='secgrp')
+            .column
+              input(type='radio', id='secgrp-hide' value='hide' v-model='secgrp')
+            .column
+              input(type='radio', id='secgrp-expand' value='expand' v-model='secgrp')
+          //- Instances
+          .columns
+            .column
+              input(type='radio', id='instances-show' value='show' v-model='instances')
+            .column
+              input(type='radio', id='instances-hide' value='hide' v-model='instances')
+            .column
+              input(type='radio', id='instances-expand' value='expand' v-model='instances')
+          //- Jumpboxes
+          .columns
+            .column
+              input(type='radio', id='jumpboxMode-show' value='show' v-model='jumpboxMode')
+            .column
+              input(type='radio', id='jumpboxMode-hide' value='hide' v-model='jumpboxMode')
+            .column
+              input(type='radio', id='jumpboxMode-expand' value='expand' v-model='jumpboxMode')
+          //- AMI Images
+          .columns
+            .column
+              input(type='radio', id='ami-show' value='show' v-model='ami')
+            .column
+              input(type='radio', id='ami-hide' value='hide' v-model='ami')
+            .column
+              input(type='radio', id='ami-expand' value='expand' v-model='ami')
+          //- Key Pairs
+          .columns
+            .column
+              input(type='radio', id='key-show' value='show' v-model='key')
+            .column
+              input(type='radio', id='key-hide' value='hide' v-model='key')
+            .column
+              input(type='radio', id='key-expand' value='expand' v-model='key')
+          //- Load Balancers
+          .columns
+            .column
+              input(type='radio', id='load-show' value='show' v-model='load')
+            .column
+              input(type='radio', id='load-hide' value='hide' v-model='load')
+            .column
+              input(type='radio', id='load-expand' value='expand' v-model='load')
+          //- Target Groups
+          .columns
+            .column
+              input(type='radio', id='target-show' value='show' v-model='target')
+            .column
+              input(type='radio', id='target-hide' value='hide' v-model='target')
+            .column
+              input(type='radio', id='target-expand' value='expand' v-model='target')
+          //- Clusters
+          .columns
+            .column
+              input(type='radio', id='clusterMode-show' value='show' v-model='clusterMode')
+            .column
+              input(type='radio', id='clusterMode-hide' value='hide' v-model='clusterMode')
+            .column
+              input(type='radio', id='clusterMode-expand' value='expand' v-model='clusterMode')
+          //- Services
+          .columns
+            .column
+              input(type='radio', id='serviceMode-show' value='show' v-model='serviceMode')
+            .column
+              input(type='radio', id='serviceMode-hide' value='hide' v-model='serviceMode')
+            .column
+              input(type='radio', id='serviceMode-expand' value='expand' v-model='serviceMode')
+          //- Tasks
+          .columns
+            .column
+              input(type='radio', id='taskMode-show' value='show' v-model='taskMode')
+            .column
+              input(type='radio', id='taskMode-hide' value='hide' v-model='taskMode')
+            .column
+              input(type='radio', id='taskMode-expand' value='expand' v-model='taskMode')
     div
 </template>
 
@@ -86,25 +237,25 @@ export default {
   name: 'VisNetwork',
   data () {
     return {
-      vpcs: false,
-      availability: true,
-      subnets: true,
-      internet: false,
-      route: false,
-      natGateways: false,
-      networkInterfaces: false,
-      secgrp: false,
-      elastic: false,
-      public: false,
-      instances: true,
-      jumpboxMode: true,
-      ami: false,
-      key: false,
-      load: true,
-      target: false,
-      clusterMode: false,
-      serviceMode: false,
-      taskMode: false
+      vpcs: 'hide',
+      availability: 'show',
+      subnets: 'show',
+      internet: 'hide',
+      route: 'hide',
+      natGateways: 'hide',
+      networkInterfaces: 'hide',
+      secgrp: 'hide',
+      elastic: 'hide',
+      public: 'hide',
+      instances: 'show',
+      jumpboxMode: 'show',
+      ami: 'hide',
+      key: 'hide',
+      load: 'show',
+      target: 'hide',
+      clusterMode: 'hide',
+      serviceMode: 'hide',
+      taskMode: 'hide'
     }
   },
   components: {
@@ -117,6 +268,8 @@ export default {
   methods: {
     init () {
       let _self = this
+      let currentRegion = this.$store.state.region
+      console.log('currentRegion = ', currentRegion)
       let parentGrp = {
         'virtual_private_cloud': 'virtual_private_cloud',
         'availability_zone': 'availability_zone',
@@ -214,32 +367,76 @@ export default {
 
         // Return a rule, based on the UI
         let getRuleForNodeFromUI = function (key) {
-          let ignore = false
+          let option = 'hide'
           if (
-            (_self.vpcs === false && key.indexOf('Virtual') === 0) ||
-            (_self.availability === false && key.indexOf('Availability') === 0) ||
-            (_self.subnets === false && key.indexOf('Subnet') === 0) ||
-            (_self.internet === false && key.indexOf('Internet') === 0) ||
-            (_self.route === false && key.indexOf('Route Table') === 0) ||
-            (_self.natGateways === false && key.indexOf('NAT Gateway::') === 0) ||
-            (_self.networkInterfaces === false && key.indexOf('Network Interface') === 0) ||
-            (_self.secgrp === false && key.indexOf('Security Group::') === 0) ||
-            (_self.elastic === false && key.indexOf('Elastic') === 0) ||
-            (_self.jumpboxMode === false && key.indexOf('Jumpbox') === 0) ||
-            (_self.public === false && key.indexOf('Public') === 0) ||
-            (_self.instances === false && key.indexOf('EC2') === 0) ||
-            (_self.ami === false && key.indexOf('AMI') === 0) ||
-            (_self.key === false && key.indexOf('Key') === 0) ||
-            (_self.load === false && key.indexOf('Load') === 0) ||
-            (_self.target === false && key.indexOf('Target') === 0) ||
-            (_self.clusterMode === false && key.startsWith('Cluster::')) ||
-            (_self.serviceMode === false && key.startsWith('Service::')) ||
-            (_self.taskMode === false && key.startsWith('Task::'))
+            (_self.vpcs === 'show' && key.indexOf('Virtual') === 0) ||
+            (_self.availability === 'show' && key.indexOf('Availability') === 0) ||
+            (_self.subnets === 'show' && key.indexOf('Subnet') === 0) ||
+            (_self.internet === 'show' && key.indexOf('Internet') === 0) ||
+            (_self.route === 'show' && key.indexOf('Route Table') === 0) ||
+            (_self.natGateways === 'show' && key.indexOf('NAT Gateway::') === 0) ||
+            (_self.networkInterfaces === 'show' && key.indexOf('Network Interface') === 0) ||
+            (_self.secgrp === 'show' && key.indexOf('Security Group::') === 0) ||
+            (_self.elastic === 'show' && key.indexOf('Elastic') === 0) ||
+            (_self.jumpboxMode === 'show' && key.indexOf('Jumpbox') === 0) ||
+            (_self.public === 'show' && key.indexOf('Public') === 0) ||
+            (_self.instances === 'show' && key.indexOf('EC2') === 0) ||
+            (_self.ami === 'show' && key.indexOf('AMI') === 0) ||
+            (_self.key === 'show' && key.indexOf('Key') === 0) ||
+            (_self.load === 'show' && key.indexOf('Load') === 0) ||
+            (_self.target === 'show' && key.indexOf('Target') === 0) ||
+            (_self.clusterMode === 'show' && key.startsWith('Cluster::')) ||
+            (_self.serviceMode === 'show' && key.startsWith('Service::')) ||
+            (_self.taskMode === 'show' && key.startsWith('Task::'))
           ) {
-            ignore = true
+            option = 'show'
+          } else if (
+            (_self.vpcs === 'hide' && key.indexOf('Virtual') === 0) ||
+            (_self.availability === 'hide' && key.indexOf('Availability') === 0) ||
+            (_self.subnets === 'hide' && key.indexOf('Subnet') === 0) ||
+            (_self.internet === 'hide' && key.indexOf('Internet') === 0) ||
+            (_self.route === 'hide' && key.indexOf('Route Table') === 0) ||
+            (_self.natGateways === 'hide' && key.indexOf('NAT Gateway::') === 0) ||
+            (_self.networkInterfaces === 'hide' && key.indexOf('Network Interface') === 0) ||
+            (_self.secgrp === 'hide' && key.indexOf('Security Group::') === 0) ||
+            (_self.elastic === 'hide' && key.indexOf('Elastic') === 0) ||
+            (_self.jumpboxMode === 'hide' && key.indexOf('Jumpbox') === 0) ||
+            (_self.public === 'hide' && key.indexOf('Public') === 0) ||
+            (_self.instances === 'hide' && key.indexOf('EC2') === 0) ||
+            (_self.ami === 'hide' && key.indexOf('AMI') === 0) ||
+            (_self.key === 'hide' && key.indexOf('Key') === 0) ||
+            (_self.load === 'hide' && key.indexOf('Load') === 0) ||
+            (_self.target === 'hide' && key.indexOf('Target') === 0) ||
+            (_self.clusterMode === 'hide' && key.startsWith('Cluster::')) ||
+            (_self.serviceMode === 'hide' && key.startsWith('Service::')) ||
+            (_self.taskMode === 'hide' && key.startsWith('Task::'))
+          ) {
+            option = 'hide'
+          } else if (
+            (_self.vpcs === 'expand' && key.indexOf('Virtual') === 0) ||
+            (_self.availability === 'expand' && key.indexOf('Availability') === 0) ||
+            (_self.subnets === 'expand' && key.indexOf('Subnet') === 0) ||
+            (_self.internet === 'expand' && key.indexOf('Internet') === 0) ||
+            (_self.route === 'expand' && key.indexOf('Route Table') === 0) ||
+            (_self.natGateways === 'expand' && key.indexOf('NAT Gateway::') === 0) ||
+            (_self.networkInterfaces === 'expand' && key.indexOf('Network Interface') === 0) ||
+            (_self.secgrp === 'expand' && key.indexOf('Security Group::') === 0) ||
+            (_self.elastic === 'expand' && key.indexOf('Elastic') === 0) ||
+            (_self.jumpboxMode === 'expand' && key.indexOf('Jumpbox') === 0) ||
+            (_self.public === 'expand' && key.indexOf('Public') === 0) ||
+            (_self.instances === 'expand' && key.indexOf('EC2') === 0) ||
+            (_self.ami === 'expand' && key.indexOf('AMI') === 0) ||
+            (_self.key === 'expand' && key.indexOf('Key') === 0) ||
+            (_self.load === 'expand' && key.indexOf('Load') === 0) ||
+            (_self.target === 'expand' && key.indexOf('Target') === 0) ||
+            (_self.clusterMode === 'expand' && key.startsWith('Cluster::')) ||
+            (_self.serviceMode === 'expand' && key.startsWith('Service::')) ||
+            (_self.taskMode === 'expand' && key.startsWith('Task::'))
+          ) {
+            option = 'expand'
           }
 
-          return ignore ? 'hide' : 'expand'
+          return option
         }
 
         // If no 'rulesFn' prop was provided use our default,
@@ -420,7 +617,7 @@ export default {
           var ids = params.nodes
           var clickedNodes = nodes.get(ids)
           if (clickedNodes[0].label) {
-            _self.$nuxt.$router.replace({ path: `/node/${clickedNodes[0].label}` })
+            _self.$nuxt.$router.replace({ path: `/${currentRegion}/node/${clickedNodes[0].label}` })
           }
         })
         network.on('hoverNode', function (params) {
@@ -554,7 +751,7 @@ export default {
           network.on('click', function (params) {
             var ids = params.nodes
             var clickedNodes = nodes.get(ids)
-            _self.$nuxt.$router.replace({ path: `/node/${clickedNodes[0].label}` })
+            _self.$nuxt.$router.replace({ path: `/${currentRegion}/node/${clickedNodes[0].label}` })
           })
 
           network.on('hoverNode', function (params) {
@@ -563,8 +760,9 @@ export default {
         })
       })
     },
-    onchange (_value) {
-      this.$set(this, _value, !this[_value])
+    onchange (_id, _value) {
+      console.log(_id, _value)
+      this.$set(this, _id, _value)
     }
   },
   created () {
@@ -606,5 +804,9 @@ export default {
 
 .tooltip:hover .tooltiptext {
     visibility: visible;
+}
+
+.my-mode-selectors {
+  font-size: 11px;
 }
 </style>
