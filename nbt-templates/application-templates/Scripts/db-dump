@@ -1,0 +1,22 @@
+#!/bin/bash
+. $(dirname $0)/SETENV
+
+file=$(date "+export-%Y%m%d-%H:%M")
+
+# Add header
+cat > ${file} << END1
+SET AUTOCOMMIT = 0;
+SET FOREIGN_KEY_CHECKS=0;
+END1
+
+# Dump the database
+CMD="docker run -it --rm mysql mysqldump -h ${DB_HOST} -u ${DB_USERNAME} -p${DB_PASSWORD} ${DB_NAME} --add-drop-table --comments"
+echo CMD=${CMD}
+         ${CMD} >> ${file}
+
+# Add a footer
+cat >> ${file} << END2
+SET FOREIGN_KEY_CHECKS = 1;
+COMMIT;
+SET AUTOCOMMIT = 1;
+END2

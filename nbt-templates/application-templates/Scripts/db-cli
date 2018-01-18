@@ -1,0 +1,8 @@
+#!/bin/bash
+. $(dirname $0)/SETENV
+
+
+# Connect to the databases
+CMD="docker run -it --rm mysql mysql -h ${DB_HOST} -u ${DB_USERNAME} -p${DB_PASSWORD} ${DB_NAME}"
+echo CMD=${CMD} $@
+exec ${CMD} $@

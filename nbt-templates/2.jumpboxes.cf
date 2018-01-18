@@ -1,0 +1,181 @@
+Parameters:
+  EnvironmentName:
+    Description: "IMPORTANT    -->>> this MUST match the previous stacks for this environment"
+    Type: String
+
+  InstanceType:
+    Description: "Container Instance type"
+    Type: "String"
+    Default: "t2.nano"
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+    ConstraintDescription: "must be a valid EC2 instance type."
+
+#  KeyName:
+#    Description: "Name of an existing EC2 KeyPair to enable SSH access to the instance"
+#    Type: "AWS::EC2::KeyPair::KeyName"
+#    ConstraintDescription: "must be the name of an existing EC2 KeyPair."
+
+Mappings:
+  Constants:
+    InstanceValues:
+      TemplateName: "2.jumpboxes.cf"
+      TemplateVersion: "1.2.3"
+  AWSRegionToAMI:
+    us-east-1:
+      AMI: ami-ec33cc96
+    us-east-2:
+      AMI: ami-34032e51
+    us-west-1:
+      AMI: ami-d5d0e0b5
+    us-west-2:
+      AMI: ami-29f80351
+    eu-west-1:
+      AMI: ami-13f7226a
+    eu-west-2:
+      AMI: ami-eb62708f
+    eu-central-1:
+      AMI: ami-40d5672f
+    ap-northeast-1:
+      AMI: ami-21815747
+    ap-northeast-2:
+      AMI: ami-7ee13b10
+    ap-southeast-1:
+      AMI: ami-99f588fa
+    ap-southeast-2:
+      AMI: ami-4f08e82d
+    ca-central-1:
+      AMI: ami-9b54edff
+
+
+
+Resources:
+  Jumpbox1:
+    Type: "AWS::EC2::Instance"
+    Properties:
+  #    Affinity: default
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+  #    BlockDeviceMappings:
+  #      - EC2 Block Device Mapping
+  #    DisableApiTermination: Boolean
+  #    EbsOptimized: Boolean
+  #    HostId: String
+  #    IamInstanceProfile: String
+      ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMI ]
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: !Ref InstanceType
+  #    Ipv6AddressCount: Integer
+  #    Ipv6Addresses:
+  #      - IPv6 Address Type
+  #    KernelId: String
+      #KeyName: !Ref KeyName
+      KeyName: !Sub 'nbt-${EnvironmentName}-${AWS::Region}'
+  #    Monitoring: Boolean
+  #    NetworkInterfaces:
+  #      - EC2 Network Interface
+  #    PlacementGroupName: String
+  #    PrivateIpAddress: String
+  #    RamdiskId: String
+      SecurityGroupIds:
+  #      - String
+          - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-LoadBalancerSecurityGroup'
+  #    SecurityGroups:
+  #        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-ApplicationSecurityGroup'
+  #    SourceDestCheck: Boolean
+  #    SsmAssociations:
+  #      - SSMAssociation
+      SubnetId:
+        'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-PublicSubnet1'
+      Tags:
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-jumpbox-1
+          - Key: Description
+            Value: !Sub Jump box for environment ${EnvironmentName}
+          - Key: "aws-explorer:template"
+            Value:
+              !FindInMap [ Constants, InstanceValues, TemplateName ]
+          - Key: "aws-explorer:version"
+            Value:
+              !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: "aws-explorer:template"
+            Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+          - Key: "aws-explorer:version"
+            Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+  #      - Resource Tag
+  #    Tenancy: String
+  #    UserData: String
+  #    Volumes:
+  #      - EC2 MountPoint
+  #    AdditionalInfo: String
+
+  Jumpbox2:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMI ]
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: !Ref InstanceType
+      KeyName: !Sub 'nbt-${EnvironmentName}-${AWS::Region}'
+      SecurityGroupIds:
+          - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-LoadBalancerSecurityGroup'
+      SubnetId:
+        'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-PublicSubnet2'
+      Tags:
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-jumpbox-2
+          - Key: Description
+            Value: !Sub Jump box for environment ${EnvironmentName}
+          - Key: "aws-explorer:template"
+            Value:
+              !FindInMap [ Constants, InstanceValues, TemplateName ]
+          - Key: "aws-explorer:version"
+            Value:
+              !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: "aws-explorer:template"
+            Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+          - Key: "aws-explorer:version"
+            Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+
+
+Outputs:
+  Jumpbox1:
+    Description: Jumpbox1
+    Value: !Ref Jumpbox1
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-Jumpbox1
+  KeyName:
+    Description: Key Pair used to log in
+    Value:
+      !Sub 'nbt-${EnvironmentName}-${AWS::Region}'
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-KeyName

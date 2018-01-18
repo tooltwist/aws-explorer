@@ -1,0 +1,13 @@
+#!/bin/bash
+. $(dirname $0)/SETENV
+
+
+# Load the database
+CMD="docker run -i --rm mysql mysql -h ${DB_HOST} -u ${DB_USERNAME} -p${DB_PASSWORD}"
+echo CMD=${CMD}
+
+# We should probably find the latest dumps
+#ZZZZ
+
+# Load the databases
+${CMD} ${DB_NAME} < Dump20170119.sql

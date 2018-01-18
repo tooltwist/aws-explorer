@@ -1,0 +1,23 @@
+#!/bin/bash
+. $(dirname $0)/SETENV
+
+# Load the databases
+CMD="docker run -i --rm mysql mysql -h ${DB_HOST} -u ${DB_USERNAME} -p${DB_PASSWORD}"
+#echo CMD=${CMD}
+
+# Load the databases
+FROM=training.crowdhound.io
+TO=${APPLICATION_HOST}
+DUMPFILE=Dump20170623.sql
+
+# Convert the 
+echo ""
+echo "cat ${DUMPFILE} \\"
+echo "  | sed \"s!${FROM}!${TO}!g\" \\"
+echo "  | ${CMD} ${DB_NAME}"
+echo ""
+cat ${DUMPFILE} \
+	| sed "s!${FROM}!${TO}!g" \
+	| ${CMD} ${DB_NAME}
+
+exit $?

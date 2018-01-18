@@ -1,0 +1,20 @@
+The files in this directory provide the configuration for
+application {{{APPLICATION}}} in environment {{{ENVIRONMENT}}}.
+
+The SETENV file provides a single location for configuration variables.
+
+In the current implementation, the Volumes and Scripts directories get
+mounted into the running Docker containers via a rather convoluted path.
+
+  Here -> secure CodeCommit repo
+    -> Downloaded in CodePipeline 'Source' Stage
+    -> Merged with source code in CodePipeline 'Merge' Stage
+    -> Config installed to /SecureConfig in Docker container during CodePipeline 'Build' Stage
+    -> Deploy.zip extracted in CodePipeline 'Extract' stage
+    -> Deploy.zip provides template used by CloudFormation in CodePipeline 'Deploy' stage
+
+In that final stage, the Docker image is deployed as a service into ECS.
+
+Deploy/service.cf is a Cloudformation script to configure the application
+as an ECS service. For repeat builds, the same definition is rerun to update
+the service to use the new Docker image.

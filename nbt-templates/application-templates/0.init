@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+#	Script to set up Git with our remote SecureConfig repository in AWS CodeCommit
+#
+repo="https://git-codecommit.{{{REGION}}}.amazonaws.com/v1/repos/nbt-{{{ENVIRONMENT}}}-{{{APPLICATION}}}-SecureConfig"
+
+if [ ! -d .git ] ; then
+
+	# Initialize Git
+	echo ""
+	echo "Initializing git repository"
+	git init
+	echo ""
+	echo ""
+
+	# Set the remote
+	echo "Setting remote repository to ${repo}"
+  git remote add origin https://git-codecommit.{{{REGION}}}.amazonaws.com/v1/repos/nbt-{{{ENVIRONMENT}}}-{{{APPLICATION}}}-SecureConfig
+	echo ""
+	echo ""
+
+	# Make these scripts executable
+	chmod +x 0.init
+	chmod +x 1.setenv
+	chmod +x 2.prepare
+	chmod +x 3.sync
+fi
+
+
+# Check we have git working
+echo ""
+echo "Check we can connect to the repository..."
+echo ""
+if ! git fetch --all ; then
+	echo ""
+	echo ""
+	echo "You appear to be unable to connecting to the CodeCommit repository."
+	echo ""
+	echo "1. CodeCommit uses AWS credentials during the Git login. For instructions go to the repository page and press the 'Connect' button."
+	echo ""
+	echo "        https://{{{REGION}}}.console.aws.amazon.com/codecommit/home?region={{{REGION}}}#/repository/nbt-trsgd1-j6-SecureConfig/browse/master/--/"
+	echo ""
+	echo ""
+	echo "2. If the repo is not in your AWS default region, you might need to define a profile in ~/.aws/credentials, and select it with an environment variable."
+	echo ""
+	echo "        export AWS_PROFILE=production"
+	echo ""
+	echo ""
+else
+	echo "Looks ok."
+	echo ""
+fi
+
+exit 0

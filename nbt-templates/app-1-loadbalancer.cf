@@ -1,0 +1,144 @@
+Parameters:
+
+  EnvironmentName:
+    Description: "Environment name (Note: this MUST match the previously run stacks)"
+    Type: String
+
+  ApplicationName:
+    Type: String
+
+  CostCode:
+    Description: "Who will be billed for this application?"
+    Type: String
+    Default: "0000"
+
+  HealthCheckPath:
+    Type: String
+    Default: "/"
+
+
+Resources:
+  AssetsS3:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub nbt-${EnvironmentName}-${ApplicationName}-assets
+
+  LogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub nbt-${EnvironmentName}-${ApplicationName}-logs
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${EnvironmentName}-${ApplicationName}
+      Subnets:
+        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-PublicSubnet1'
+        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-PublicSubnet2'
+      SecurityGroups:
+        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-LoadBalancerSecurityGroup'
+      Tags:
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: Application
+            Value: !Sub ${ApplicationName}
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-${ApplicationName}
+          - Key: CostCode
+            Value: !Ref CostCode
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: LoadBalancer
+    Properties:
+      Name: !Sub ${EnvironmentName}-${ApplicationName}
+      VpcId:
+          'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-VPCID'
+      Port: 80
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      Tags:
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: Application
+            Value: !Sub ${ApplicationName}
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-${ApplicationName}
+          - Key: CostCode
+            Value: !Ref CostCode
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+
+Outputs:
+  HealthCheckPath:
+    Description: HealthCheck Path
+    Value: !Ref HealthCheckPath
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-HealthCheckPath
+
+  TargetGroup:
+    Description: Target Group
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-TargetGroup
+
+  ServiceUrl:
+    Description: Application URL
+    Value: !Sub http://${LoadBalancer.DNSName}
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-ServiceUrl
+
+  HealthcheckUrl:
+    Description: HealthCheck URL
+    Value: !Sub http://${LoadBalancer.DNSName}${HealthCheckPath}
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-HealthCheckUrl
+
+  AssetsS3:
+    Description: Assets S3 bucket
+    Value: !Ref AssetsS3
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-AssetsS3
+
+  LogGroup:
+    Description: Application LogGroup
+    Value: !Ref LogGroup
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-LogGroup
+
+  LogPage:
+    Description: Application LogGroup page
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logStream:group=nbt-${EnvironmentName}-${ApplicationName}-logs"
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-${ApplicationName}-LogPage

@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#	Run the healthcheck via the ALB
+#
+. $(dirname $0)/SETENV
+
+echo "$" curl -v http://${AUTHSERVICE_HOST}/v1/healthcheck
+         curl -v http://${AUTHSERVICE_HOST}/v1/healthcheck

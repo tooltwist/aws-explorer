@@ -1,0 +1,274 @@
+Parameters:
+
+  EnvironmentName:
+    Description: "IMPORTANT    -->>> this MUST match the previous stacks for this environment"
+    Type: String
+
+  ClientKey:
+    Description: "AWS Client Key"
+    Type: String
+
+  ClientSecret:
+    Description: "AWS Client Secret"
+    Type: String
+
+  InstanceType:
+    Description: "Container Instance type"
+    Type: "String"
+    Default: "t2.small"
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+    ConstraintDescription: "must be a valid EC2 instance type."
+
+  ClusterSize:
+    Type: Number
+    Default: 1
+
+#  Subnets:
+#    Type: List<AWS::EC2::Subnet::Id>
+#
+#  SourceSecurityGroup:
+#    Type: AWS::EC2::SecurityGroup::Id
+
+# The mappings come from http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+# These should be kept up to date so we get the latest security patches
+#
+# Updated December 26, 2017 - Philip Callender
+#
+Mappings:
+  Constants:
+    InstanceValues:
+      TemplateName: "3.ecs-cluster.cf"
+      TemplateVersion: "1.2.4"
+  AWSRegionToAMI:
+    us-east-1:
+      AMI: ami-fad25980
+    us-east-2:
+      AMI: ami-58f5db3d
+    us-west-1:
+      AMI: ami-62e0d802
+    us-west-2:
+      AMI: ami-7114c909
+    eu-west-1:
+      AMI: ami-4cbe0935
+    eu-west-2:
+      AMI: ami-dbfee1bf
+    eu-west-3:
+      AMI: ami-d179ceac
+    eu-central-1:
+      AMI: ami-05991b6a
+    ap-northeast-1:
+      AMI: ami-56bd0030
+    ap-northeast-2:
+      AMI: ami-7267c01c
+    ap-southeast-1:
+      AMI: ami-1bdc8b78
+    ap-southeast-2:
+      AMI: ami-14b55f76
+    ca-central-1:
+      AMI: ami-918b30f5
+    ap-south-1:
+      AMI: ami-e4d29c8b
+    sa-east-1:
+      AMI: ami-d596d2b9
+
+
+Resources:
+  ECSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "ec2.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ECSRole
+
+#  ECSSecurityGroup:
+#    Type: "AWS::EC2::SecurityGroup"
+#    Properties:
+#      GroupDescription: !Sub ${AWS::StackName}-hosts
+##      SecurityGroupIngress:
+##        - SourceSecurityGroupId: !Ref SourceSecurityGroup
+##          IpProtocol: -1
+#      SecurityGroupIngress:
+#        - SourceSecurityGroupId:
+#            'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-LoadBalancerSecurityGroup'
+#          IpProtocol: -1
+#      VpcId:
+#          'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-VPCID'
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub 'nbt-${EnvironmentName}'
+
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-PrivateSubnet1'
+        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-PrivateSubnet2'
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      MinSize: !Ref ClusterSize
+      MaxSize: !Ref ClusterSize
+      DesiredCapacity: !Ref ClusterSize
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} - ECS Host
+          PropagateAtLaunch: true
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+          PropagateAtLaunch: true
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+          PropagateAtLaunch: true
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT15M
+        WaitOnResourceSignals: true
+
+  LaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          commands:
+            01_add_instance_to_cluster:
+                command: !Sub echo ECS_CLUSTER=${Cluster} > /etc/ecs/ecs.config
+          files:
+            "/etc/cfn/cfn-hup.conf":
+              mode: 000400
+              owner: root
+              group: root
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: true
+                ensureRunning: true
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+    Properties:
+      ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMI ]
+      InstanceType: !Ref InstanceType
+      KeyName: !Sub 'nbt-${EnvironmentName}-${AWS::Region}'
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroups:
+        - 'Fn::ImportValue': !Sub 'nbt-${EnvironmentName}-ApplicationSecurityGroup'
+      UserData:
+        "Fn::Base64": !Sub |
+          #!/bin/bash
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
+          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup
+          \
+          S3_BUCKET=nbt-${EnvironmentName}-configs
+          AWS_CLIENT_KEY=${ClientKey}
+          AWS_SECRET=${ClientSecret}
+          \
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+          echo BEGIN USER DATA
+          date '+%Y-%m-%d %H:%M:%S'
+          \
+          # Install ECS config from S3 bucket
+          yum install -y aws-cli
+          aws s3 cp s3://$S3_BUCKET/ecs.config /etc/ecs/ecs.config
+          \
+          # Install s3fs
+          if [ ! -e /usr/local/bin/s3fs ] ; then
+              yum -y install automake fuse fuse-devel gcc-c++ git libcurl-devel libxml2-devel make openssl-devel
+              git clone https://github.com/s3fs-fuse/s3fs-fuse.git
+              cd s3fs-fuse
+              ./autogen.sh
+              ./configure
+              make
+              sudo make install
+          fi
+          \
+          # Set credentials for the S3 bucket
+          echo $AWS_CLIENT_KEY:$AWS_SECRET  > /etc/passwd-s3fs
+          chmod 600 /etc/passwd-s3fs
+          \
+          # Add commands to rc.local to mount the S3 bucket on boot
+          cat >> /etc/rc.local << END
+          \
+          # Start of code added by the EC2 instance 'user data'
+          # Mount the S3 bucket (this was added by the instance 'user data')
+          date >> /tmp/rc.local.my-begin
+          rm -rf /CONFIGS_S3_BUCKET; mkdir /CONFIGS_S3_BUCKET
+          /usr/local/bin/s3fs $S3_BUCKET /CONFIGS_S3_BUCKET -o allow_other
+          \
+          # Periodically sync from the s3 bucket to the volumes
+          rm -rf /Volumes; mkdir /Volumes
+          rm -rf /Scripts; mkdir /Scripts
+          (while true ; do rsync -a /CONFIGS_S3_BUCKET/Volumes/ /Volumes/; rsync -a /CONFIGS_S3_BUCKET/Scripts/ /Scripts/; date > /tmp/sync-configs-timestamp ; sleep 120 ; done) &
+          date >> /tmp/rc.local.my-end
+          # End of code added by the EC2 instance 'user data'
+          \
+          END
+          echo "END USER DATA"
+
+
+
+Outputs:
+  ClusterName:
+    Description: Cluster name
+    Value: !Ref Cluster
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-Cluster

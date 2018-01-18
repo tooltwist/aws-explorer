@@ -18,26 +18,21 @@ const router = Router()
 router.get('/graph/:region', function (req, res, next) {
   console.log('API /graph/:region', req.params)
   let region = req.params.region
-
-  // See if we already have what we need.
-
   console.log(`API: Region is ${region}`);
 
+  // See if we can use the value in the cache.
   let cacheKey = region
-
   let value = cache.get(cacheKey) // "value"
   if (req.query.reload) {
     console.log('Reloading cache')
     value = null
   }
   if (value) {
-    // console.log('Have value in cache:\n', value)
-    // console.log('RETURNING CACHED VALUE');
     res.json(value)
     return
   }
 
-
+  // Download all we need from AWS
   download.downloadEverything(region, false, err => {
     if (err) {
       console.log(`Error downloading region ${region}`, err, err.stack);

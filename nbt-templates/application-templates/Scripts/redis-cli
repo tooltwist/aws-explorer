@@ -1,0 +1,8 @@
+#!/bin/bash
+. $(dirname $0)/SETENV
+
+
+# Connect to the databases
+CMD="docker run -it --rm redis redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}"
+echo CMD=${CMD} $@
+exec ${CMD} $@

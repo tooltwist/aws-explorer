@@ -1,0 +1,539 @@
+
+Parameters:
+
+  ContactEmail:
+    Description: Contact Email address
+    Type: String
+
+  EnvironmentName:
+    Description: IMPORTANT!!!     -->>> The stack name MUST be <environmentName>-vpc
+    Type: String
+
+  CostCode:
+    Type: String
+    Default: "0000"
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.10.0/24
+
+  PublicSubnet2CIDR:
+      Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+      Type: String
+      Default: 10.192.11.0/24
+
+  PrivateSubnet1CIDR:
+      Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+      Type: String
+      Default: 10.192.20.0/24
+
+  PrivateSubnet2CIDR:
+      Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+      Type: String
+      Default: 10.192.21.0/24
+
+Mappings:
+  Constants:
+    InstanceValues:
+      TemplateName: "1.network.cf"
+      TemplateVersion: "1.2.3"
+
+Resources:
+  ConfigS3:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub nbt-${EnvironmentName}-configs
+      VersioningConfiguration:
+        Status: Enabled
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vpc
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: ContactEmail
+          Value: !Sub ${ContactEmail}
+        - Key: CostCode
+          Value: !Ref CostCode
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-gw
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: ContactEmail
+          Value: !Sub ${ContactEmail}
+        - Key: CostCode
+          Value: !Ref CostCode
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !Ref PublicSubnet1CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+        - Key: Description
+          Value: Subnet for load balancers and jump box
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: ContactEmail
+          Value: !Sub ${ContactEmail}
+        - Key: CostCode
+          Value: !Ref CostCode
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !Ref PublicSubnet2CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+        - Key: Description
+          Value: Subnet for load balancers and jump box
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: ContactEmail
+          Value: !Sub ${ContactEmail}
+        - Key: CostCode
+          Value: !Ref CostCode
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+      - Key: Description
+        Value: Subnet for application servers
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+      - Key: Description
+        Value: Subnet for application servers
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  #
+  #     The NAT gateways provide outbound access to the Internet with the various
+  #     instances sharing a single IP address. Instances running in the private
+  #     subnets via the NAT Gateways running in the public subnets. The NATs access
+  #     the Internet via the Internet Gateway.
+  #
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} NAT 1
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} NAT 2
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  #
+  #     The public subnets route non-vpc connections out into the Internet,
+  #     via the Internet Gateway.
+  #
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Public Routes
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  #
+  #       Instances running in the private subnets cannot access the Internet
+  #       directly via the Internet Gateway. Instead, their requests are routed
+  #       via the NAT Gateway running in the public subnet within the same
+  #       availability zone.
+  #
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Routes (AZ2)
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: CostCode
+        Value: !Ref CostCode
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
+  #
+  #     Security groups for the load balancer and applications.
+  #
+  LoadBalancerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Sub Controls who can access the load balaancer
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: "TCP"
+          FromPort: 80
+          ToPort: 80
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: "TCP"
+          FromPort: 22
+          ToPort: 22
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName}-alb
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  ApplicationSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: !Sub Controls who can access the ECS instances
+      SecurityGroupIngress:
+          # Only allow in bound from the load balancer
+          - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+            IpProtocol: -1
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName}-instances
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  DatabaseSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: !Sub Controls who can access the database
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        SourceSecurityGroupId: !Ref ApplicationSecurityGroup
+        FromPort: '3306'
+        ToPort: '3306'
+      Tags:
+      - Key: Name
+        Value: !Sub nbt-${EnvironmentName}-db
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: ContactEmail
+        Value: !Sub ${ContactEmail}
+      - Key: "aws-explorer:template"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+      - Key: "aws-explorer:version"
+        Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  CacheSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: !Sub Controls who can access the cache
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        SourceSecurityGroupId: !Ref ApplicationSecurityGroup
+        FromPort: '6379'
+        ToPort: '6379'
+      Tags:
+        - Key: Name
+          Value: !Sub nbt-${EnvironmentName}-cache
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: ContactEmail
+          Value: !Sub ${ContactEmail}
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  DatabaseSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: !Sub nbt-${EnvironmentName}-db
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub nbt-${EnvironmentName}-db
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: ContactEmail
+          Value: !Sub ${ContactEmail}
+        - Key: "aws-explorer:template"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+        - Key: "aws-explorer:version"
+          Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+
+  CacheSubnetGroup:
+    Type: "AWS::ElastiCache::SubnetGroup"
+    Properties:
+      CacheSubnetGroupName: !Sub nbt-${EnvironmentName}-cache
+      Description:  !Sub Controls who can access the cache
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+#
+# Values that may be used elsewhere.
+#
+Outputs:
+  Contact:
+    Description: Contact Email
+    Value: !Ref ContactEmail
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-ContactEmail
+  CostCode:
+    Description: Cost Code
+    Value: !Ref CostCode
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-CostCode
+  ConfigS3:
+    Description: Config S3 bucket
+    Value: !Ref ConfigS3
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-ConfigS3
+  PrivateSubnet1:
+    Description: Private subnet ID 1
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-PrivateSubnet1
+  PrivateSubnet2:
+    Description: Private subnet ID 2
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-PrivateSubnet2
+  PublicSubnet1:
+    Description: Public subnet ID 1
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-PublicSubnet1
+  PublicSubnet2:
+    Description: Public subnet ID 2
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-PublicSubnet2
+  VpcId:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-VPCID
+  LoadBalancerSecurityGroup:
+    Description: Load balancer security group
+    Value: !Ref LoadBalancerSecurityGroup
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-LoadBalancerSecurityGroup
+  ApplicationSecurityGroup:
+    Description: Application security group
+    Value: !Ref ApplicationSecurityGroup
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-ApplicationSecurityGroup
+  DatabaseSecurityGroup:
+    Description: Database security group
+    Value: !Ref DatabaseSecurityGroup
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-DatabaseSecurityGroup
+  TemplateName:
+    Description: Template name
+    Value: !FindInMap [ Constants, InstanceValues, TemplateName ]
+    Export:
+      Name: !Sub nbt-${AWS::StackName}-TemplateName
+  TemplateVersion:
+    Description: Template version
+    Value: !FindInMap [ Constants, InstanceValues, TemplateVersion ]
+    Export:
+      Name: !Sub nbt-${EnvironmentName}-TemplateVersion

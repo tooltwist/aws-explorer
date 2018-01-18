@@ -1,0 +1,84 @@
+#
+#       This Cloudformation script is called by CodePipeline when
+#       a new version of the application has been saved as Docker
+#       image into the artifacts repository.
+#
+#       It updates the task definition for the service, causing
+#       the new image to be started.
+#
+#       Based on:
+#       https://github.com/awslabs/ecs-refarch-continuous-deployment/blob/master/templates/service.yaml
+#
+Parameters:
+  Tag:
+    Type: String
+    Default: latest
+
+  DesiredCount:
+    Type: Number
+    Default: 0
+
+  TargetGroup:
+    Type: String
+
+  Cluster:
+    Type: String
+
+  Repository:
+    Type: String
+
+
+Resources:
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "ecs.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: "nbt-___ENVIRONMENT___-___APPLICATION___"
+      Cluster: !Ref Cluster
+      Role: !Ref ECSServiceRole
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - ContainerName: ___APPLICATION___App
+          ContainerPort: ___APPLICATION_PORT___
+          TargetGroupArn: !Ref TargetGroup
+
+  TaskDefinition:
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: "nbt-___ENVIRONMENT___-___APPLICATION___"
+      # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html
+      ContainerDefinitions:
+        - Name: ___APPLICATION___App
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:${Tag}
+          Essential: true
+          Memory: 256
+          PortMappings:
+            - ContainerPort: ___APPLICATION_PORT___
+              Protocol: tcp
+          Environment:
+            - Name: Tag
+              Value: !Ref Tag
+            - Name: TTAUTH2_HOME
+              Value: /secure-config/Config/authservice-home
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              'awslogs-region': !Ref 'AWS::Region'
+              'awslogs-group': ___LOGSTREAM___
+              'awslogs-stream-prefix': authservice

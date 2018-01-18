@@ -113,7 +113,7 @@ function getApplicationType(details, callback/* (err) */) {
 function installFromTemplate(template, convertFn, to, callback) {
   // console.log(`installFromTemplate(${template})`);
 
-  let from = `${__dirname}/nbt-templates/${template}`
+  let from = `${__dirname}/../nbt-templates/${template}`
   fs.readFile(from, {
     encoding: 'utf8'
   }, (err, fileContents) => {

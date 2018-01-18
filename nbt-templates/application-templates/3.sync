@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+#   Synchronise configs to S3 bucket
+#
+cd $(dirname $0)
+. SETENV
+
+# Leave none of these directories empty
+date > Scripts/_timestamp
+date > Deploy/_timestamp
+date > Config/_timestamp
+cp SETENV Scripts/SETENV
+
+# Prepare the deploy cloudformation template.
+# Our CodePipeline pulled Deploy.zip out of the SecureConfig repo (in CodeCommit)
+# using a lambda, and passes the template to CloudFormation to deploy the Docker
+# container to the ECS cluster.
+(cd Deploy; zip ../Deploy.zip _timestamp *.cf)
+
+# Push everything to the SecureConfig repo in AWS CodeCommit.
+git add . && \
+git commit -m "$(date)" && \
+git push --set-upstream origin master
+rv=$?
+
+echo ""
+echo "Config uploaded."
+exit $rv
