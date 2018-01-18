@@ -368,74 +368,33 @@ export default {
         // Return a rule, based on the UI
         let getRuleForNodeFromUI = function (key) {
           let option = 'hide'
-          if (
-            (_self.vpcs === 'show' && key.indexOf('Virtual') === 0) ||
-            (_self.availability === 'show' && key.indexOf('Availability') === 0) ||
-            (_self.subnets === 'show' && key.indexOf('Subnet') === 0) ||
-            (_self.internet === 'show' && key.indexOf('Internet') === 0) ||
-            (_self.route === 'show' && key.indexOf('Route Table') === 0) ||
-            (_self.natGateways === 'show' && key.indexOf('NAT Gateway::') === 0) ||
-            (_self.networkInterfaces === 'show' && key.indexOf('Network Interface') === 0) ||
-            (_self.secgrp === 'show' && key.indexOf('Security Group::') === 0) ||
-            (_self.elastic === 'show' && key.indexOf('Elastic') === 0) ||
-            (_self.jumpboxMode === 'show' && key.indexOf('Jumpbox') === 0) ||
-            (_self.public === 'show' && key.indexOf('Public') === 0) ||
-            (_self.instances === 'show' && key.indexOf('EC2') === 0) ||
-            (_self.ami === 'show' && key.indexOf('AMI') === 0) ||
-            (_self.key === 'show' && key.indexOf('Key') === 0) ||
-            (_self.load === 'show' && key.indexOf('Load') === 0) ||
-            (_self.target === 'show' && key.indexOf('Target') === 0) ||
-            (_self.clusterMode === 'show' && key.startsWith('Cluster::')) ||
-            (_self.serviceMode === 'show' && key.startsWith('Service::')) ||
-            (_self.taskMode === 'show' && key.startsWith('Task::'))
-          ) {
-            option = 'show'
-          } else if (
-            (_self.vpcs === 'hide' && key.indexOf('Virtual') === 0) ||
-            (_self.availability === 'hide' && key.indexOf('Availability') === 0) ||
-            (_self.subnets === 'hide' && key.indexOf('Subnet') === 0) ||
-            (_self.internet === 'hide' && key.indexOf('Internet') === 0) ||
-            (_self.route === 'hide' && key.indexOf('Route Table') === 0) ||
-            (_self.natGateways === 'hide' && key.indexOf('NAT Gateway::') === 0) ||
-            (_self.networkInterfaces === 'hide' && key.indexOf('Network Interface') === 0) ||
-            (_self.secgrp === 'hide' && key.indexOf('Security Group::') === 0) ||
-            (_self.elastic === 'hide' && key.indexOf('Elastic') === 0) ||
-            (_self.jumpboxMode === 'hide' && key.indexOf('Jumpbox') === 0) ||
-            (_self.public === 'hide' && key.indexOf('Public') === 0) ||
-            (_self.instances === 'hide' && key.indexOf('EC2') === 0) ||
-            (_self.ami === 'hide' && key.indexOf('AMI') === 0) ||
-            (_self.key === 'hide' && key.indexOf('Key') === 0) ||
-            (_self.load === 'hide' && key.indexOf('Load') === 0) ||
-            (_self.target === 'hide' && key.indexOf('Target') === 0) ||
-            (_self.clusterMode === 'hide' && key.startsWith('Cluster::')) ||
-            (_self.serviceMode === 'hide' && key.startsWith('Service::')) ||
-            (_self.taskMode === 'hide' && key.startsWith('Task::'))
-          ) {
-            option = 'hide'
-          } else if (
-            (_self.vpcs === 'expand' && key.indexOf('Virtual') === 0) ||
-            (_self.availability === 'expand' && key.indexOf('Availability') === 0) ||
-            (_self.subnets === 'expand' && key.indexOf('Subnet') === 0) ||
-            (_self.internet === 'expand' && key.indexOf('Internet') === 0) ||
-            (_self.route === 'expand' && key.indexOf('Route Table') === 0) ||
-            (_self.natGateways === 'expand' && key.indexOf('NAT Gateway::') === 0) ||
-            (_self.networkInterfaces === 'expand' && key.indexOf('Network Interface') === 0) ||
-            (_self.secgrp === 'expand' && key.indexOf('Security Group::') === 0) ||
-            (_self.elastic === 'expand' && key.indexOf('Elastic') === 0) ||
-            (_self.jumpboxMode === 'expand' && key.indexOf('Jumpbox') === 0) ||
-            (_self.public === 'expand' && key.indexOf('Public') === 0) ||
-            (_self.instances === 'expand' && key.indexOf('EC2') === 0) ||
-            (_self.ami === 'expand' && key.indexOf('AMI') === 0) ||
-            (_self.key === 'expand' && key.indexOf('Key') === 0) ||
-            (_self.load === 'expand' && key.indexOf('Load') === 0) ||
-            (_self.target === 'expand' && key.indexOf('Target') === 0) ||
-            (_self.clusterMode === 'expand' && key.startsWith('Cluster::')) ||
-            (_self.serviceMode === 'expand' && key.startsWith('Service::')) ||
-            (_self.taskMode === 'expand' && key.startsWith('Task::'))
-          ) {
-            option = 'expand'
-          }
+          let rules = ['show', 'hide', 'expand']
 
+          rules.forEach(function (rule) {
+            if (
+              (_self.vpcs === rule && key.indexOf('Virtual') === 0) ||
+              (_self.availability === rule && key.indexOf('Availability') === 0) ||
+              (_self.subnets === rule && key.indexOf('Subnet') === 0) ||
+              (_self.internet === rule && key.indexOf('Internet') === 0) ||
+              (_self.route === rule && key.indexOf('Route Table') === 0) ||
+              (_self.natGateways === rule && key.indexOf('NAT Gateway::') === 0) ||
+              (_self.networkInterfaces === rule && key.indexOf('Network Interface') === 0) ||
+              (_self.secgrp === rule && key.indexOf('Security Group::') === 0) ||
+              (_self.elastic === rule && key.indexOf('Elastic') === 0) ||
+              (_self.jumpboxMode === rule && key.indexOf('Jumpbox') === 0) ||
+              (_self.public === rule && key.indexOf('Public') === 0) ||
+              (_self.instances === rule && key.indexOf('EC2') === 0) ||
+              (_self.ami === rule && key.indexOf('AMI') === 0) ||
+              (_self.key === rule && key.indexOf('Key') === 0) ||
+              (_self.load === rule && key.indexOf('Load') === 0) ||
+              (_self.target === rule && key.indexOf('Target') === 0) ||
+              (_self.clusterMode === rule && key.startsWith('Cluster::')) ||
+              (_self.serviceMode === rule && key.startsWith('Service::')) ||
+              (_self.taskMode === rule && key.startsWith('Task::'))
+            ) {
+              option = rule
+            }
+          })
           return option
         }
 
