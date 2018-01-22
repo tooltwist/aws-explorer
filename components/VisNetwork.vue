@@ -1,231 +1,111 @@
 <template lang="pug">
   .columns
-    .column.is-two-thirds
+    .column.is-four-fifths
       div#mynetwork
     .column.my-mode-selectors
       .columns
         .column
-          |
+          | 
+        .column.sidebar-title
           .columns
             .column
-              | Option
-          .columns
-            .column
-              | VPCs:
-          .columns
-            .column
-              | Subnets:
-          .columns
-            .column
-              | Availability Zone:
-          .columns
-            .column
-              | Internet Gateway:
-          .columns
-            .column
-              | Route Tables:
-          .columns
-            .column
-              | NAT Gateways:
-          .columns
-            .column
-              | Network Interfaces:
-          .columns
-            .column
-              | Elastic IPs:
-          .columns
-            .column
-              | Public IP Addresses:
-          .columns
-            .column
-              | Security Group:
-          .columns
-            .column
-              | Instances:
-          .columns
-            .column
-              | Jumpboxes:
-          .columns
-            .column
-              | AMI Images:
-          .columns
-            .column
-              | Key Pairs:
-          .columns
-            .column
-              | Load Balancers:
-          .columns
-            .column
-              | Target Groups:
-          .columns
-            .column
-              | Clusters:
-          .columns
-            .column
-              | Services:
-          .columns
-            .column
-              | Tasks:
+              | Hide&nbsp;&nbsp;Show&nbsp;&nbsp;Expand
+      .columns.sidebar-items
         .column
-          .columns
-            .column
-              | S
-            .column
-              | H
-            .column
-              | E
-          //- VPCs
-          .columns
-            .column
-              input(type='radio', id='vpcs-show' value='show' v-model='vpcs')
-            .column
-              input(type='radio', id='vpcs-hide' value='hide' v-model='vpcs')
-            .column
-              input(type='radio', id='vpcs-expand' value='expand' v-model='vpcs')
-          //- Subnets
-          .columns
-            .column
-              input(type='radio', id='subnets-show' value='show' v-model='subnets')
-            .column
-              input(type='radio', id='subnets-hide' value='hide' v-model='subnets')
-            .column
-              input(type='radio', id='subnets-expand' value='expand' v-model='subnets')
-          //- Availability Zones
-          .columns
-            .column
-              input(type='radio', id='availability-show' value='show' v-model='availability')
-            .column
-              input(type='radio', id='availability-hide' value='hide' v-model='availability')
-            .column
-              input(type='radio', id='availability-expand' value='expand' v-model='availability')
-          //- Internet Gateway
-          .columns
-            .column
-              input(type='radio', id='internet-show' value='show' v-model='internet')
-            .column
-              input(type='radio', id='internet-hide' value='hide' v-model='internet')
-            .column
-              input(type='radio', id='internet-expand' value='expand' v-model='internet')
-          //- Route Tables
-          .columns
-            .column
-              input(type='radio', id='route-show' value='show' v-model='route')
-            .column
-              input(type='radio', id='route-hide' value='hide' v-model='route')
-            .column
-              input(type='radio', id='route-expand' value='expand' v-model='route')
-          //- NAT Gateways
-          .columns
-            .column
-              input(type='radio', id='natGateways-show' value='show' v-model='natGateways')
-            .column
-              input(type='radio', id='natGateways-hide' value='hide' v-model='natGateways')
-            .column
-              input(type='radio', id='natGateways-expand' value='expand' v-model='natGateways')
-          //- Network Interfaces
-          .columns
-            .column
-              input(type='radio', id='networkInterfaces-show' value='show' v-model='networkInterfaces')
-            .column
-              input(type='radio', id='networkInterfaces-hide' value='hide' v-model='networkInterfaces')
-            .column
-              input(type='radio', id='networkInterfaces-expand' value='expand' v-model='networkInterfaces')
-          //- Elastic IPs
-          .columns
-            .column
-              input(type='radio', id='elastic-show' value='show' v-model='elastic')
-            .column
-              input(type='radio', id='elastic-hide' value='hide' v-model='elastic')
-            .column
-              input(type='radio', id='elastic-expand' value='expand' v-model='elastic')
-          //- Public IP Addresses
-          .columns
-            .column
-              input(type='radio', id='public-show' value='show' v-model='public')
-            .column
-              input(type='radio', id='public-hide' value='hide' v-model='public')
-            .column
-              input(type='radio', id='public-expand' value='expand' v-model='public')
-          //- Security Group
-          .columns
-            .column
-              input(type='radio', id='secgrp-show' value='show' v-model='secgrp')
-            .column
-              input(type='radio', id='secgrp-hide' value='hide' v-model='secgrp')
-            .column
-              input(type='radio', id='secgrp-expand' value='expand' v-model='secgrp')
-          //- Instances
-          .columns
-            .column
-              input(type='radio', id='instances-show' value='show' v-model='instances')
-            .column
-              input(type='radio', id='instances-hide' value='hide' v-model='instances')
-            .column
-              input(type='radio', id='instances-expand' value='expand' v-model='instances')
-          //- Jumpboxes
-          .columns
-            .column
-              input(type='radio', id='jumpboxMode-show' value='show' v-model='jumpboxMode')
-            .column
-              input(type='radio', id='jumpboxMode-hide' value='hide' v-model='jumpboxMode')
-            .column
-              input(type='radio', id='jumpboxMode-expand' value='expand' v-model='jumpboxMode')
-          //- AMI Images
-          .columns
-            .column
-              input(type='radio', id='ami-show' value='show' v-model='ami')
-            .column
-              input(type='radio', id='ami-hide' value='hide' v-model='ami')
-            .column
-              input(type='radio', id='ami-expand' value='expand' v-model='ami')
-          //- Key Pairs
-          .columns
-            .column
-              input(type='radio', id='key-show' value='show' v-model='key')
-            .column
-              input(type='radio', id='key-hide' value='hide' v-model='key')
-            .column
-              input(type='radio', id='key-expand' value='expand' v-model='key')
-          //- Load Balancers
-          .columns
-            .column
-              input(type='radio', id='load-show' value='show' v-model='load')
-            .column
-              input(type='radio', id='load-hide' value='hide' v-model='load')
-            .column
-              input(type='radio', id='load-expand' value='expand' v-model='load')
-          //- Target Groups
-          .columns
-            .column
-              input(type='radio', id='target-show' value='show' v-model='target')
-            .column
-              input(type='radio', id='target-hide' value='hide' v-model='target')
-            .column
-              input(type='radio', id='target-expand' value='expand' v-model='target')
-          //- Clusters
-          .columns
-            .column
-              input(type='radio', id='clusterMode-show' value='show' v-model='clusterMode')
-            .column
-              input(type='radio', id='clusterMode-hide' value='hide' v-model='clusterMode')
-            .column
-              input(type='radio', id='clusterMode-expand' value='expand' v-model='clusterMode')
-          //- Services
-          .columns
-            .column
-              input(type='radio', id='serviceMode-show' value='show' v-model='serviceMode')
-            .column
-              input(type='radio', id='serviceMode-hide' value='hide' v-model='serviceMode')
-            .column
-              input(type='radio', id='serviceMode-expand' value='expand' v-model='serviceMode')
-          //- Tasks
-          .columns
-            .column
-              input(type='radio', id='taskMode-show' value='show' v-model='taskMode')
-            .column
-              input(type='radio', id='taskMode-hide' value='hide' v-model='taskMode')
-            .column
-              input(type='radio', id='taskMode-expand' value='expand' v-model='taskMode')
+          | VPCs:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='vpcs')
+      .columns.sidebar-items
+        .column
+          | Subnets:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='subnets')
+      .columns.sidebar-items
+        .column
+          | Availability Zone:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='availability')
+      .columns.sidebar-items
+        .column
+          | Internet Gateway:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='internet')
+      .columns.sidebar-items
+        .column
+          | Route Tables:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='route')
+      .columns.sidebar-items
+        .column
+          | NAT Gateways:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='natGateways')
+      .columns.sidebar-items
+        .column
+          | Network Interfaces:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='networkInterfaces')
+      .columns.sidebar-items
+        .column
+          | Elastic IPs:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='elastic')
+      .columns.sidebar-items
+        .column
+          | Public IP Addresses:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='public')
+      .columns.sidebar-items
+        .column
+          | Security Group:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='secgrp')
+      .columns.sidebar-items
+        .column
+          | Instances:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='instances')
+      .columns.sidebar-items
+        .column
+          | Jumpboxes:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='jumpboxMode')
+      .columns.sidebar-items
+        .column
+          | AMI Images:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='ami')
+      .columns.sidebar-items
+        .column
+          | Key Pairs:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='key')
+      .columns.sidebar-items
+        .column
+          | Load Balancers:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='load')
+      .columns.sidebar-items
+        .column
+          | Target Groups:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='target')
+      .columns.sidebar-items
+        .column
+          | Clusters:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='clusterMode')
+      .columns.sidebar-items
+        .column
+          | Services:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='serviceMode')
+      .columns.sidebar-items
+        .column
+          | Tasks:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='taskMode')
+        
     div
 </template>
 
@@ -237,25 +117,25 @@ export default {
   name: 'VisNetwork',
   data () {
     return {
-      vpcs: 'hide',
-      availability: 'show',
-      subnets: 'show',
-      internet: 'hide',
-      route: 'hide',
-      natGateways: 'hide',
-      networkInterfaces: 'hide',
-      secgrp: 'hide',
-      elastic: 'hide',
-      public: 'hide',
-      instances: 'show',
-      jumpboxMode: 'show',
-      ami: 'hide',
-      key: 'hide',
-      load: 'show',
-      target: 'hide',
-      clusterMode: 'hide',
-      serviceMode: 'hide',
-      taskMode: 'hide'
+      vpcs: 0,
+      availability: 1,
+      subnets: 1,
+      internet: 0,
+      route: 0,
+      natGateways: 0,
+      networkInterfaces: 0,
+      secgrp: 0,
+      elastic: 0,
+      public: 0,
+      instances: 1,
+      jumpboxMode: 1,
+      ami: 0,
+      key: 0,
+      load: 1,
+      target: 0,
+      clusterMode: 0,
+      serviceMode: 0,
+      taskMode: 0
     }
   },
   components: {
@@ -368,31 +248,30 @@ export default {
         // Return a rule, based on the UI
         let getRuleForNodeFromUI = function (key) {
           let option = 'hide'
-          let rules = ['show', 'hide', 'expand']
-
+          let rules = [{ id: 0, rule: 'hide' }, { id: 1, rule: 'show' }, { id: 2, rule: 'expand' }]
           rules.forEach(function (rule) {
             if (
-              (_self.vpcs === rule && key.indexOf('Virtual') === 0) ||
-              (_self.availability === rule && key.indexOf('Availability') === 0) ||
-              (_self.subnets === rule && key.indexOf('Subnet') === 0) ||
-              (_self.internet === rule && key.indexOf('Internet') === 0) ||
-              (_self.route === rule && key.indexOf('Route Table') === 0) ||
-              (_self.natGateways === rule && key.indexOf('NAT Gateway::') === 0) ||
-              (_self.networkInterfaces === rule && key.indexOf('Network Interface') === 0) ||
-              (_self.secgrp === rule && key.indexOf('Security Group::') === 0) ||
-              (_self.elastic === rule && key.indexOf('Elastic') === 0) ||
-              (_self.jumpboxMode === rule && key.indexOf('Jumpbox') === 0) ||
-              (_self.public === rule && key.indexOf('Public') === 0) ||
-              (_self.instances === rule && key.indexOf('EC2') === 0) ||
-              (_self.ami === rule && key.indexOf('AMI') === 0) ||
-              (_self.key === rule && key.indexOf('Key') === 0) ||
-              (_self.load === rule && key.indexOf('Load') === 0) ||
-              (_self.target === rule && key.indexOf('Target') === 0) ||
-              (_self.clusterMode === rule && key.startsWith('Cluster::')) ||
-              (_self.serviceMode === rule && key.startsWith('Service::')) ||
-              (_self.taskMode === rule && key.startsWith('Task::'))
+              (parseInt(_self.vpcs) === rule.id && key.indexOf('Virtual') === 0) ||
+              (parseInt(_self.availability) === rule.id && key.indexOf('Availability') === 0) ||
+              (parseInt(_self.subnets) === rule.id && key.indexOf('Subnet') === 0) ||
+              (parseInt(_self.internet) === rule.id && key.indexOf('Internet') === 0) ||
+              (parseInt(_self.route) === rule.id && key.indexOf('Route Table') === 0) ||
+              (parseInt(_self.natGateways) === rule.id && key.indexOf('NAT Gateway::') === 0) ||
+              (parseInt(_self.networkInterfaces) === rule.id && key.indexOf('Network Interface') === 0) ||
+              (parseInt(_self.secgrp) === rule.id && key.indexOf('Security Group::') === 0) ||
+              (parseInt(_self.elastic) === rule.id && key.indexOf('Elastic') === 0) ||
+              (parseInt(_self.jumpboxMode) === rule.id && key.indexOf('Jumpbox') === 0) ||
+              (parseInt(_self.public) === rule.id && key.indexOf('Public') === 0) ||
+              (parseInt(_self.instances) === rule.id && key.indexOf('EC2') === 0) ||
+              (parseInt(_self.ami) === rule.id && key.indexOf('AMI') === 0) ||
+              (parseInt(_self.key) === rule.id && key.indexOf('Key') === 0) ||
+              (parseInt(_self.load) === rule.id && key.indexOf('Load') === 0) ||
+              (parseInt(_self.target) === rule.id && key.indexOf('Target') === 0) ||
+              (parseInt(_self.clusterMode) === rule.id && key.startsWith('Cluster::')) ||
+              (parseInt(_self.serviceMode) === rule.id && key.startsWith('Service::')) ||
+              (parseInt(_self.taskMode) === rule.id && key.startsWith('Task::'))
             ) {
-              option = rule
+              option = rule.rule
             }
           })
           return option
@@ -426,6 +305,7 @@ export default {
         let addNode = (key, markAsInitialNode) => {
           // console.log('key is ' + key)
           let rule = getRuleForNode(key)
+          // console.log(rule)
           if (rule === 'hide') {
             return
           }
@@ -767,5 +647,23 @@ export default {
 
 .my-mode-selectors {
   font-size: 11px;
+}
+
+.column.sidebar-title {
+  margin-left: 20px;
+  text-align: center;
+  font-size: 9px;
+}
+
+.columns.sidebar-items {
+  margin-bottom: 0px;
+}
+
+.columns.sidebar-items input[type='range'] {
+  width: 60%;
+}
+
+.columns.sidebar-items .column:nth-child(2) {
+  text-align: center;
 }
 </style>
