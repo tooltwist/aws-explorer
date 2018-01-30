@@ -21,8 +21,8 @@ cp SETENV Scripts/SETENV
 git add . && \
 git commit -m "$(date)" && \
 git push --set-upstream origin master
-rv=$?
+[ $? != 0 ] && exit 1
 
 echo ""
 echo "Config uploaded."
-exit $rv
+exit 0

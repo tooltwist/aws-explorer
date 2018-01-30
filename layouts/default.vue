@@ -24,10 +24,10 @@
 
             .navbar-end
               a.navbar-item(v-bind:href="'/' + $store.state.region + '/'") Index
-              a.navbar-item(v-bind:href="'/' + $store.state.region + '/instance'") Instances
+              // a.navbar-item(v-bind:href="'/' + $store.state.region + '/instance'") Instances
               a.navbar-item(v-bind:href="'/' + $store.state.region + '/cluster'") Clusters
-              a.navbar-item(v-bind:href="'/' + $store.state.region + '/vpc'") Networks
-              a.navbar-item(v-bind:href="'/' + $store.state.region + '/environment'") Environment
+              a.navbar-item(v-bind:href="'/' + $store.state.region + '/vpc'") VPCs
+              // a.navbar-item(v-bind:href="'/' + $store.state.region + '/environment'") Environment
               a.navbar-item(v-bind:href="'/' + $store.state.region + '/graph'") Graph
               a.navbar-item(v-bind:href="'/' + $store.state.region + '/awslinks'") AWS Links
               a.navbar-item(v-bind:href="'/' + $store.state.region + '/help'") Help
@@ -36,8 +36,13 @@
                   i.fas.fa-home
                 | reload
                 //.icon.is-small.fas.fa-redo
+              //- a.navbar-item(v-on:click="toggleHelp")
+              //-   span.icon
+              //-     i.fas.fa-home
+              //-   | help
+              //-   //.icon.is-small.fas.fa-redo
               .navbar-item
-                div.field
+                div.field.my-help-modal
                   //label.label Region
                   .control
                     .select
@@ -51,6 +56,12 @@
       //- nav
     //- header
 
+    // Help modal box
+    .modal
+      .modal-background
+      .modal-content
+        | What a lovely day
+      button.modal-close.is-large(aria-label="close")
     .container
       nuxt
     my-footer
@@ -62,6 +73,7 @@ import Regions from 'aws-regions'
 import myAWS from '~/server/misc/myAWS'
 
 var reloadCount = 1
+var helpVisible = false
 
 export default {
   components: {
@@ -84,6 +96,9 @@ export default {
       }
       return 'ap-southeast-1'
       // return ''
+    },
+    helpVisible: function () {
+      return helpVisible
     }
   },
   methods: {
@@ -104,6 +119,11 @@ export default {
       console.log('route to', path)
       this.$router.push({ path: path, query: { reload: true, s: reloadCount++ } })
       return true
+    },
+    toggleHelp: function () {
+      console.log(`toggleHelp()`)
+
+      helpVisible = !helpVisible
     }
   }
 }

@@ -335,10 +335,10 @@ Resources:
         S3Key: "CodepipelineArtifactMunge.zip"
       Role: !GetAtt CodePipelineLambdaRole.Arn
       Description: "Lambda function to merge artifacts in a CodePipeline"
-      Timeout: 30
+      Timeout: 60
       Handler:  "merge.handler"
       Runtime: "nodejs6.10"
-      MemorySize: 128
+      MemorySize: 256
 
 
   # Lambda to extract artifacts
@@ -353,10 +353,10 @@ Resources:
         S3Key: "CodepipelineArtifactMunge.zip"
       Role: !GetAtt CodePipelineLambdaRole.Arn
       Description: "Lambda function to extract from artifacts in a CodePipeline"
-      Timeout: 30
+      Timeout: 60
       Handler:  "extract.handler"
       Runtime: "nodejs6.10"
-      MemorySize: 128
+      MemorySize: 256
 
 
   Pipeline:

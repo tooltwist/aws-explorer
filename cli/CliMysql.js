@@ -13,7 +13,7 @@ function CliMysql(ip1, ip2, dbhost, dbname, username, password) {
   let loginCmd = `ssh -t -i ${keyfile} -p ${localPort} ec2-user@127.0.0.1       `
   let mysqlCmd = `ssh -t -i ${keyfile} -p ${localPort} ec2-user@127.0.0.1 docker run -it --rm mysql mysql -h ${dbhost}  -u ${username} -p${password} ${dbname}       `
   let phpmyadminCmd = `ssh -t -i ${keyfile} -p ${localPort} ec2-user@127.0.0.1 docker run -it --rm -p ${httpPort}:80 -e PMA_HOST=${dbhost} phpmyadmin/phpmyadmin:4.6.4-1        `
-  let browserCmd = `open localhost:${httpPort}        `
+  let browserCmd = `open http://localhost:${httpPort}        `
 
   console.log(`
 
