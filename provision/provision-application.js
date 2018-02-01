@@ -478,7 +478,7 @@ function ProvisionApplication(callback) {
                 console.log('CodePipeline: ' + url1);
                 console.log('ECS Cluster : ' + url2);
 
-                https : //ap-southeast-1.console.aws.amazon.com/ecs/home?region=ap-southeast-1#/clusters/nbt-trsgd1/services
+                // https://ap-southeast-1.console.aws.amazon.com/ecs/home?region=ap-southeast-1#/clusters/nbt-trsgd1/services
                 return callback(null);
               });
             });

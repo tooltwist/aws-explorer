@@ -169,6 +169,7 @@ function doEnvironmentProvisioning(details, callback) {
   url += `&param_ClientKey=${details.clientKey}`
   url += `&param_ClientSecret=${details.clientSecret}`
   console.log('Stack #3 - set up the ECS Cluster\n');
+  console.log(`(Don't forget to select 'I acknowledge that AWS Cloudformation might create AIM resources')\n`);
   console.log('\t' + url);
   console.log();
 }

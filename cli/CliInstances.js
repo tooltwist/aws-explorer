@@ -5,7 +5,7 @@ const types = require('../lib/types')
 const pad = require('../server/misc/util').pad
 const capitalize = require('../server/misc/util').capitalize
 const download = require('../server/misc/download')
-
+var colors = require('colors');
 
 function CliInstances(region) {
   region = myAWS.checkAwsRegion(region)
@@ -91,7 +91,13 @@ function CliInstances(region) {
         previousEnvironment = environment;
       }
 
-      console.log(`   ${pad(environment, 15)} ${pad(name, 25)} ${pad(state, 8)} ${pad(type, 10)} ${pad(instanceId, 20)} ${pad(ipaddr, 15)} ${pad(privateIp, 15)} ${pad(az, 16)} ${pad(keyname, 28)} ${description}`);
+      let row = `   ${pad(environment, 15)} ${pad(name, 25)} ${pad(state, 8)} ${pad(type, 10)} ${pad(instanceId, 20)} ${pad(ipaddr, 15)} ${pad(privateIp, 15)} ${pad(az, 16)} ${pad(keyname, 28)} ${description}`;
+      if (name.indexOf('-jumpbox-') > 0) {
+        row = (state === 'running') ? row.blue : row.dim;
+      } else {
+        row = (state === 'running') ? row.green.bold : row.red;
+      }
+      console.log(row);
     });
     console.log();
   })
