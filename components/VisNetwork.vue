@@ -739,7 +739,7 @@ export default {
 <style scoped>
 #mynetwork {
   width: 100%;
-  height: 600px;
+  height: 70vh;
   border: 1px solid lightgray;
 }
 .tooltip {
