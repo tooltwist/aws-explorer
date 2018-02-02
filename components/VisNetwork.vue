@@ -8,6 +8,7 @@
         button.button.is-small(@click="presetNetworks") networks
         button.button.is-small(@click="presetInstances") instances
         button.button.is-small(@click="presetSecGrps") security groups
+        button.button.is-small(@click="presetVpcs") VPCs
         button.button.is-small(@click="presetAll") all
         button.button.is-small(@click="presetNone") none
     .column.my-mode-selectors
@@ -659,13 +660,6 @@ export default {
         load: 'show'
       })
     },
-    presetClusters () {
-      this.usePresets({
-        vpc: 'expand',
-        subnets: 'expand',
-        availabilityZones: 'expand'
-      })
-    },
     presetSecGrps () {
       this.usePresets({
         vpcs: 'expand',
@@ -673,6 +667,23 @@ export default {
         secgrp: 'expand',
         instances: 'expand',
         jumpboxMode: 'expand'
+      })
+    },
+    presetClusters () {
+      this.usePresets({
+        load: 'show',
+        target: 'show',
+        clusterMode: 'expand',
+        serviceMode: 'expand',
+        taskMode: 'expand'
+      })
+    },
+    presetVpcs () {
+      this.usePresets({
+        vpc: 'expand',
+        subnets: 'expand',
+        availabilityZones: 'expand',
+        instances: 'show'
       })
     },
     presetNetworks () {
