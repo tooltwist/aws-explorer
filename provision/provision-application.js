@@ -402,6 +402,7 @@ function provisionApp_codePipeline(details, callback) {
   url += `&stackName=nbt-${details.environmentName}-${details.applicationName}-codepipeline`;
   url += `&param_EnvironmentName=${details.environmentName}`;
   url += `&param_ApplicationName=${details.applicationName}`;
+  url += `&param_GitHubBranch=${details.environmentName}`;
 
   inquirer.prompt([
     {

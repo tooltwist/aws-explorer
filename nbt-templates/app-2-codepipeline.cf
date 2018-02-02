@@ -7,11 +7,11 @@ Parameters:
     Type: String
 
   GitHubUser:
-    Description: "Tooltwist account owner  (---THIS-PART---/XXXXXXXXX)"
+    Description: "e.g. https://github.com/<USER_NAME>/xxxxxx.git"
     Type: String
 
   GitHubRepo:
-    Description: "Repository name  (XXXXXXXXX/---THIS-PART---)"
+    Description: "e.g. https://github.com/xxxxxx/<REPOSITORY_NAME>.git"
     Type: String
 
   GitHubBranch:
