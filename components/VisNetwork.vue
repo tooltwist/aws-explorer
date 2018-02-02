@@ -2,10 +2,18 @@
   .columns
     .column.is-four-fifths
       div#mynetwork
+      .mypresets
+        | presets:
+        button.button.is-small(@click="presetClusters") clusters
+        button.button.is-small(@click="presetNetworks") networks
+        button.button.is-small(@click="presetInstances") instances
+        button.button.is-small(@click="presetSecGrps") security groups
+        button.button.is-small(@click="presetAll") all
+        button.button.is-small(@click="presetNone") none
     .column.my-mode-selectors
       .columns
         .column
-          | 
+          |
         .column.sidebar-title
           .columns
             .column
@@ -17,14 +25,14 @@
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='vpcs')
       .columns.sidebar-items
         .column
+          | Availability Zone:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='availabilityZones')
+      .columns.sidebar-items
+        .column
           | Subnets:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='subnets')
-      .columns.sidebar-items
-        .column
-          | Availability Zone:
-        .column
-          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='availability')
       .columns.sidebar-items
         .column
           | Internet Gateway:
@@ -52,7 +60,7 @@
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='elastic')
       .columns.sidebar-items
         .column
-          | Public IP Addresses:
+          | Public IPs:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='public')
       .columns.sidebar-items
@@ -105,7 +113,7 @@
           | Tasks:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='taskMode')
-        
+
     div
 </template>
 
@@ -117,25 +125,25 @@ export default {
   name: 'VisNetwork',
   data () {
     return {
-      vpcs: 0,
-      availability: 1,
-      subnets: 1,
+      vpcs: 2,
+      availabilityZones: 2,
+      subnets: 2,
       internet: 0,
       route: 0,
       natGateways: 0,
       networkInterfaces: 0,
-      secgrp: 0,
       elastic: 0,
       public: 0,
-      instances: 1,
-      jumpboxMode: 1,
+      secgrp: 0,
+      instances: 2,
+      jumpboxMode: 0,
       ami: 0,
       key: 0,
-      load: 1,
-      target: 0,
-      clusterMode: 0,
-      serviceMode: 0,
-      taskMode: 0
+      load: 2,
+      target: 2,
+      clusterMode: 2,
+      serviceMode: 2,
+      taskMode: 2
     }
   },
   components: {
@@ -143,7 +151,8 @@ export default {
   props: [
     'index',
     'initialNodesFn', // Function to select initial nodes
-    'rulesFn' // Function to determine what should be displayed
+    'rulesFn', // Function to determine what should be displayed
+    'settings' // An object containing initial settings for each node type
   ],
   methods: {
     init () {
@@ -168,6 +177,10 @@ export default {
         'target_group': 'target_group'
       }
 
+      // Use the default presets.
+      // this.presetDefault()
+
+      // Display the Vis network
       const version = 2
       if (version === 2) {
         const theNodeIndex = this.index
@@ -252,7 +265,7 @@ export default {
           rules.forEach(function (rule) {
             if (
               (parseInt(_self.vpcs) === rule.id && key.indexOf('Virtual') === 0) ||
-              (parseInt(_self.availability) === rule.id && key.indexOf('Availability') === 0) ||
+              (parseInt(_self.availabilityZones) === rule.id && key.indexOf('Availability') === 0) ||
               (parseInt(_self.subnets) === rule.id && key.indexOf('Subnet') === 0) ||
               (parseInt(_self.internet) === rule.id && key.indexOf('Internet') === 0) ||
               (parseInt(_self.route) === rule.id && key.indexOf('Route Table') === 0) ||
@@ -432,7 +445,7 @@ export default {
               shape: 'triangle',
               color: '#FF9900' // orange
             }
-            // availability: {
+            // availabilityZones: {
             //   shape: 'dot',
             //   color: '#2B7CE9' // blue
             // },
@@ -513,7 +526,7 @@ export default {
           //   ctr++
           // })
           Object.keys(parsedData).forEach(function (key) {
-            if ((_self.vpcs === false && key.indexOf('Virtual') === 0) || (_self.availability === false && key.indexOf('Availability') === 0) || (_self.subnets === false && key.indexOf('Subnets') === 0) || (_self.internet === false && key.indexOf('Internet') === 0) || (_self.routes === false && key.indexOf('Routes') === 0) || (_self.elastic === false && key.indexOf('Elastic') === 0) || (_self.public === false && key.indexOf('Public') === 0) || (_self.instances === false && key.indexOf('EC2') === 0) || (_self.ami === false && key.indexOf('AMI') === 0) || (_self.key === false && key.indexOf('Key') === 0) || (_self.load === false && key.indexOf('Load') === 0) || (_self.target === false && key.indexOf('Target') === 0)) {
+            if ((_self.vpcs === false && key.indexOf('Virtual') === 0) || (_self.availabilityZones === false && key.indexOf('Availability') === 0) || (_self.subnets === false && key.indexOf('Subnets') === 0) || (_self.internet === false && key.indexOf('Internet') === 0) || (_self.routes === false && key.indexOf('Routes') === 0) || (_self.elastic === false && key.indexOf('Elastic') === 0) || (_self.public === false && key.indexOf('Public') === 0) || (_self.instances === false && key.indexOf('EC2') === 0) || (_self.ami === false && key.indexOf('AMI') === 0) || (_self.key === false && key.indexOf('Key') === 0) || (_self.load === false && key.indexOf('Load') === 0) || (_self.target === false && key.indexOf('Target') === 0)) {
               return
             }
 
@@ -535,7 +548,7 @@ export default {
             let children = Object.keys(parsedData[key]).length
             if (children) {
               Object.keys(parsedData[key]).forEach(function (key) {
-                if ((_self.vpcs === false && key.indexOf('Virtual') === 0) || (_self.availability === false && key.indexOf('Availability') === 0) || (_self.subnets === false && key.indexOf('Subnets') === 0) || (_self.internet === false && key.indexOf('Internet') === 0) || (_self.routes === false && key.indexOf('Routes') === 0) || (_self.elastic === false && key.indexOf('Elastic') === 0) || (_self.public === false && key.indexOf('Public') === 0) || (_self.instances === false && key.indexOf('Instances') === 0) || (_self.key === false && key.indexOf('Key') === 0) || (_self.load === false && key.indexOf('Load') === 0) || (_self.target === false && key.indexOf('Target') === 0)) {
+                if ((_self.vpcs === false && key.indexOf('Virtual') === 0) || (_self.availabilityZones === false && key.indexOf('Availability') === 0) || (_self.subnets === false && key.indexOf('Subnets') === 0) || (_self.internet === false && key.indexOf('Internet') === 0) || (_self.routes === false && key.indexOf('Routes') === 0) || (_self.elastic === false && key.indexOf('Elastic') === 0) || (_self.public === false && key.indexOf('Public') === 0) || (_self.instances === false && key.indexOf('Instances') === 0) || (_self.key === false && key.indexOf('Key') === 0) || (_self.load === false && key.indexOf('Load') === 0) || (_self.target === false && key.indexOf('Target') === 0)) {
                   return
                 }
 
@@ -602,6 +615,114 @@ export default {
     onchange (_id, _value) {
       console.log(_id, _value)
       this.$set(this, _id, _value)
+    },
+    usePresets (presets) {
+      function mode (name) {
+        let val = presets[name]
+        if (!val) {
+          return 0
+        }
+        if (val === 'expand') {
+          return 2
+        }
+        if (val === 'show') {
+          return 1
+        }
+        return 0
+      }
+      this.vpcs = mode('vpc')
+      this.availabilityZones = mode('availabilityZones')
+      this.subnets = mode('subnets')
+      this.internet = mode('internet')
+      this.route = mode('route')
+      this.natGateways = mode('natGateways')
+      this.networkInterfaces = mode('networkInterfaces')
+      this.secgrp = mode('secgrp')
+      this.elastic = mode('elastic')
+      this.public = mode('public')
+      this.instances = mode('instances')
+      this.jumpboxMode = mode('jumpboxMode')
+      this.ami = mode('ami')
+      this.key = mode('key')
+      this.load = mode('load')
+      this.target = mode('target')
+      this.clusterMode = mode('clusterMode')
+      this.serviceMode = mode('serviceMode')
+      this.taskMode = mode('taskMode')
+    },
+    presetDefault () {
+      this.usePresets({
+        availabilityZones: 'show',
+        subnets: 'expand',
+        instances: 'show',
+        jumpboxMode: 'show',
+        load: 'show'
+      })
+    },
+    presetClusters () {
+      this.usePresets({
+        vpc: 'expand',
+        subnets: 'expand',
+        availabilityZones: 'expand'
+      })
+    },
+    presetSecGrps () {
+      this.usePresets({
+        vpcs: 'expand',
+        availabilityZones: 'expand',
+        secgrp: 'expand',
+        instances: 'expand',
+        jumpboxMode: 'expand'
+      })
+    },
+    presetNetworks () {
+      this.usePresets({
+        subnets: 'expand',
+        internet: 'expand',
+        route: 'expand',
+        natGateways: 'expand',
+        networkInterfaces: 'expand',
+        elastic: 'expand',
+        public: 'expand'
+      })
+    },
+    presetInstances () {
+      this.usePresets({
+        instances: 'expand',
+        load: 'expand',
+        target: 'expand',
+        serviceMode: 'expand',
+        taskMode: 'expand'
+      })
+    },
+    presetAll () {
+      console.log('presetAll')
+      this.usePresets({
+        vpcs: 'expand',
+        availabilityZones: 'expand',
+        subnets: 'expand',
+        internet: 'expand',
+        route: 'expand',
+        natGateways: 'expand',
+        networkInterfaces: 'expand',
+        secgrp: 'expand',
+        elastic: 'expand',
+        public: 'expand',
+        instances: 'expand',
+        jumpboxMode: 'expand',
+        ami: 'expand',
+        key: 'expand',
+        load: 'expand',
+        target: 'expand',
+        clusterMode: 'expand',
+        serviceMode: 'expand',
+        taskMode: 'expand'
+      })
+    },
+    presetNone () {
+      this.usePresets({
+
+      })
     }
   },
   created () {
@@ -665,5 +786,16 @@ export default {
 
 .columns.sidebar-items .column:nth-child(2) {
   text-align: center;
+}
+
+.mypresets {
+  margin-left: 5px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  font-size: 13px;
+  color: #999;
+}
+.mypresets button {
+  margin-left: 10px;
 }
 </style>
