@@ -54,7 +54,7 @@ Resources:
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - ContainerName: ___APPLICATION___App
-          ContainerPort: 80
+          ContainerPort: ___APPLICATION_PORT___
           TargetGroupArn: !Ref TargetGroup
 
   TaskDefinition:

@@ -6,7 +6,7 @@ Parameters:
     Type: String
 
   EnvironmentName:
-    Description: IMPORTANT!!!     -->>> The stack name MUST be <environmentName>-vpc
+    Description: IMPORTANT!!!     -->>> The stack name MUST be <environmentName>
     Type: String
 
   CostCode:

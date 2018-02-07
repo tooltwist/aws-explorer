@@ -300,6 +300,9 @@ function provisionApp_secureConfig(details, callback) {
                             type: 'confirm',
                             name: 'step1complete',
                             message: `
+
+    APPLICATION CONFIG FILES
+    ------------------------
     A config skeleton has been written to ${configDir}
 
     Please go to this directory and:
@@ -364,7 +367,6 @@ function provisionApp_secureConfig(details, callback) {
 }
 
 function provisionApp_loadBalancer(details, callback) {
-
   let url = `https://${myAWS.region()}.console.aws.amazon.com/cloudformation/home?region=${myAWS.region()}#/stacks/create/review`;
   url += `?templateURL=https://s3-ap-northeast-1.amazonaws.com/nbt-templates/app-1-loadbalancer.cf`
   url += `&stackName=nbt-${details.environmentName}-${details.applicationName}-loadbalancer`;
@@ -378,11 +380,45 @@ function provisionApp_loadBalancer(details, callback) {
       type: 'confirm',
       name: 'step2complete',
       message: `
+
+  LOAD BALANCER
+  -------------
   Please run this stack, to prepare the load balancer:
 
     ${url}
 
   Have you completed this step?`
+    }
+  ]).then(function(answers) {
+    // Check their reply
+    if (answers.step2complete) {
+      callback(null);
+    } else {
+      console.log('Please complete these steps before continuing...');
+      return provisionApp_loadBalancer(details, callback);
+    }
+  })
+}
+
+function provisionApp_updateDNS(details, callback) {
+  inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'step3complete',
+      message: `
+
+  DNS ENTRY
+  ---------
+  If you wish, you can now create a DNS entry to access this application.  It takes a while
+  for DNS entries take to propagate around the world, so the sooner you do this the better:
+
+    1. Look at the 'Outputs' section of the Cloudformaton stack you just completed.
+
+    2. Take note of the 'ServiceUrl' endpoint.
+
+    3. Wherever you maintain your DNS, add a CNAME record referring to this Url.
+
+  Proceed?`
     }
   ]).then(function(answers) {
     // Check their reply
@@ -407,8 +443,11 @@ function provisionApp_codePipeline(details, callback) {
   inquirer.prompt([
     {
       type: 'confirm',
-      name: 'step3complete',
+      name: 'step4complete',
       message: `
+
+  CODE PIPELINE
+  -------------
   Please run this stack, to create the code Pipeline:
 
     ${url}
@@ -460,31 +499,35 @@ function ProvisionApplication(callback) {
             if (err)
               return callback(err);
 
-            provisionApp_codePipeline(details, err => {
+            provisionApp_updateDNS(details, err => {
               if (err)
                 return callback(err);
 
-              provisionApp_secureConfig(details, function(err) {
+              provisionApp_codePipeline(details, err => {
                 if (err)
                   return callback(err);
-                let url1 = `https://${myAWS.region()}.console.aws.amazon.com/codepipeline/home?region=${myAWS.region()}#/dashboard`;
-                let url2 = `https://${myAWS.region()}.console.aws.amazon.com/ecs/home?region=${myAWS.region()}#/clusters/nbt-${details.environmentName}/services`;
-                let url3 = `https://${myAWS.region()}.console.aws.amazon.com/codecommit/home?region=${myAWS.region()}#/repository/nbt-${details.environmentName}-${details.applicationName}-SecureConfig`;
 
-                console.log();
-                console.log('Your application is now provisioned with codepipeline, an ECS service, and load balancer.\n');
-                console.log('Each time you commit to your Github repository, the deployment pipeline will be triggered.\n');
-                console.log();
-                console.log('Secure Repo : ' + url3);
-                console.log('CodePipeline: ' + url1);
-                console.log('ECS Cluster : ' + url2);
+                provisionApp_secureConfig(details, function(err) {
+                  if (err)
+                    return callback(err);
+                  let url1 = `https://${myAWS.region()}.console.aws.amazon.com/codepipeline/home?region=${myAWS.region()}#/dashboard`;
+                  let url2 = `https://${myAWS.region()}.console.aws.amazon.com/ecs/home?region=${myAWS.region()}#/clusters/nbt-${details.environmentName}/services`;
+                  let url3 = `https://${myAWS.region()}.console.aws.amazon.com/codecommit/home?region=${myAWS.region()}#/repository/nbt-${details.environmentName}-${details.applicationName}-SecureConfig`;
 
-                // https://ap-southeast-1.console.aws.amazon.com/ecs/home?region=ap-southeast-1#/clusters/nbt-trsgd1/services
-                return callback(null);
+                  console.log();
+                  console.log('Your application is now provisioned with codepipeline, an ECS service, and load balancer.\n');
+                  console.log('Each time you commit to your Github repository, the deployment pipeline will be triggered.\n');
+                  console.log();
+                  console.log('Secure Repo : ' + url3);
+                  console.log('CodePipeline: ' + url1);
+                  console.log('ECS Cluster : ' + url2);
+
+                  // https://ap-southeast-1.console.aws.amazon.com/ecs/home?region=ap-southeast-1#/clusters/nbt-trsgd1/services
+                  return callback(null);
+                });
               });
             });
-
-          })
+          });
         });
       });
     });
