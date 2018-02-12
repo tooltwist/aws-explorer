@@ -1,18 +1,13 @@
 <template lang="pug">
   .top
-    CardForInstance(v-if="node.type === 'EC2 Instance'" v-bind:node="node")
-    CardForVPC(v-else-if="node.type === 'Virtual Private Cloud'" v-bind:node="node")
-    .card(v-else style="min-width: 0%;")
-      .mytype(v-if="showType")
-        | {{node.type}}
-      .link(v-if="idAsLabel === '' || idAsLabel === 'true'" rel="CSS")
-        router-link(v-bind:to="urlForNode(node)") {{ node.id }}
-      .link(v-else rel="CSS")
-        //router-link(v-bind:to="'/node/' + node.key") {{ node.key }}
-        //br
-        router-link(v-bind:to="urlForNode(node)") {{ node.key }}
-      .name {{ label }}
-      .desc {{ description }}
+    .card(style="min-width: 0%;")
+      img.awsicon(src="/aws-images/General_virtualprivatecloud.png")
+      // .link(v-if="idAsLabel === '' || idAsLabel === 'true'" rel="CSS")
+      //   router-link(v-bind:to="urlForNode(node)") {{ node.id }}
+      // .link(v-else rel="CSS")
+      //   router-link(v-bind:to="urlForNode(node)") {{ node.key }}
+      router-link(v-bind:to="urlForNode(node)") {{ label }}
+      router-link(v-bind:to="urlForNode(node)") {{ node.VpcId }}
 
     pre(v-if="showData === '' || showData === 'true'" rel="CSS")
       | {{ node.data }}
@@ -21,31 +16,26 @@
 
 <script>
 import urlForNode from '~/lib/urlForNode.js'
-import CardForInstance from '~/components/Card-Instance'
-import CardForVPC from '~/components/Card-VPC'
+import types from '../lib/types'
 
 export default {
   name: 'id',
-  components: {
-    CardForInstance,
-    CardForVPC
-  },
   props: [
-    'showType',
     'node',
     'showData',
     'idAsLabel'
   ],
   computed: {
     label: function () {
-      let label = ''
+      return types.label(this.node)
+      /* let label = ''
       if (this.node.data && this.node.data.Tags) {
         this.node.data.Tags.filter(tag => tag.Key === 'Name').forEach(tag => { label = tag.Value })
       }
-      if (!label && this.node.Name) {
-        label = this.node.Name
+      if (!label && this.node.VpcId) {
+        label = this.node.VpcId
       }
-      return label
+      return label */
     },
     description: function () {
       let desc = ''
@@ -78,33 +68,15 @@ export default {
   @import "~bulma";
   @import '~bulma/sass/utilities/mixins';
 
-
-  .node-card {
-    display: inline-block;
-    //font-family: Helvetica;
-    min-height: 70px;
-    border: solid 1px #cce;
-    width: 300px;
-    padding: 3px;
-    margin: 10px;
-  }
-
   .card {
     margin-bottom: 10px;
-    min-height: 30px;
+    min-height: 50px;
     padding-left: 5px;
   }
 
   .heading router-link {
     font-weight: strong;
     //font-size: 0.8em;
-  }
-
-  .mytype {
-    color: #aaa;
-    font-weight: strong;
-    font-size: 0.8em;
-    text-align: left;
   }
 
   .name {
@@ -114,9 +86,17 @@ export default {
   .desc {
     font-family: "Helvetica Narrow","Arial Narrow",Tahoma,Arial,Helvetica,sans-serif;
     font-size: 0.7em;
-    color: #999;
+    color: #aaa;
   }
 
+  .awsicon {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-right: 5px;
+    width: 48px;
+    float: left;
+    vertical-align: top;
+  }
   pre {
     overflow-x: scroll;
     text-align: left;

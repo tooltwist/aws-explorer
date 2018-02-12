@@ -68,14 +68,14 @@ Resources:
       Protocol: HTTP
       Matcher:
         HttpCode: 200-299
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 30
       HealthCheckPath: !Ref HealthCheckPath
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 15
       HealthyThresholdCount: 2
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: 30
+          Value: 120
       Tags:
           - Key: Environment
             Value: !Sub ${EnvironmentName}

@@ -8,6 +8,8 @@ const CliMysql = require('./CliMysql')
 const CliNbt = require('./CliNbt')
 const CliSummary = require('./CliSummary')
 const CliProvision = require('./CliProvision')
+const CliDatabases = require('./CliDatabases')
+// const CliCaches = require('./CliCaches')
 const CliInstances = require('./CliInstances')
 const CliClusters = require('./CliClusters')
 const CliALBs = require('./CliALBs')
@@ -57,7 +59,17 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
       CliClusters(r)
     });
 
-  // Show ECS clusters
+  // Show Databases
+  program
+    .command('databases')
+    .description('List databases')
+    .action(function(ip) {
+      haveCommand = true
+      let r = program.region || myAWS.INITIAL_REGION;
+      CliDatabases(r)
+    });
+
+  // Show load balancers
   program
     .command('albs')
     .description('List Application Load Balancers')

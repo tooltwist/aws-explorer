@@ -2,7 +2,7 @@
   .page
     .container.has-text-centered
       //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-      h1.title Node
+      h1.title {{ node.type }}
       h2.info {{ node.key }}
       hr
       br
@@ -11,28 +11,27 @@
       .columns
         .column.has-text-centered
           h3 Is-used-by
+          br
           ul
             li(v-for="parentId in node.parents")
-              node-card(v-bind:node="index[parentId]")
-          hr
+              node-card(v-bind:node="index[parentId]" show-type="true")
 
         .column.has-text-centered(style="min-width: 0;")
-          h3 Current node
           node-card(v-bind:node="node" show-data="true")
 
         .column.has-text-centered
           h3 Uses
+          br
           ul
             li(v-for="childId in node.children")
-              node-card(v-bind:node="index[childId]")
-      hr
+              node-card(v-bind:node="index[childId]" show-type="true")
 
-      h3 All
-      ul
-        li(v-for="item in list")
-          router-link(v-bind:to="'/node/' + item.key") {{ item.key }}
-      nuxt-link(to="/" class="button") Home
-      nuxt-link(to="/stuff" class="button") Stuff
+      // h3 All
+      // ul
+      //   li(v-for="item in list")
+      //     router-link(v-bind:to="'/node/' + item.key") {{ item.key }}
+      // nuxt-link(to="/" class="button") Home
+      // nuxt-link(to="/stuff" class="button") Stuff
 </template>
 
 <script>

@@ -18,7 +18,7 @@ function CliInstances(region) {
     }
 
     // Collect just the EC2 Instances
-    let list = graph.nodes().filter(node => (node.type === types.INSTANCE || node.type === types.JUMPBOX))
+    let list = graph.nodes().filter(node => (node.type === types.INSTANCE))
 
     // Patch on the name and other values
     list.forEach(node => {
@@ -30,7 +30,7 @@ function CliInstances(region) {
         if (tag.Key == 'Description') { node._description = tag.Value };
         if (tag.Key == 'Environment') { node._environment = tag.Value };
       })
-      node._isJumpbox = (node.type === types.JUMPBOX) ? 1 : 0;
+      node._isJumpbox = (node.data._isJumpbox) ? 1 : 0;
     });
 
     // Sort the instance nodes

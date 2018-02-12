@@ -150,6 +150,10 @@ function nodeWithKey(key) {
 }
 
 function findNode(type, id, data, describeFn) {
+  if (type === types.INSTANCE) {
+    console.log(`****** INSTANCE ${id}, data=`, data);
+  }
+
   let key = keyForNode(type, id)
   let node = nodeIndex[key]
   if (!node) {
@@ -160,6 +164,7 @@ function findNode(type, id, data, describeFn) {
     node.setData(data)
   }
   if (describeFn) {
+    console.log(`\n\nWARNING: findNode(${type}) called with describeFn`);
     node.setDescribe(describeFn)
   }
   return node

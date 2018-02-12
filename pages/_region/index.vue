@@ -77,6 +77,12 @@
         h3 Tasks
           .vpc(v-for="node in list" v-if="node.type === 'Task'")
             node-card(v-bind:node="node" id-as-label)
+        h3 Databases
+          .vpc(v-for="node in list" v-if="node.type === 'Database'")
+            node-card(v-bind:node="node" id-as-label)
+        h3 Caches
+          .vpc(v-for="node in list" v-if="node.type === 'Cache'")
+            node-card(v-bind:node="node" id-as-label)
     hr
 
 </template>

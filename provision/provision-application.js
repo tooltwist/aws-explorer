@@ -298,7 +298,7 @@ function provisionApp_secureConfig(details, callback) {
                         inquirer.prompt([
                           {
                             type: 'confirm',
-                            name: 'step1complete',
+                            name: 'step5complete',
                             message: `
 
     APPLICATION CONFIG FILES
@@ -328,7 +328,7 @@ function provisionApp_secureConfig(details, callback) {
                           }
                         ]).then(function(answers) {
                           // Check their reply
-                          if (answers.step1complete) {
+                          if (answers.step5complete) {
                             callback(null);
                           } else {
                             console.log('Please complete these steps before continuing...');
@@ -380,13 +380,13 @@ function provisionApp_loadBalancer(details, callback) {
       type: 'confirm',
       name: 'step2complete',
       message: `
-
+\n
   LOAD BALANCER
   -------------
-  Please run this stack, to prepare the load balancer:
-
-    ${url}
-
+  Please run this stack, to prepare the load balancer:\n
+\n
+    ${url}\n
+\n
   Have you completed this step?`
     }
   ]).then(function(answers) {
@@ -410,7 +410,7 @@ function provisionApp_updateDNS(details, callback) {
   DNS ENTRY
   ---------
   If you wish, you can now create a DNS entry to access this application.  It takes a while
-  for DNS entries take to propagate around the world, so the sooner you do this the better:
+  for DNS entries to propagate around the world, so the sooner you do this the better:
 
     1. Look at the 'Outputs' section of the Cloudformaton stack you just completed.
 
@@ -422,11 +422,11 @@ function provisionApp_updateDNS(details, callback) {
     }
   ]).then(function(answers) {
     // Check their reply
-    if (answers.step2complete) {
+    if (answers.step3complete) {
       callback(null);
     } else {
       console.log('Please complete these steps before continuing...');
-      return provisionApp_loadBalancer(details, callback);
+      return provisionApp_updateDNS(details, callback);
     }
   })
 }
@@ -445,24 +445,24 @@ function provisionApp_codePipeline(details, callback) {
       type: 'confirm',
       name: 'step4complete',
       message: `
-
+\n
   CODE PIPELINE
   -------------
   Please run this stack, to create the code Pipeline:
-
+\n
     ${url}
-
+\n
   NOTES:
-
+\n
       You will need to include an access token for your Github account, which can be
       created under User Icon->Settings->Developer Settings->Personal Access Tokens.
       Please make sure to include 'repo' and 'admin:repo_hook' permissions.
-
+\n
   Have you completed this step?`
     }
   ]).then(function(answers) {
     // Check their reply
-    if (answers.step3complete) {
+    if (answers.step4complete) {
       callback(null);
     } else {
       console.log('Please complete this step before continuing...');

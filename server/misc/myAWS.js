@@ -13,6 +13,7 @@ var ec2 = null
 var elbv2 = null
 var autoscaling = null
 var ecs = null
+var rds = null
 
 function downloadRegions (callback) {
   console.log('  downloadRegions()')
@@ -108,6 +109,10 @@ function checkAwsRegion (region) {
       apiVersion: '2014-11-13',
       region: currentRegion
     })
+    rds = new AWS.RDS({
+      apiVersion: '2014-10-31',
+      region: currentRegion
+    })
   }
 
   return currentRegion
@@ -123,6 +128,10 @@ module.exports.ec2 = function () {
 
 module.exports.ecs = function () {
   return ecs
+}
+
+module.exports.rds = function () {
+  return rds
 }
 
 module.exports.elbv2 = function () {

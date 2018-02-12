@@ -66,14 +66,6 @@ function downloadVpcs(callback) {
 
 function downloadInstances(callback) {
   if (debug) console.log('  downloadInstances()');
-  let describe = node => {
-    let desc = ''
-    let name = node.findTag('Name')
-    if (name) {
-      desc += '  Name: ' + name + '\n';
-    }
-    return desc
-  }
 
   myAWS.ec2().describeInstances({}, (err, data) => {
     if (err) return callback(err);
@@ -84,13 +76,14 @@ function downloadInstances(callback) {
 
         // See if it is a jumpbox
         // console.log('instance=', instance);
-        let type = types.INSTANCE;
         instance.Tags.forEach(tag => {
           if (tag.Key === 'Name' && tag.Value.indexOf('-jumpbox-') >= 0) {
-            type = types.JUMPBOX;
+            instance._isJumpbox = true
           }
         });
-        let i = graph.findNode(type, instance.InstanceId, instance, describe)
+
+        // Create the node
+        let i = graph.findNode(types.INSTANCE, instance.InstanceId, instance)
 
         // ImageId
         let img = graph.findNode(types.IMAGE, instance.ImageId, null)
@@ -171,6 +164,8 @@ function downloadSubnets(callback) {
     return desc
   }
 
+  // let describe = types.describe
+
   myAWS.ec2().describeSubnets({}, (err, data) => {
     if (err) return callback(err);
 
@@ -236,6 +231,18 @@ function downloadNatGateways(callback) {
         // Add this to it's VPC
         let v = graph.findNode(types.VPC, grp.VpcId, null)
         v.addChild(g)
+
+        // Add it's public IPs
+        grp.NatGatewayAddresses.forEach(addr => {
+          if (addr.NetworkInterfaceId) {
+            let iface = graph.findNode(types.NETIFACE, addr.NetworkInterfaceId, null)
+            g.addChild(iface)
+          }
+          if (addr.PublicIp) {
+            let ip = graph.findNode(types.PUBLICIP, addr.PublicIp, null)
+            g.addChild(ip)
+          }
+        })
       }
     })
     return callback(null)
@@ -253,11 +260,14 @@ function downloadInternetGateways(callback) {
     return desc
   }
 
+  // An Internet Gateway provides the means by which the stuff in the
+  // VPC connects to the Internet. I believe a NAT will quietly use
+  // the Internet Gateway, but doesn't actually reference it.
   myAWS.ec2().describeInternetGateways({}, (err, data) => {
     if (err) return callback(err);
 
-    // console.log('data=', data);
     data.InternetGateways.forEach(rec => {
+      // console.log('\n\n\nINTERNET GATEWAY=', rec)
       let igw = graph.findNode(types.IGW, rec.InternetGatewayId, rec, describe)
 
       // See where it is attached
@@ -336,6 +346,7 @@ function downloadKeyPairs(callback) {
   })
 }
 
+// Inbound interface from the Internet
 function downloadNetworkInterfaces(callback) {
   if (debug) console.log('  downloadNetworkInterfaces()');
   let describe = node => {
@@ -356,6 +367,14 @@ function downloadNetworkInterfaces(callback) {
       if (rec.Association && rec.Association.PublicIp) {
         let ip = graph.findNode(types.PUBLICIP, rec.Association.PublicIp)
         ip.addChild(ni)
+      }
+
+      // Attachment
+      if (rec.Attachment) {
+        if (rec.Attachment.InstanceId) {
+          let instance = graph.findNode(types.INSTANCE, rec.Attachment.InstanceId)
+          ni.addChild(instance)
+        }
       }
 
       // AvailabilityZone
@@ -400,7 +419,7 @@ function downloadRouteTables(callback) {
       if (route.GatewayId === 'local') {
         desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;local</td></tr>\n'
       } else {
-        let key = graph.keyForNode(types.IGW, route.GatewayId)
+        let key = graph.keyForNode(types.NAT, route.GatewayId)
         desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;<a href="?node=' + key + '">' + route.GatewayId + '</a></td></tr>\n'
       }
     })
@@ -420,9 +439,10 @@ function downloadRouteTables(callback) {
       let gateways = [] // Only add each gateway it once
       rec.Routes.forEach(route => {
         if (route.GatewayId != 'local') {
-          if (!gateways[route.GatewayId]) {
-            let igw = graph.findNode(types.IGW, route.GatewayId)
-            igw.addChild(rt)
+          let natId = route.NatGatewayId
+          if (!gateways[natId]) {
+            let igw = graph.findNode(types.NAT, natId)
+            rt.addChild(igw)
             // Having a route to an Internet Gateway is the definition of a "Public Subnet"
             rt.hasPublicRoutes = true
             gateways[route.GatewayId] = true
@@ -886,6 +906,46 @@ function downloadClusters(callback) {
   }); //- listClusters
 }
 
+function downloadDatabases(callback) {
+  if (debug) console.log('  downloadDatabases()');
+
+  // Function to describe node
+  let describe = node => {
+    let desc = ''
+    desc += 'DATABASE ' + node.DBInstanceIdentifier
+    // desc += 'From: ' + node.data.Protocol.toLowerCase() + ' / ' + node.data.Port + '\n'
+    // desc += 'Healthcheck: ' + node.data.HealthCheckPath + '\n'
+
+    // Add the targets for this target group, if they have been loaded
+    // desc += describeTargets(node, withHealthchecks)
+    return desc
+  }
+
+  // Load the definitions
+  myAWS.rds().describeDBInstances({}, (err, data) => {
+    if (err) return callback(err);
+
+    //console.log('data=', data);
+    data.DBInstances.forEach(rec => {
+      console.log('\n\n\nDB =>', rec);
+      let db = graph.findNode(types.DATABASE, rec.DBInstanceIdentifier, rec, describe)
+
+      rec.VpcSecurityGroups.forEach(sgDef => {
+        let sg = graph.findNode(types.SECGRP, sgDef.VpcSecurityGroupId)
+        sg.addChild(db)
+      })
+      let az = graph.findNode(types.AZ, rec.AvailabilityZone)
+      az.addChild(db)
+
+      // VPC
+      // let vpc = graph.findNode(types.VPC, rec.VpcId)
+      // vpc.addChild(tg)
+    })
+    targetGroupsAreLoaded = true;
+    return callback(null)
+  })
+}
+
 // See http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#describeSubnets-property
 function downloadEverything(region, withHealthchecks, callback/* (err) */) {
   console.log('downloadEverything()');
@@ -925,9 +985,12 @@ function downloadEverything(region, withHealthchecks, callback/* (err) */) {
                               if (err) return callback(err)
                               downloadClusters(err => {
                                 if (err) return callback(err)
+                                downloadDatabases(err => {
+                                  if (err) return callback(err)
 
-                                console.log('finished downloading everything');
-                                return callback(null)
+                                  console.log('finished downloading everything  ZZZ1');
+                                  return callback(null)
+                                })
                               })
                             })
                           })
@@ -958,4 +1021,5 @@ module.exports.downloadRouteTables = downloadRouteTables;
 module.exports.downloadLoadBalancers = downloadLoadBalancers;
 module.exports.downloadTargetGroups = downloadTargetGroups;
 module.exports.downloadClusters = downloadClusters;
+module.exports.downloadDatabases = downloadDatabases;
 module.exports.downloadEverything = downloadEverything;

@@ -114,6 +114,16 @@
           | Tasks:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='taskMode')
+      .columns.sidebar-items
+        .column
+          | Databases:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='databaseMode')
+      .columns.sidebar-items
+        .column
+          | Caches:
+        .column
+          input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='cacheMode')
 
     div
 </template>
@@ -121,6 +131,7 @@
 <script>
 import vis from 'vis'
 import _ from 'lodash'
+import types from '../lib/types'
 
 export default {
   name: 'VisNetwork',
@@ -144,7 +155,9 @@ export default {
       target: 2,
       clusterMode: 2,
       serviceMode: 2,
-      taskMode: 2
+      taskMode: 2,
+      databaseMode: 0,
+      cacheMode: 0
     }
   },
   components: {
@@ -162,16 +175,16 @@ export default {
       console.log('currentRegion = ', currentRegion)
       let parentGrp = {
         'virtual_private_cloud': 'virtual_private_cloud',
-        'availability_zone': 'availability_zone',
-        'subnet': 'subnet',
+        // 'availability_zone': 'availability_zone',
+        // 'subnet': 'subnet',
         'internet_gateway': 'internet_gateway',
         'route_table': 'route_table',
         'nat_gateway::': 'nat_gateway',
         'network_interface': 'network_interface',
-        'security_group': 'security_group',
+        // 'security_group': 'security_group',
         'elastic_ip': 'elastic_ip',
         'public_ip_address': 'public_ip_address',
-        'ec2_instance': 'ec2_instance',
+        // 'ec2_instance': 'ec2_instance',
         'ami_image': 'ami_image',
         'key_pair': 'key_pair',
         'load_balancer': 'load_balancer',
@@ -283,7 +296,9 @@ export default {
               (parseInt(_self.target) === rule.id && key.indexOf('Target') === 0) ||
               (parseInt(_self.clusterMode) === rule.id && key.startsWith('Cluster::')) ||
               (parseInt(_self.serviceMode) === rule.id && key.startsWith('Service::')) ||
-              (parseInt(_self.taskMode) === rule.id && key.startsWith('Task::'))
+              (parseInt(_self.taskMode) === rule.id && key.startsWith('Task::')) ||
+              (parseInt(_self.databaseMode) === rule.id && key.startsWith('Database::')) ||
+              (parseInt(_self.cacheMode) === rule.id && key.startsWith('Cache::'))
             ) {
               option = rule.rule
             }
@@ -383,7 +398,10 @@ export default {
         let visdata = { nodes: [], edges: [], container: {} }
         Object.keys(nodesForGraph).forEach(function (key) {
           var def = nodesForGraph[key]
-          // console.log('-- node --> ' + key + ' --> ', def)
+          console.log('-- node --> ' + key + ' --> ', def)
+
+          // Get the actual node definition.
+          let node = theNodeIndex[key]
 
           // Decide on the node appearance (group) and it's label
           let group = 0
@@ -396,7 +414,74 @@ export default {
             // Choose the group based on the node type
             group = parentGrp[_.replace(_.split(key, '::')[0], /\s+/g, '_').toLowerCase()]
           }
-          visdata.nodes.push({ id: def.visId, label: label, title: label, group: group })
+
+          // See http://visjs.org/docs/network/nodes.html
+          let nodedef = { id: def.visId, label: label, title: label, group: group, shape: 'square', ourKey: def.key }
+          if (node.type === types.INSTANCE) {
+            // let label = types.findTag(node, 'Name')
+            // if (!label) {
+            //   if (node.data) {
+            //     console.log('node is', node)
+            //     label = node.data.InstanceId
+            //   } else {
+            //     label = `Unknown ${node.id}`
+            //   }
+            // }
+            // nodedef.label = `EC2 Instance\n${label}`
+            // nodedef.title = `<b>EC2 Instance</b><br/>
+            //     Id: ${node.data.InstanceId}<br/>
+            //     Type: ${node.data.InstanceType}`
+            nodedef.label = `EC2 Instance\n${types.label(node)}`
+            nodedef.title = types.describe(node)
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonEC2_instance.png'
+          } else if (node.type === types.VPC) {
+            nodedef.label = types.label(node)
+            nodedef.title = types.describe(node)
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/General_virtualprivatecloud.png'
+          } else if (node.type === 'Database') {
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Database_AmazonRDS_DBinstance.png'
+          } else if (node.type === 'Route Table') {
+            nodedef.label = types.label(node)
+            nodedef.title = `<b>Route Table</b><br />${types.details(node)}`
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonVPC_router.png'
+          } else if (node.type === 'Internet Gateway') {
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonVPC_Internetgateway.png'
+          } else if (node.type === 'Load Balancer') {
+            nodedef.label = `Load Balancer\n${node.data.LoadBalancerName}`
+            nodedef.title = `<b>Load Balancer</b><br/>${node.data.LoadBalancerName}<br/>${node.data.DNSName}`
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_ElasticLoadBalancing_ApplicationLoadBalancer.png'
+          } else if (node.type === 'Cluster') {
+            nodedef.label = `Cluster\n${node.data.clusterName}`
+            nodedef.title = `<b>Cluster</b><br/>${node.data.clusterName}<br/>status: ${node.data.status}<br/>containers: ${node.data.registeredContainerInstancesCount}<br/>tasks: ${node.data.runningTasksCount}<br/><i>Note: this information might be out of date.</i>`
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonECS.png'
+          } else if (node.type === 'NAT Gateway') {
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonVPC_VPCNATgateway.png'
+          } else if (node.type === 'Elastic IP') {
+            nodedef.label = `Elastic\n${node.data.PublicIp}`
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonEC2_ElasticIPaddress.png'
+          } else if (node.type === 'Subnet') {
+            nodedef.label = `${node.data.SubnetId}\n${types.findTag(node, 'Name')}`
+            nodedef.shape = 'dot'
+            nodedef.color = { border: '#c7c7c7', background: '#eee' }
+          } else if (node.type === 'Availability Zone') {
+            nodedef.label = `Availability Zone\n${node.data.ZoneName}`
+            nodedef.shape = 'dot'
+            nodedef.color = { border: '#c7c7f7', background: '#eef' }
+          } else if (node.type === 'Public IP Address') {
+            nodedef.shape = 'triangle'
+            nodedef.color = { border: '#c7c7f7', background: '#eef' }
+          }
+
+          visdata.nodes.push(nodedef)
         })
         Object.keys(edgesForGraph).forEach(function (key) {
           var def = edgesForGraph[key]
@@ -470,7 +555,7 @@ export default {
           var ids = params.nodes
           var clickedNodes = nodes.get(ids)
           if (clickedNodes[0].label) {
-            _self.$nuxt.$router.replace({ path: `/${currentRegion}/node/${clickedNodes[0].label}` })
+            _self.$nuxt.$router.replace({ path: `/${currentRegion}/node/${clickedNodes[0].ourKey}` })
           }
         })
         network.on('hoverNode', function (params) {
@@ -479,139 +564,7 @@ export default {
         network.on('hoverEdge', function (params) {
           console.log('hoverEdge Event:', params)
         })
-
-        return
       }
-
-      // INITIAL VERSION
-      let parents = this.index
-      let parsedData = {}
-      new Promise((resolve) => {
-        Object.keys(parents).forEach(function (pkey) {
-          let children = parents[pkey].children
-          if (children) {
-            Object.keys(children).forEach(function (key) {
-              if (parsedData[parents[pkey].key]) {
-                parsedData[parents[pkey].key] = { ...parsedData[parents[pkey].key], [children[key]]: {} }
-              } else {
-                parsedData[parents[pkey].key] = { [children[key]]: {} }
-              }
-            })
-          }
-        })
-        resolve(parsedData)
-      }).then((parsedData) => {
-        let parentGrp = {
-          'InitialNode': 99,
-          'Virtual': 1,
-          'Availability': 2,
-          'Subnets': 3,
-          'Internet': 4,
-          'Route': 5,
-          'Elastic': 6,
-          'Public': 7,
-          'EC2': 8,
-          'AMI': 9,
-          'Key': 10,
-          'Load': 11,
-          'Target': 12
-        }
-        let visdata = { nodes: [], edges: [], container: {} }
-        new Promise((resolve) => {
-          visdata.nodes.push({ id: 0, label: 'aws-explorer', group: 0 })
-          let ctr = 1
-          let parentCtr = 0
-          // Object.keys(parents).forEach(function (key) {
-          //   visdata.nodes.push({ id: ctr, label: parents[key] })
-          //   visdata.edges.push({ from: key, to: 1 })
-          //   ctr++
-          // })
-          Object.keys(parsedData).forEach(function (key) {
-            if ((_self.vpcs === false && key.indexOf('Virtual') === 0) || (_self.availabilityZones === false && key.indexOf('Availability') === 0) || (_self.subnets === false && key.indexOf('Subnets') === 0) || (_self.internet === false && key.indexOf('Internet') === 0) || (_self.routes === false && key.indexOf('Routes') === 0) || (_self.elastic === false && key.indexOf('Elastic') === 0) || (_self.public === false && key.indexOf('Public') === 0) || (_self.instances === false && key.indexOf('EC2') === 0) || (_self.ami === false && key.indexOf('AMI') === 0) || (_self.key === false && key.indexOf('Key') === 0) || (_self.load === false && key.indexOf('Load') === 0) || (_self.target === false && key.indexOf('Target') === 0)) {
-              return
-            }
-
-            if (key.indexOf('Subnet') === 0 || key.indexOf('Route') === 0 || key.indexOf('NAT') === 0 || key.indexOf('Network') === 0 || key.indexOf('Security') === 0) {
-              return
-            }
-
-            let group
-            Object.keys(parentGrp).forEach(function (groupKey) {
-              if (key.indexOf(groupKey) === 0) {
-                group = parentGrp[groupKey]
-              }
-            })
-
-            visdata.nodes.push({ id: ctr, label: key, group: group })
-            visdata.edges.push({ from: 0, to: ctr })
-            parentCtr = ctr
-            ctr++
-            let children = Object.keys(parsedData[key]).length
-            if (children) {
-              Object.keys(parsedData[key]).forEach(function (key) {
-                if ((_self.vpcs === false && key.indexOf('Virtual') === 0) || (_self.availabilityZones === false && key.indexOf('Availability') === 0) || (_self.subnets === false && key.indexOf('Subnets') === 0) || (_self.internet === false && key.indexOf('Internet') === 0) || (_self.routes === false && key.indexOf('Routes') === 0) || (_self.elastic === false && key.indexOf('Elastic') === 0) || (_self.public === false && key.indexOf('Public') === 0) || (_self.instances === false && key.indexOf('Instances') === 0) || (_self.key === false && key.indexOf('Key') === 0) || (_self.load === false && key.indexOf('Load') === 0) || (_self.target === false && key.indexOf('Target') === 0)) {
-                  return
-                }
-
-                if (key.indexOf('Subnet') === 0 || key.indexOf('Route') === 0 || key.indexOf('NAT') === 0 || key.indexOf('Network') === 0 || key.indexOf('Security') === 0) {
-                  return
-                }
-                if (visdata.container.hasOwnProperty(key)) {
-                  // console.log(visdata.container[key])
-                  // visdata.nodes.push({ id: ctr, label: key })
-                  visdata.edges.push({ from: visdata.container[key], to: parentCtr })
-                } else {
-                  visdata.container[key] = ctr
-                  visdata.nodes.push({ id: ctr, label: key, group: group })
-                  visdata.edges.push({ from: parentCtr, to: ctr })
-                }
-                ctr++
-              })
-            }
-          })
-          let nodes = new vis.DataSet(visdata.nodes)
-          let edges = new vis.DataSet(visdata.edges)
-
-          // console.log(nodes)
-
-          // create a network
-          var container = document.getElementById('mynetwork')
-          var data = {
-            nodes: nodes,
-            edges: edges
-          }
-          var options = {
-            interaction: { hover: true },
-            nodes: {
-              shape: 'dot',
-              size: 16
-            },
-            physics: {
-              forceAtlas2Based: {
-                gravitationalConstant: -26,
-                centralGravity: 0.005,
-                springLength: 230,
-                springConstant: 0.18
-              },
-              maxVelocity: 146,
-              solver: 'forceAtlas2Based',
-              timestep: 0.35,
-              stabilization: {iterations: 150}
-            }
-          }
-          var network = new vis.Network(container, data, options)
-
-          network.on('click', function (params) {
-            var ids = params.nodes
-            var clickedNodes = nodes.get(ids)
-            _self.$nuxt.$router.replace({ path: `/${currentRegion}/node/${clickedNodes[0].label}` })
-          })
-
-          network.on('hoverNode', function (params) {
-            console.log('hoverNode Event:', params)
-          })
-        })
-      })
     },
     onchange (_id, _value) {
       console.log(_id, _value)
@@ -650,6 +603,7 @@ export default {
       this.clusterMode = mode('clusterMode')
       this.serviceMode = mode('serviceMode')
       this.taskMode = mode('taskMode')
+      this.databaseMode = mode('databaseMode')
     },
     presetDefault () {
       this.usePresets({
@@ -675,7 +629,8 @@ export default {
         target: 'show',
         clusterMode: 'expand',
         serviceMode: 'expand',
-        taskMode: 'expand'
+        taskMode: 'expand',
+        databaseMode: 'expand'
       })
     },
     presetVpcs () {
