@@ -1,3 +1,4 @@
+[![DeepScan grade](https://deepscan.io/api/projects/1949/branches/8880/badge/grade.svg)](https://deepscan.io/dashboard#view=project&pid=1949&bid=8880)
 
 # Visualize the relationships between your AWS assets
 
