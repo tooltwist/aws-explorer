@@ -1,4 +1,3 @@
-const myAWS = require('../server/misc/myAWS')
 const graph = require('../server/misc/graph')
 const download = require('../server/misc/download')
 

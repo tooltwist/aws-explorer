@@ -359,7 +359,7 @@ export default {
               let ruleForChild = getRuleForNode(childKey)
               if (ruleForChild !== 'hide') {
                 registerEdge(key, childKey)
-                addNode(childKey, false, false)
+                addNode(childKey, false)
               }
             })
           }
@@ -369,7 +369,7 @@ export default {
               let ruleForParent = getRuleForNode(parentKey)
               if (ruleForParent !== 'hide') {
                 registerEdge(parentKey, key)
-                addNode(parentKey, false, false)
+                addNode(parentKey, false)
               }
             })
           }

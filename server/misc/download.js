@@ -1,6 +1,5 @@
 var myAWS = require('./myAWS')
 const graph = require('./graph')
-const instances = require('./instances')
 const types = require('../../lib/types')
 
 var loadBalancersAreLoaded = false;
@@ -297,7 +296,8 @@ function downloadKeyPairs(callback) {
 
     // console.log('data=', data);
     data.KeyPairs.forEach(rec => {
-      let g = graph.findNode(types.KEYPAIR, rec.KeyName, rec, describe)
+      // This will create the node
+      graph.findNode(types.KEYPAIR, rec.KeyName, rec, describe)
     })
     return callback(null)
   })

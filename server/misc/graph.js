@@ -1,5 +1,4 @@
 const myAWS = require('./myAWS')
-const download = require('./download')
 const types = require('../../lib/types')
 
 var nodeIndex = [ ]; // key -> AWSNode

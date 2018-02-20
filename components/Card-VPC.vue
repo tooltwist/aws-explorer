@@ -39,7 +39,7 @@ export default {
     },
     description: function () {
       let desc = ''
-      if (this.node.data && this.node.data.Tags) {
+      if (this.node.data) {
         if (this.node.data.Tags) {
           this.node.data.Tags.filter(tag => tag.Key === 'Description').forEach(tag => { desc = tag.Value })
         }

@@ -368,20 +368,20 @@ exports.environmentCompletion = function(stacks, regionCode, callback/*(err,envl
         }
       }
 
-      const ENV_NETWORK_SUFFIX = '-loadbalancer'
+      const ENV_NETWORK_SUFFIX = '1-network'
       const ENV_JUMPBOXES_SUFFIX = '2-jumpboxes'
       const ENV_ECS_SUFFIX = '3-ecs'
       const APP_LOAD_BALANCER_SUFFIX = '-loadbalancer'
-      const APP_PIPELINE_SUFFIX = '-loadbalancer'
+      // const APP_PIPELINE_SUFFIX = '-loadbalancer'
 
       // Set flags in the environment
-      if (remainder === '1-network') {
+      if (remainder === ENV_NETWORK_SUFFIX) {
         env.steps[this.ENV_STEP_NETWORK] = stack;
         env.step3 = stack;
-      } else if (remainder === '2-jumpboxes') {
+      } else if (remainder === ENV_JUMPBOXES_SUFFIX) {
         env.steps[this.ENV_STEP_JUMPBOX] = stack;
         env.step4 = stack;
-      } else if (remainder === '3-ecs') {
+      } else if (remainder === ENV_ECS_SUFFIX) {
         env.steps[this.ENV_STEP_ECS] = stack;
         env.step5 = stack;
       } else if (remainder.endsWith(APP_LOAD_BALANCER_SUFFIX)) {
