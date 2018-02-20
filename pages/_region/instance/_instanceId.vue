@@ -20,18 +20,18 @@
           h3 Is-used-by
           ul
             li(v-for="parentId in node.parents")
-              node-card(v-bind:node="index[parentId]")
+              node-card(v-bind:node="index[parentId]" show-type="true")
           hr
 
         .column.has-text-centered(style="min-width: 0;")
           h3 Current node
-          node-card(v-bind:node="node" show-data="true")
+          node-card(v-bind:node="node" show-data="true" show-type="true")
 
         .column.has-text-centered
           h3 Uses
           ul
             li(v-for="childId in node.children")
-              node-card(v-bind:node="index[childId]")
+              node-card(v-bind:node="index[childId]" show-type="true")
 </template>
 
 <script>
@@ -64,6 +64,7 @@ export default {
       nodeId = prefix + nodeId
     }
     console.log('nodeId=' + nodeId)
+    context.store.commit('setRegion', region)
     return GraphClient(region, nodeId, false, context.error)
   },
   // fetch () {

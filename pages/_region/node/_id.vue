@@ -3,13 +3,13 @@
     .container.has-text-centered
       //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
       h1.title {{ node.type }}
-      h2.info {{ node.key }}
-      hr
+      // h2.info {{ node.key }}
       br
 
     .container
       .columns
         .column.has-text-centered
+          br
           h3 Is-used-by
           br
           ul
@@ -17,9 +17,10 @@
               node-card(v-bind:node="index[parentId]" show-type="true")
 
         .column.has-text-centered(style="min-width: 0;")
-          node-card(v-bind:node="node" show-data="true")
+          node-card(v-bind:node="node" show-data="true" show-type="true")
 
         .column.has-text-centered
+          br
           h3 Uses
           br
           ul
@@ -51,6 +52,7 @@ export default {
   asyncData (context) {
     let region = context.params.region
     let nodeId = context.params.id
+    context.store.commit('setRegion', region)
     return GraphClient(region, nodeId, false, context.error)
   },
   // fetch () {

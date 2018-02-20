@@ -5,7 +5,6 @@ const types = require('../lib/types')
 const pad = require('../server/misc/util').pad
 const capitalize = require('../server/misc/util').capitalize
 const download = require('../server/misc/download')
-var colors = require('colors');
 
 function CliInstances(region) {
   region = myAWS.checkAwsRegion(region)

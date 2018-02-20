@@ -1,18 +1,24 @@
 <template lang="pug">
   .top
-    CardForInstance(v-if="node.type === 'EC2 Instance'" v-bind:node="node")
-    CardForVPC(v-else-if="node.type === 'Virtual Private Cloud'" v-bind:node="node")
+    CardForInstance(v-if="node.type === 'EC2 Instance'" v-bind:node="node" v-bind:show-type="showType")
+    CardForVPC(v-else-if="node.type === 'Virtual Private Cloud'" v-bind:node="node" v-bind:show-type="showType")
     .card(v-else style="min-width: 0%;")
-      .mytype(v-if="showType")
-        | {{node.type}}
-      .link(v-if="idAsLabel === '' || idAsLabel === 'true'" rel="CSS")
-        router-link(v-bind:to="urlForNode(node)") {{ node.id }}
-      .link(v-else rel="CSS")
-        //router-link(v-bind:to="'/node/' + node.key") {{ node.key }}
-        //br
-        router-link(v-bind:to="urlForNode(node)") {{ node.key }}
-      .name {{ label }}
-      .desc {{ description }}
+      div(v-if="showType")
+        .mytype
+          | {{node.type}}
+        .myid
+          | {{id}}
+        br
+      router-link(v-bind:to="urlForNode(node)") {{ label }}
+      // .link(v-if="idAsLabel === '' || idAsLabel === 'true'" rel="CSS")
+        // router-link(v-bind:to="urlForNode(node)") {{ node.id }}
+      // .link(v-else rel="CSS")
+      //   //router-link(v-bind:to="'/node/' + node.key") {{ node.key }}
+      //   //br
+      //   | 1b.
+      //   router-link(v-bind:to="urlForNode(node)") {{ label }}
+      // .nameZ 2. {{ label }}
+      .name {{ description }}
 
     pre(v-if="showData === '' || showData === 'true'" rel="CSS")
       | {{ node.data }}
@@ -20,6 +26,7 @@
 </template>
 
 <script>
+import types from '../lib/types'
 import urlForNode from '~/lib/urlForNode.js'
 import CardForInstance from '~/components/Card-Instance'
 import CardForVPC from '~/components/Card-VPC'
@@ -37,27 +44,14 @@ export default {
     'idAsLabel'
   ],
   computed: {
+    id: function () {
+      return types.id(this.node)
+    },
     label: function () {
-      let label = ''
-      if (this.node.data && this.node.data.Tags) {
-        this.node.data.Tags.filter(tag => tag.Key === 'Name').forEach(tag => { label = tag.Value })
-      }
-      if (!label && this.node.Name) {
-        label = this.node.Name
-      }
-      return label
+      return types.label(this.node)
     },
     description: function () {
-      let desc = ''
-      if (this.node.data && this.node.data.Tags) {
-        if (this.node.data.Tags) {
-          this.node.data.Tags.filter(tag => tag.Key === 'Description').forEach(tag => { desc = tag.Value })
-        }
-        if (!desc && this.node.data.Description) {
-          desc = this.node.data.Description
-        }
-      }
-      return desc
+      return types.description(this.node)
     }
   },
   methods: {
@@ -104,7 +98,15 @@ export default {
     color: #aaa;
     font-weight: strong;
     font-size: 0.8em;
-    text-align: left;
+    // text-align: left;
+    float: left;
+  }
+
+  .myid {
+    color: #aaa;
+    font-weight: strong;
+    font-size: 0.8em;
+    float: right;
   }
 
   .name {

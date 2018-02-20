@@ -1,13 +1,9 @@
 const myAWS = require('../server/misc/myAWS')
 const graph = require('../server/misc/graph')
 const types = require('../lib/types')
-const pad = require('../server/misc/util').pad
-const capitalize = require('../server/misc/util').capitalize
 const download = require('../server/misc/download')
 
 function CliClusters(region) {
-  region = myAWS.checkAwsRegion(region)
-
   // Clear existing list of nodes and reload everything
   graph.reset();
   download.downloadInstances(err => {

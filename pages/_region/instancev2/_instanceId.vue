@@ -68,6 +68,7 @@ export default {
       nodeId = prefix + nodeId
     }
     console.log('nodeId=' + nodeId)
+    context.store.commit('setRegion', region)
     return GraphClient(region, nodeId, false, context.error)
   },
   // fetch () {

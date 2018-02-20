@@ -6,7 +6,7 @@ function CliSummary(callback) {
   let stackInfo = StackInfo.stacksForRegion(myAWS.region());
   console.log('stackInfo is ', stackInfo);
 
-  var environments = stackInfo.environments((err, environments) => {
+  stackInfo.environments((err, environments) => {
     if (err) return callback(err);
     console.log('\nENVIRONMENTS:', environments);
     for (var envName in environments) {
@@ -19,9 +19,9 @@ function CliSummary(callback) {
       for (var aname in e.apps) {
         let a = e.apps[aname];
         console.log(`  Application: ${aname}:`);
-        for (var valueName in a.values) {
-          let value = a.values[valueName];
-          console.log(`          ${pad(valueName, 26)}  ${value}`)
+        for (var valueName2 in a.values) {
+          let value = a.values[valueName2];
+          console.log(`          ${pad(valueName2, 26)}  ${value}`)
         }
       }
     }

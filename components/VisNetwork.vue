@@ -9,6 +9,7 @@
         button.button.is-small(@click="presetInstances") instances
         button.button.is-small(@click="presetSecGrps") security groups
         button.button.is-small(@click="presetVpcs") VPCs
+        | &nbsp;&nbsp;&nbsp;&nbsp;
         button.button.is-small(@click="presetAll") all
         button.button.is-small(@click="presetNone") none
     .column.my-mode-selectors
@@ -69,6 +70,7 @@
           | Security Group:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='secgrp')
+      hr
       .columns.sidebar-items
         .column
           | Instances:
@@ -89,6 +91,7 @@
           | Key Pairs:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='key')
+      hr
       .columns.sidebar-items
         .column
           | Load Balancers:
@@ -114,6 +117,7 @@
           | Tasks:
         .column
           input(class='slider is-fullwidth' step='1' min='0' max='2' type='range' v-model='taskMode')
+      hr
       .columns.sidebar-items
         .column
           | Databases:
@@ -443,36 +447,60 @@ export default {
           } else if (node.type === 'Database') {
             nodedef.shape = 'image'
             nodedef.image = '/aws-images/Database_AmazonRDS_DBinstance.png'
-          } else if (node.type === 'Route Table') {
+          } else if (node.type === types.ROUTETABLE) {
             nodedef.label = types.label(node)
-            nodedef.title = `<b>Route Table</b><br />${types.details(node)}`
+            nodedef.title = `<b>Route Table</b><br />${types.describe(node)}`
             nodedef.shape = 'image'
             nodedef.image = '/aws-images/Compute_AmazonVPC_router.png'
-          } else if (node.type === 'Internet Gateway') {
+          } else if (node.type === types.IGW) {
             nodedef.shape = 'image'
             nodedef.image = '/aws-images/Compute_AmazonVPC_Internetgateway.png'
-          } else if (node.type === 'Load Balancer') {
+          } else if (node.type === types.ALB) {
             nodedef.label = `Load Balancer\n${node.data.LoadBalancerName}`
             nodedef.title = `<b>Load Balancer</b><br/>${node.data.LoadBalancerName}<br/>${node.data.DNSName}`
             nodedef.shape = 'image'
             nodedef.image = '/aws-images/Compute_ElasticLoadBalancing_ApplicationLoadBalancer.png'
-          } else if (node.type === 'Cluster') {
+          } else if (node.type === types.CLUSTER) {
             nodedef.label = `Cluster\n${node.data.clusterName}`
             nodedef.title = `<b>Cluster</b><br/>${node.data.clusterName}<br/>status: ${node.data.status}<br/>containers: ${node.data.registeredContainerInstancesCount}<br/>tasks: ${node.data.runningTasksCount}<br/><i>Note: this information might be out of date.</i>`
             nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonEC2.png'
+          } else if (node.type === types.SERVICE) {
+            nodedef.label = `Service\n${types.label(node)}`
+            nodedef.title = types.describe(node)
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonECR_ECRRegistry.png'
+          } else if (node.type === types.TASK) {
+            nodedef.label = `Task\n${types.label(node)}`
+            nodedef.title = types.describe(node)
+            nodedef.shape = 'image'
+            nodedef.image = '/aws-images/Compute_AmazonECS_ECScontainer.png'
+          } else if (node.type === types.TARGETGRP) {
+            nodedef.label = `Target Group\n${types.label(node)}`
+            nodedef.title = types.describe(node)
+            nodedef.shape = 'image'
             nodedef.image = '/aws-images/Compute_AmazonECS.png'
-          } else if (node.type === 'NAT Gateway') {
+          } else if (node.type === types.NAT) {
             nodedef.shape = 'image'
             nodedef.image = '/aws-images/Compute_AmazonVPC_VPCNATgateway.png'
-          } else if (node.type === 'Elastic IP') {
+          } else if (node.type === types.ADDR) {
             nodedef.label = `Elastic\n${node.data.PublicIp}`
             nodedef.shape = 'image'
             nodedef.image = '/aws-images/Compute_AmazonEC2_ElasticIPaddress.png'
-          } else if (node.type === 'Subnet') {
-            nodedef.label = `${node.data.SubnetId}\n${types.findTag(node, 'Name')}`
+          } else if (node.type === types.SECGRP) {
+            nodedef.label = `Security Group\n${types.label(node)}`
+            nodedef.title = types.describe(node)
+            nodedef.shape = 'image'
+            // nodedef.image = '/aws-images/Compute_AmazonEC2_ElasticIPaddress.png'
             nodedef.shape = 'dot'
             nodedef.color = { border: '#c7c7c7', background: '#eee' }
-          } else if (node.type === 'Availability Zone') {
+          } else if (node.type === types.SUBNET) {
+            // nodedef.label = `${node.data.SubnetId}\n${types.findTag(node, 'Name')}`
+            nodedef.label = types.label(node)
+            nodedef.title = `<b>Subnet</b><br />${types.describe(node)}`
+            nodedef.shape = 'dot'
+            nodedef.color = { border: '#c7c7c7', background: '#eee' }
+          } else if (node.type === types.AZ) {
             nodedef.label = `Availability Zone\n${node.data.ZoneName}`
             nodedef.shape = 'dot'
             nodedef.color = { border: '#c7c7f7', background: '#eef' }
@@ -616,21 +644,23 @@ export default {
     },
     presetSecGrps () {
       this.usePresets({
-        vpcs: 'expand',
-        availabilityZones: 'expand',
+        vpc: 'expand',
+        // availabilityZones: 'expand',
         secgrp: 'expand',
-        instances: 'expand',
-        jumpboxMode: 'expand'
+        instances: 'show',
+        jumpboxMode: 'show',
+        databaseMode: 'show',
+        cacheMode: 'show',
+        load: 'show'
       })
     },
     presetClusters () {
       this.usePresets({
-        load: 'show',
-        target: 'show',
+        load: 'expand',
+        target: 'expand',
         clusterMode: 'expand',
         serviceMode: 'expand',
-        taskMode: 'expand',
-        databaseMode: 'expand'
+        taskMode: 'expand'
       })
     },
     presetVpcs () {
@@ -664,7 +694,7 @@ export default {
     presetAll () {
       console.log('presetAll')
       this.usePresets({
-        vpcs: 'expand',
+        vpc: 'expand',
         availabilityZones: 'expand',
         subnets: 'expand',
         internet: 'expand',
@@ -763,5 +793,11 @@ export default {
 }
 .mypresets button {
   margin-left: 10px;
+}
+
+hr {
+  margin-top: 0px;
+  margin-bottom: 10px;
+  // padding-right: 10px;
 }
 </style>

@@ -33,7 +33,8 @@ function CliDatabases(region) {
     });
 
     // Sort the instance nodes
-    / ZZZZZ
+
+    // ZZZZZ
     list.sort((a, b) => {
 
       // Sort by name
@@ -49,13 +50,20 @@ function CliDatabases(region) {
 
     // Display the IP Addresses
     let regionDesc = capitalize(myAWS.regionDescription(region));
+    // let lines = '---------------------------------------'
     console.log();
     console.log(`${regionDesc} (${region}):`);
     console.log();
-    console.log(`   ${pad('NAME', 20)} ${pad('STATE', 12)} ${pad('TYPE', 15)} ${pad('ENGINE', 10)} ${pad('PUBLIC', 6)} ${pad('AVAIL. ZONE', 16)} ${pad('KEYNAME', 28)} ${'DESCRIPTION'}`);
-    console.log(`   ${pad('-----------', 15)} ${pad('----', 25)} ${pad('-----', 8)} ${pad('----', 10)} ${pad('-----------', 20)} ${pad('------', 15)} ${pad('-------', 15)} ${pad('-----------', 16)} ${pad('-------', 28)} ${'-----------'}`);
+    console.log(`   ${pad('NAME', 20)} ${pad('STATE', 12)} ${pad('TYPE', 15)} ${pad('ENGINE', 10)} ${pad('PUBLIC', 6)}   ${pad('AVAIL. ZONE', 16)}  ${'DESCRIPTION'}`);
+    console.log(`   ${pad('----', 20)} ${pad('-----', 12)} ${pad('----', 15)} ${pad('------', 10)} ${pad('------', 6)}   ${pad('-----------', 16)}  -----------`);
     let previousEnvironment = null;
-    list.forEach(node => {
+    list.sort((n1, n2) => {
+      let name1 = n1.data.DBInstanceIdentifier
+      let name2 = n2.data.DBInstanceIdentifier
+      if (name1 < name2) return -1
+      if (name1 > name2) return +1
+      return 0
+    }).forEach(node => {
       // console.log(node.data);
       let name = node.data.DBInstanceIdentifier;
       let state = node.data.DBInstanceStatus;
@@ -76,12 +84,12 @@ function CliDatabases(region) {
       // let description = node._description
 
       // console.log(`Endpoint: `, node.data.Endpoint);
-      console.log(`DBSecurityGroups: `, node.data.DBSecurityGroups);
-      console.log(`VpcSecurityGroups: `, node.data.VpcSecurityGroups);
       // console.log(`DBSecurityGroups: `, node.data.DBSecurityGroups);
-      console.log(`DBSubnetGroup: `, node.data.DBSubnetGroup);
+      // console.log(`VpcSecurityGroups: `, node.data.VpcSecurityGroups);
+      // console.log(`DBSecurityGroups: `, node.data.DBSecurityGroups);
+      // console.log(`DBSubnetGroup: `, node.data.DBSubnetGroup);
 
-      let row = `   ${pad(name, 20)} ${pad(state, 12)} ${pad(type, 15)} ${pad(engine, 10)} ${pad(public, 6)} ${pad(az, 16)}  ${endpoint}`;
+      let row = `   ${pad(name, 20)} ${pad(state, 12)} ${pad(type, 15)} ${pad(engine, 10)} ${pad(public, 6)}   ${pad(az, 16)}  ${endpoint}`;
       if (state === 'available') {
         row = (public === 'true') ? row.red.bold : row.green.bold;
       } else {

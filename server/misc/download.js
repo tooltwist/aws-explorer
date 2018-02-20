@@ -43,22 +43,13 @@ function findInstanceById(id) {
 
 function downloadVpcs(callback) {
   if (debug) console.log('  downloadVpcs()');
-  let describe = (node) => {
-    let desc = ''
-    let name = node.findTag('Name');
-    if (name) {
-      desc += '  Name: ' + name + '\n'
-    }
-    return desc
-  }
-
   myAWS.ec2().describeVpcs({}, (err, data) => {
     if (err) return callback(err);
 
     // console.log('data=', data);
     data.Vpcs.forEach(rec => {
       // console.log('rec=', rec);
-      graph.findNode(types.VPC, rec.VpcId, rec, describe)
+      graph.findNode(types.VPC, rec.VpcId, rec)
     })
     return callback(null)
   })
@@ -87,7 +78,7 @@ function downloadInstances(callback) {
 
         // ImageId
         let img = graph.findNode(types.IMAGE, instance.ImageId, null)
-        img.addChild(i)
+        i.addChild(img)
 
         // Availability zone
         if (instance.Placement && instance.Placement.AvailabilityZone) {
@@ -129,40 +120,6 @@ function downloadInstances(callback) {
 
 function downloadSubnets(callback) {
   if (debug) console.log('  downloadSubnets()');
-  let describe = node => {
-    // Return a description
-    let desc = ''
-
-    // See if the subnet's routing table connects to an Internet Gateway
-    let isPublicSubnet = false
-    node.parents.forEach(parent => {
-      if (parent.type === types.ROUTETABLE && parent.hasPublicRoutes) {
-        isPublicSubnet = true
-      }
-    })
-    if (isPublicSubnet) {
-      desc += 'PUBLIC SUBNET'
-    }
-
-    let name = node.findTag('Name')
-    if (name) {
-      desc += '\nName: ' + name
-    }
-
-    // Route table?
-    let useVpcRouteTable = true
-    node.parents.forEach(parent => {
-      if (parent.type === types.ROUTETABLE) {
-        useVpcRouteTable = false
-      }
-    })
-    if (useVpcRouteTable) {
-      desc += '\nUse default route table for VPC'
-    }
-    // IP Address range
-    desc += '\nCidrBlock: ' + node.data.CidrBlock
-    return desc
-  }
 
   // let describe = types.describe
 
@@ -171,7 +128,7 @@ function downloadSubnets(callback) {
 
     // console.log('data=', data);
     data.Subnets.forEach(rec => {
-      let sn = graph.findNode(types.SUBNET, rec.SubnetId, rec, describe)
+      let sn = graph.findNode(types.SUBNET, rec.SubnetId, rec)
 
       // Add this to it's VPC
       let v = graph.findNode(types.VPC, rec.VpcId, null)
@@ -438,14 +395,27 @@ function downloadRouteTables(callback) {
       // Look for routes to Internet Gateways
       let gateways = [] // Only add each gateway it once
       rec.Routes.forEach(route => {
-        if (route.GatewayId != 'local') {
-          let natId = route.NatGatewayId
-          if (!gateways[natId]) {
-            let igw = graph.findNode(types.NAT, natId)
-            rt.addChild(igw)
-            // Having a route to an Internet Gateway is the definition of a "Public Subnet"
+        if (route.GatewayId === 'local') {
+          // Routing to the local subnet
+        } else if (route.NatGatewayId) {
+          // Routes to a NAT
+          let id = route.NatGatewayId
+          if (!gateways[id]) {
+            let nat = graph.findNode(types.NAT, id)
+            rt.addChild(nat)
+            // Having a route to the internet via a NAT is the definition of a "Public Subnet"
             rt.hasPublicRoutes = true
-            gateways[route.GatewayId] = true
+            gateways[id] = true
+          }
+        } else if (route.GatewayId) {
+          // Routes to an Internet Gateway
+          let id = route.GatewayId
+          if (!gateways[id]) {
+            let igw = graph.findNode(types.IGW, id)
+            rt.addChild(igw)
+            // // Having a route to an Internet Gateway is also the definition of a "Public Subnet"
+            // rt.hasPublicRoutes = true
+            gateways[id] = true
           }
         }
       })
@@ -927,7 +897,7 @@ function downloadDatabases(callback) {
 
     //console.log('data=', data);
     data.DBInstances.forEach(rec => {
-      console.log('\n\n\nDB =>', rec);
+      // console.log('\n\n\nDB =>', rec);
       let db = graph.findNode(types.DATABASE, rec.DBInstanceIdentifier, rec, describe)
 
       rec.VpcSecurityGroups.forEach(sgDef => {

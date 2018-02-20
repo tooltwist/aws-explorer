@@ -4,8 +4,6 @@
       //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
       h1.title Network
       h2.info
-      hr
-      br
     vis-network(v-bind:index="index" ZZZv-bind:initialNodesFn="useAsInitialNode" ZZZv-bind:rulesFn="getRuleForNode")
 </template>
 

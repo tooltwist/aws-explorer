@@ -1,5 +1,4 @@
 var program = require('commander');
-var colors = require('colors');
 
 function CliJump(ip1, ip2) {
   // console.log(`jumpbox ${ip1} ${ip2}`);

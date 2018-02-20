@@ -1,6 +1,12 @@
 <template lang="pug">
   .top
     .card(style="min-width: 0%;")
+      div(v-if="showType")
+        .mytype
+          | {{node.type}}
+        .myid
+          | {{id}}
+        br
       img.awsicon(src="/aws-images/Compute_AmazonEC2_instance.png")
       // .link(v-if="idAsLabel === '' || idAsLabel === 'true'" rel="CSS")
       //   router-link(v-bind:to="urlForNode(node)") {{ node.id }}
@@ -15,44 +21,26 @@
 </template>
 
 <script>
+import types from '../lib/types'
 import urlForNode from '~/lib/urlForNode.js'
 
 export default {
   name: 'id',
   props: [
+    'showType',
     'node',
     'showData',
     'idAsLabel'
   ],
   computed: {
+    id: function () {
+      return types.id(this.node)
+    },
     label: function () {
-      let label = ''
-      if (this.node.data && this.node.data.Tags) {
-        this.node.data.Tags.filter(tag => tag.Key === 'Name').forEach(tag => { label = tag.Value })
-      }
-      if (!label && this.node.Name) {
-        label = this.node.Name
-      }
-      return label
+      return types.label(this.node)
     },
     description: function () {
-      let desc = ''
-      if (this.node.data && this.node.data.Tags) {
-        if (this.node.data.Tags) {
-          this.node.data.Tags.filter(tag => tag.Key === 'Description').forEach(tag => { desc = tag.Value })
-        }
-        if (!desc && this.node.data.Description) {
-          desc = this.node.data.Description
-        }
-      }
-      return desc
-    },
-    label1: function () {
-      let label1 = this.getName()
-      if (!label1) {
-        label1 = this.InstanceId
-      }
-      return label1
+      return types.description(this.node)
     }
   },
   methods: {
@@ -99,6 +87,20 @@ export default {
     margin-bottom: 10px;
     min-height: 50px;
     padding-left: 5px;
+  }
+  .mytype {
+    color: #aaa;
+    font-weight: strong;
+    font-size: 0.8em;
+    // text-align: left;
+    float: left;
+  }
+
+  .myid {
+    color: #aaa;
+    font-weight: strong;
+    font-size: 0.8em;
+    float: right;
   }
 
   .heading router-link {
