@@ -28,9 +28,9 @@
         h3 NAT Gateways
           .vpc(v-for="node in list" v-if="node.type == 'NAT Gateway'")
             node-card(v-bind:node="node" show-type="true")
-        h3 Route Tables
-          .vpc(v-for="node in list" v-if="node.type == 'Route Table'")
-            node-card(v-bind:node="node" show-type="true")
+        //- h3 Route Tables
+        //-   .vpc(v-for="node in list" v-if="node.type == 'Route Table'")
+        //-     node-card(v-bind:node="node" show-type="true")
       .column
         h3 Elastic IPs
           .vpc(v-for="node in list" v-if="node.type === 'Elastic IP'")

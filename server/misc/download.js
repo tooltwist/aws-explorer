@@ -177,6 +177,7 @@ function downloadNatGateways(callback) {
 
     // console.log('data=', data);
     data.NatGateways.forEach(grp => {
+      console.log('nat is ' + grp.NatGatewayId);
       let g = graph.findNode(types.NAT, grp.NatGatewayId, grp, describe)
 
       if (grp.State !== 'deleted') {
@@ -958,7 +959,7 @@ function downloadEverything(region, withHealthchecks, callback/* (err) */) {
                                 downloadDatabases(err => {
                                   if (err) return callback(err)
 
-                                  console.log('finished downloading everything  ZZZ1');
+                                  console.log('finished downloading everything');
                                   return callback(null)
                                 })
                               })
