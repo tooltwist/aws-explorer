@@ -1,4 +1,5 @@
 var program = require('commander');
+const colors = require('colors')
 
 function CliMysql(ip1, ip2, dbhost, dbname, username, password) {
   // console.log(`jumpbox ${ip1} ${ip2}`);
