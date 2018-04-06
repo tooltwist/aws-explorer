@@ -582,6 +582,19 @@ export default {
         network.on('click', function (params) {
           var ids = params.nodes
           var clickedNodes = nodes.get(ids)
+          var options = {
+            scale: 1.0,
+            offset: {x: 0, y: 0},
+            animation: {
+              duration: 1000,
+              easingFunction: 'easeInOutQuad'
+            }
+          }
+          network.focus(clickedNodes[0].id, options)
+        })
+        network.on('doubleClick', function (params) {
+          var ids = params.nodes
+          var clickedNodes = nodes.get(ids)
           if (clickedNodes[0].label) {
             _self.$nuxt.$router.replace({ path: `/${currentRegion}/node/${clickedNodes[0].ourKey}` })
           }
