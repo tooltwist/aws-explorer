@@ -58,7 +58,7 @@ Parameters:
 # The mappings come from http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
 # These should be kept up to date so we get the latest security patches
 #
-# Updated December 26, 2017 - Philip Callender
+# Updated April 30, 2018 - Philip Callender
 #
 Mappings:
   Constants:
