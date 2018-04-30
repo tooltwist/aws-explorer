@@ -67,35 +67,35 @@ Mappings:
       TemplateVersion: "1.2.4"
   AWSRegionToAMI:
     us-east-1:
-      AMI: ami-fad25980
+      AMI: ami-aff65ad2
     us-east-2:
-      AMI: ami-58f5db3d
+      AMI: ami-64300001
     us-west-1:
-      AMI: ami-62e0d802
+      AMI: ami-69677709
     us-west-2:
-      AMI: ami-7114c909
+      AMI: ami-40ddb938
     eu-west-1:
-      AMI: ami-4cbe0935
+      AMI: ami-2d386654
     eu-west-2:
-      AMI: ami-dbfee1bf
+      AMI: ami-2218f945
     eu-west-3:
-      AMI: ami-d179ceac
+      AMI: ami-250eb858
     eu-central-1:
-      AMI: ami-05991b6a
+      AMI: ami-9fc39c74
     ap-northeast-1:
-      AMI: ami-56bd0030
+      AMI: ami-a99d8ad5
     ap-northeast-2:
-      AMI: ami-7267c01c
+      AMI: ami-9d56f9f3
     ap-southeast-1:
-      AMI: ami-1bdc8b78
+      AMI: ami-846144f8
     ap-southeast-2:
-      AMI: ami-14b55f76
+      AMI: ami-efda148d
     ca-central-1:
-      AMI: ami-918b30f5
+      AMI: ami-897ff9ed
     ap-south-1:
-      AMI: ami-e4d29c8b
+      AMI: ami-72edc81d
     sa-east-1:
-      AMI: ami-d596d2b9
+      AMI: ami-4a7e2826
 
 
 Resources:
