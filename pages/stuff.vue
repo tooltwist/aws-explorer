@@ -1,23 +1,20 @@
-<template>
-  <section class="container">
-    <div>
-      <logo/>
-      <h1 class="title">
-        Stuff
-      </h1>
-      <h2 class="subtitle">
-        Some Stuff
-      </h2>
-      <div class="links">
-        <!--
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">Option A</a>
-        <a href="https://github.com/nuxt/nuxt.js" target="_blank" class="button--grey">Option B</a>
-        -->
-        <router-link to="/" class="button--grey">Home</router-link>
-        <router-link to="/environment/a" class="button--grey">Environment A</router-link>
-      </div>
-    </div>
-  </section>
+<template lang="pug">
+  .page
+    section.section
+      .container.is-fluid
+        h3.title.is-3.has-text-centered Stuff
+          //- p.subtitle -
+        //- h1
+        
+        .content
+          .links
+            router-link.button.is-text(to="/") Home
+            router-link.button.is-text(to="/environment/a") Environment A
+          //- links
+        //- content
+      //- container
+    //- section
+  //- page
 </template>
 
 <script>
@@ -31,32 +28,5 @@ export default {
 </script>
 
 <style>
-.container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
 
-.title {
-  font-family: "Quicksand", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* 1 */
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.links {
-  padding-top: 15px;
-}
 </style>

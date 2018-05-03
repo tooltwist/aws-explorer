@@ -1,10 +1,21 @@
 <template lang="pug">
   .page
-    .container.has-text-centered
-      //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-      h1.title Network
-      h2.info
-    vis-network(v-bind:index="index" ZZZv-bind:initialNodesFn="useAsInitialNode" ZZZv-bind:rulesFn="getRuleForNode")
+    section.section
+      .container.is-fluid
+        h3.title.is-3.has-text-centered Network
+          //- p.subtitle -
+        //- h1
+
+        .content
+          .card
+            .card-content
+              vis-network(v-bind:index="index" ZZZv-bind:initialNodesFn="useAsInitialNode" ZZZv-bind:rulesFn="getRuleForNode")
+            //- card-content
+          //- card
+        //- content
+      //- container
+    //- section
+  //- page
 </template>
 
 <script>
@@ -51,20 +62,6 @@ export default {
 }
 </script>
 
-<style scoped>
-.title
-{
-  margin-top: 30px;
-}
-.info
-{
-  font-weight: 300;
-  color: #9aabb1;
-  margin: 0;
-  margin-top: 10px;
-}
-.button
-{
-  margin-top: 30px;
-}
+<style>
+
 </style>

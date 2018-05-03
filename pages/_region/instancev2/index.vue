@@ -1,15 +1,21 @@
 <template lang="pug">
-.page
-  .container.has-text-centered
-    //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-    h1.title EC2 Instances
-    hr
-    br
+  .page
+    section.section
+      .container.is-fluid
+        h3.title.is-3.has-text-centered EC2 Instances
+          //- p.subtitle -
+        //- h1
 
-  .content
-    .vpc(v-for="node in list" style="display:block;")
-      div(v-if="node.type == 'EC2 Instance'")
-        node-card(v-bind:node="node" id-as-label)
+        .content
+          .vpc(v-for="node in list" style="display:block;")
+            div(v-if="node.type == 'EC2 Instance'")
+              node-card(v-bind:node="node" id-as-label)
+            //- div
+          //- vpc
+        //- content
+      //- container
+    //- section
+  //- page
 </template>
 
 <script>
@@ -43,36 +49,5 @@ export default {
 </script>
 
 <style>
-.container {
-  //min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
 
-.title {
-  font-family: "Quicksand", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* 1 */
-  display: block;
-  font-weight: 300;
-  font-size: 42px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.vpc {
-  max-width: 300px;
-}
-
-.links {
-  padding-top: 15px;
-}
 </style>

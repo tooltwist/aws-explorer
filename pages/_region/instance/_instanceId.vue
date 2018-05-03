@@ -1,39 +1,50 @@
 <template lang="pug">
   .page
-    .container.has-text-centered
-      //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-      h1.title Instance
-      //h2.info {{ node.key }}
-    br
-    .tabs
-      ul
-        li.is-active
-          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id") Relationships
-        li
-          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/ecs'") ECS
-        li
-          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/network'") Network
+    section.section
+      .container.is-fluid
+        h3.title.is-3.has-text-centered Instance
+          //- p.subtitle -
+        //- h1
 
-    .container
-      .columns
-        .column.has-text-centered
-          h3 Is-used-by
+        .tabs
           ul
-            li(v-for="parentId in node.parents")
-              node-card(v-bind:node="index[parentId]" show-type="true")
-          hr
-
-        .column.has-text-centered(style="min-width: 0;")
-          h3 Current node
-          node-card(v-bind:node="node" show-data="true" show-type="true")
-
-        .column.has-text-centered
-          h3 Uses
-          ul
-            li(v-for="childId in node.children")
-              node-card(v-bind:node="index[childId]" show-type="true")
+            li.is-active
+              nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id") Relationships
+            //- li
+            li
+              nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/ecs'") ECS
+            //- li
+            li
+              nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/network'") Network
+            //- li
+          //- ul
+        //- tabs
+        .content
+          .columns
+            .column.has-text-centered
+              h3 Is-used-by
+              article(v-for="parentId in node.parents")
+                node-card(v-bind:node="index[parentId]" show-type="true")
+              //- article
+            //- column
+            .column.has-text-centered(style="min-width: 0;")
+              h3 Current node
+              article
+                node-card(v-bind:node="node" show-data="true" show-type="true")
+              //- article
+            //- column
+            .column.has-text-centered
+              h3 Uses
+              article(v-for="childId in node.children")
+                node-card(v-bind:node="index[childId]" show-type="true")
+              //- article
+            //- column
+          //- columns
+        //- content
+      //- container
+    //- section
+  //- page
 </template>
-
 <script>
 import NodeCard from '~/components/Card.vue'
 import GraphClient from '~/lib/graphClient'
@@ -93,22 +104,6 @@ export default {
 
 }
 </script>
+<style>
 
-<style scoped>
-
-  .title
-  {
-    margin-top: 30px;
-  }
-  .info
-  {
-    font-weight: 300;
-    color: #9aabb1;
-    margin: 0;
-    margin-top: 10px;
-  }
-  .button
-  {
-    margin-top: 30px;
-  }
 </style>

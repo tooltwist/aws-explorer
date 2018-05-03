@@ -1,0 +1,124 @@
+@import "_override";
+
+// =============================================================================[ ALL ]
+html {
+
+}
+body {
+
+}
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Lato', sans-serif;
+  &.title {
+    font-weight: 400;
+  }
+}
+
+// =============================================================================[ ALL ]
+
+// VPC - Index page
+.vpc,
+article {
+  & {
+
+  }
+  & + .vpc {
+    margin-top: 15px;
+  }
+  > .card {
+    margin-top: 15px;
+  }
+  p.mytype {
+    margin-bottom: 0;
+    font-size: .8rem;
+    color: grey;
+  }
+  .show-type {
+    & {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    h6 {
+      margin-bottom: 0;
+      color: #a8b0b9;
+    }
+  }
+  .name {
+    font-size: .8rem;
+  }
+  .card {
+    & {
+      // background: #eee;
+    }
+    .card-content {
+      padding: 1rem;
+    }
+  }
+  .card > .card {
+    .card-content {
+      img {
+        width: 30px;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+    }
+  }
+  .message {
+    margin-top: 15px;
+  }
+}
+.card-content {
+  a .icon {
+    color: #41b883;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+}
+
+// ASIDE - All pages
+.side-menu {
+  & {
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: white;
+    border-right: 1px solid #e8e8e8;
+  }
+  .logo {
+    padding: 15px;
+    display: block;
+    img {
+      width: 40px;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+  }
+  aside {
+    &.menu {
+      padding: 15px;
+    }
+  }
+  .control {
+    padding: 0 15px 10px;
+  }
+}
+
+// PAGE INJECT - All pages
+.page-inject {
+  margin-left: 250px;
+}
+
+// FOOTER
+footer {
+  &.footer {
+    color: #41b883;
+    border-top: 1px solid #e8e8e8;
+  }
+}
