@@ -2,16 +2,17 @@
   .columns
     .column.is-four-fifths
       div#mynetwork
-      .mypresets
-        | presets:
-        button.button.is-small(@click="presetClusters") clusters
-        button.button.is-small(@click="presetNetworks") networks
-        button.button.is-small(@click="presetInstances") instances
-        button.button.is-small(@click="presetSecGrps") security groups
-        button.button.is-small(@click="presetVpcs") VPCs
-        | &nbsp;&nbsp;&nbsp;&nbsp;
-        button.button.is-small(@click="presetAll") all
-        button.button.is-small(@click="presetNone") none
+      .mypresets.columns
+        .column(style='display: flex; align-items: center;')
+          span Presets:
+          button.button.is-small.is-primary(@click="presetClusters") Clusters
+          button.button.is-small.is-primary(@click="presetNetworks") Networks
+          button.button.is-small.is-primary(@click="presetInstances") Instances
+          button.button.is-small.is-primary(@click="presetSecGrps") Security Groups
+          button.button.is-small.is-primary(@click="presetVpcs") VPCs
+          | &nbsp;&nbsp;&nbsp;&nbsp;
+          button.button.is-small.is-primary(@click="presetAll") All
+          button.button.is-small.is-primary(@click="presetNone") None
     .column.my-mode-selectors
       .columns
         .column
