@@ -82,7 +82,7 @@ h5 {
       }
     }
     &::before {
-      content: "" url(/_nuxt/img/logo-twist-vue-mobile.0a887b7.png);
+      content: url('~assets/img/logo-twist-vue-mobile.png');
       display: flex;
       height: 64px;
       position: fixed;
