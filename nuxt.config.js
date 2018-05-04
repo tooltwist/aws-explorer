@@ -14,7 +14,7 @@ module.exports = {
       // '~/node_modules/bulma/css/bulma.css'
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
       { rel: 'stylesheet', href: '//fonts.googleapis.com/css?family=Lato|Open+Sans' }
     ],
     build: {
