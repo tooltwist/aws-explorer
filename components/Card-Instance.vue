@@ -78,12 +78,3 @@ export default {
   }
 }
 </script>
-<style lang="scss">
-  pre {
-    overflow-x: scroll;
-    text-align: left;
-    font-size: 10px;
-    background-color: white !important;
-    color: #99f;
-  }
-</style>

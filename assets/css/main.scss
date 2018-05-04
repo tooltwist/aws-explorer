@@ -171,6 +171,15 @@ article {
   .message {
     margin-top: 15px;
   }
+  pre {
+    & {
+      overflow-x: scroll;
+      text-align: left;
+      font-size: .7rem;
+      background-color: #363636;
+      color: #c2cfdc;
+    }
+  }
 }
 .card-content {
   a .icon {
