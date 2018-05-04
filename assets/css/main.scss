@@ -20,6 +20,99 @@ h5 {
 
 // =============================================================================[ ALL ]
 
+// ASIDE - All pages
+.side-menu {
+  & {
+    width: 250px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    height: 100%;
+    background: white;
+    border-right: 1px solid #e8e8e8;
+    left: 0;
+    transition: left .2s ease-in-out;
+  }
+  .navbar-burger {
+    position: absolute;
+    right: -64px;
+    top: 0;
+    z-index: 2;
+  }
+  .logo {
+    padding: 15px;
+    display: block;
+    img {
+      width: 40px;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+  }
+  aside {
+    &.menu {
+      padding: 15px;
+    }
+  }
+  .control {
+    padding: 0 15px 10px;
+  }
+}
+
+// PAGE INJECT - All pages
+.page-inject {
+  margin-left: 250px;
+  transition: all .2s ease-in-out;
+  position: relative;
+  left: 0;
+}
+
+// MOBILE
+@include touch {
+  body {
+    margin-top: 48px;
+  }
+  .side-menu {
+    & {
+      left: -250px;
+    }
+    &.is-active {
+      left: 0;
+      & + .page-inject {
+        left: 250px;
+      }
+    }
+    &::before {
+      content: "" url(/_nuxt/img/logo-twist-vue-mobile.0a887b7.png);
+      display: flex;
+      height: 64px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      align-items: center;
+      background: #fff;
+      margin-left: 250px;
+      border-bottom: 1px solid #ddd;
+      justify-content: space-around;
+      padding-right: 75px;
+    }
+    &::after {
+      content: attr(data-title);
+      display: flex;
+      height: 64px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      align-items: center;
+      margin-left: 250px;
+      justify-content: space-around;
+      padding-left: 75px;
+    }
+  }
+  .page-inject {
+    margin-left: 0;
+  }
+}
+
 // VPC - Index page
 .vpc,
 article {
@@ -78,41 +171,6 @@ article {
     vertical-align: middle;
     margin-right: 5px;
   }
-}
-
-// ASIDE - All pages
-.side-menu {
-  & {
-    width: 250px;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background: white;
-    border-right: 1px solid #e8e8e8;
-  }
-  .logo {
-    padding: 15px;
-    display: block;
-    img {
-      width: 40px;
-      vertical-align: middle;
-      margin-right: 5px;
-    }
-  }
-  aside {
-    &.menu {
-      padding: 15px;
-    }
-  }
-  .control {
-    padding: 0 15px 10px;
-  }
-}
-
-// PAGE INJECT - All pages
-.page-inject {
-  margin-left: 250px;
 }
 
 // FOOTER

@@ -1,9 +1,15 @@
 <template lang="pug">
-  .side-menu
-    a.logo(href='/')
+  .side-menu(v-bind:class="{'is-active': isActive}", data-title="aws-explorer")
+    a.navbar-burger(role="button", aria-label="menu", aria-expanded="false", @click="toggleNavbar()", v-bind:class="{'is-active': isActive}")
+      span(aria-hidden="true")
+      span(aria-hidden="true")
+      span(aria-hidden="true")
+    //- a
+    a.logo.is-hidden-touch(href='/')
       img(src='~assets/img/logo-twist-vue.png', alt='ToolTwist')
       span aws-explorer
     //- logo
+    br.is-hidden-desktop
     .control
       .select
         select.my-region-select(v-model="selectedRegion" v-on:change="changeRegion")
@@ -38,7 +44,7 @@
         //- li
         li
           a(v-on:click="reload")
-            | Reload  
+            | Reload
             b-icon(icon="autorenew", size="is-small")
           //- a
         //- li
