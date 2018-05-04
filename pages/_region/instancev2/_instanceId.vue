@@ -6,7 +6,7 @@
           //- p.subtitle -
         //- h1
 
-        .tabs
+        .tabs.is-centered
           ul
             li.is-active
               nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id") Relationships
