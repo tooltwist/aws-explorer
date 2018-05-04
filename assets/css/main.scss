@@ -197,3 +197,18 @@ footer {
     border-top: 1px solid #e8e8e8;
   }
 }
+
+// SELECT
+.select {
+  .icon {
+    position: absolute;
+    width: .5em;
+    margin-top: -.375em;
+    left: 1.125em;
+    top: 50%;
+    z-index: 4;
+    & + select {
+      padding-left: 2.5em;
+    }
+  }
+}

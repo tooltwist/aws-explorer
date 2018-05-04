@@ -12,6 +12,7 @@
     br.is-hidden-desktop
     .control
       .select
+        b-icon(icon="near-me", size="is-small")
         select.my-region-select(v-model="selectedRegion" v-on:change="changeRegion")
           option(v-for="region in regions" v-if="region.public" v-bind:value="region.code")
             | {{region.code}} ({{region.name}})
