@@ -26,7 +26,7 @@
       //- p
       ul.menu-list
         li
-          a(v-bind:href="'/' + $store.state.region + '/'") Index
+          a(v-bind:href="'/' + $store.state.region + '/allnodes'") All Nodes
         //- li
         li
           a(v-bind:href="'/' + $store.state.region + '/cluster'") Clusters
