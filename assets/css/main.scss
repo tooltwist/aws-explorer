@@ -190,7 +190,7 @@ article {
   }
 }
 
-// FOOTER
+// FOOTER - all
 footer {
   &.footer {
     color: #41b883;
@@ -198,7 +198,7 @@ footer {
   }
 }
 
-// SELECT
+// SELECT - all
 .select {
   .icon {
     position: absolute;
@@ -209,6 +209,32 @@ footer {
     z-index: 4;
     & + select {
       padding-left: 2.5em;
+    }
+  }
+}
+
+// BUTTON GROUP - all
+.field {
+  &.is-grouped {
+    &.is-centered {
+      justify-content: center;
+    }
+  }
+}
+
+// DEVELOPERS - home page
+.developers {
+  .media {
+
+  }
+  figure {
+    & {
+      margin-left: 20px;
+      margin-right: 20px;
+      margin-bottom: 20px;
+    }
+    img {
+      border-radius: 50%;
     }
   }
 }

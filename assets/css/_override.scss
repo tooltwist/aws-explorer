@@ -1,12 +1,13 @@
-@import "~bulma/sass/utilities/_all";
+@import "~bulma/sass/utilities/initial-variables";
+@import "~bulma/sass/utilities/functions";
 
 // SAMPLE CUSTOM COLOR VAUES
 $link                               : #798693;
 $primary                            : #41b883;
-// $info                               : #016FB9;
-// $success                            : #91C7B1;
-// $warning                            : #E3D081;
-// $danger                             : #FF715B;
+$info                               : #016FB9;
+$success                            : #91C7B1;
+$warning                            : #E3D081;
+$danger                             : #FF715B;
 
 // ALL
 $body-background-color              : #fafafa;
