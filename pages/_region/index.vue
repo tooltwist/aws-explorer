@@ -19,8 +19,8 @@
         br
         h3.title.is-3.has-text-dark.has-text-centered Contributors
         br
-        .columns.developers
-          .column.is-4.is-offset-2
+        .columns.developers.is-multiline
+          .column.is-4
             article.media
               figure.media-left
                 p.image.is-64x64
@@ -48,6 +48,23 @@
                   p
                   p
                     strong Kelvin Santos
+                  //- p
+                //- content
+              //- media-content
+            //- article
+            p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
+          //- column
+          .column.is-4
+            article.media
+              figure.media-left
+                p.image.is-64x64
+                  img(src='~assets/img/img-rodan.jpeg', alt='ToolTwist')
+              //- figure
+              .media-content
+                .content
+                  p
+                  p
+                    strong Rodan Luzuriaga
                   //- p
                 //- content
               //- media-content
