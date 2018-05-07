@@ -31,6 +31,11 @@ if [ $? != 0 ] ; then
   echo ""
   echo "    https://jeanlescure.io/blog/solved-aws-codecommit-git-on-osx-fatal-unable-to-access-returned-error-403"
 	echo ""
+	echo "If you are getting a 404 error, you might be using the wrong AWS account and need to set the AWS_PROFILE"
+	echo "environment variable to refer to a profile defined in ~/.aws/credentials:"
+	echo ""
+	echo "    export AWS_PROFILE=production"
+	echo ""
 	exit 1
 fi
 
