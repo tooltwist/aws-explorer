@@ -74,6 +74,23 @@
         //- columns
       //- container
     //- section
+    section.section(style='background: #f0fff0')
+      .container.is-fluid
+        .columns
+          .column
+            h1.title Consider #[a(href='http://tooltwist.com/', style='color: inherit;') ToolTwist] if you need:
+            h2.content
+              ul
+                li APIs to turbocharge your software development
+                li Someone to build your software
+                li A tech support team for your software
+        .columns
+          .column
+            h1.title ToolTwist
+            h2.content
+              p
+              | "Quietly doing the hard stuff"
+          //- column
   //- page
 </template>
 <script>
