@@ -57,9 +57,6 @@ export default {
       let region = this.$store.state.region
       return urlForNode(region, node)
     }
-  },
-  created: function () {
-    // console.log(this.node)
   }
 }
 </script>

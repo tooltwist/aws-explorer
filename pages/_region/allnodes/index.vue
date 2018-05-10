@@ -9,8 +9,8 @@
           .columns.is-multiline
             .column
               h3 Environments
-              //- .vpc(v-for="node in list" v-if="node.data.Tags.includes == 'Environment'")
-              //-   node-card(v-bind:node="node" show-type="true")
+              .vpc(v-for="node in list" v-if="searchTags(node, 'Environment') && node.type == 'Virtual Private Cloud'")
+                node-card(v-bind:node="node" show-type="true")
               h5 VPCs
               .vpc(v-for="node in list" v-if="node.type == 'Virtual Private Cloud'")
                 node-card(v-bind:node="node" show-type="true")
@@ -159,15 +159,25 @@ export default {
         n.type !== 'Database' &&
         n.type !== 'Cache'
       )
+    },
+    searchTags (node, key) {
+      if (node.data) {
+        const tags = 'Tags' in node.data
+        if (tags) {
+          const arrTags = node.data.Tags
+          for (var i in arrTags) {
+            if (arrTags[i].Key === key) {
+              return true
+            }
+          }
+        }
+      }
     }
   },
   head () {
     return {
       title: 'All Nodes'
     }
-  },
-  created () {
-    console.log(this)
   }
 }
 </script>
