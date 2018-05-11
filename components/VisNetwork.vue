@@ -537,7 +537,7 @@ export default {
           },
           layout: { randomSeed: 2 },
           manipulation: {
-            enabled: true
+            enabled: false
           },
           nodes: {
             shape: 'dot',
