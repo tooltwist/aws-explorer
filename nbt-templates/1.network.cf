@@ -6,7 +6,7 @@ Parameters:
     Type: String
 
   EnvironmentName:
-    Description: IMPORTANT!!!     -->>> The stack name MUST be <environmentName>
+    Description: IMPORTANT!!!     -->>> The stack name MUST be <environmentName>-network
     Type: String
 
   CostCode:
