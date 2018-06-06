@@ -1,0 +1,240 @@
+@import "_override";
+
+// =============================================================================[ ALL ]
+html {
+
+}
+body {
+
+}
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Lato', sans-serif;
+  &.title {
+    font-weight: 400;
+  }
+}
+
+// =============================================================================[ ALL ]
+
+// ASIDE - All pages
+.side-menu {
+  & {
+    width: 250px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    height: 100%;
+    background: white;
+    border-right: 1px solid #e8e8e8;
+    left: 0;
+    transition: left .2s ease-in-out;
+  }
+  .navbar-burger {
+    position: absolute;
+    right: -64px;
+    top: 0;
+    z-index: 2;
+  }
+  .logo {
+    padding: 15px;
+    display: block;
+    img {
+      width: 40px;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+  }
+  aside {
+    &.menu {
+      padding: 15px;
+    }
+  }
+  .control {
+    padding: 0 15px 10px;
+  }
+}
+
+// PAGE INJECT - All pages
+.page-inject {
+  margin-left: 250px;
+  transition: all .2s ease-in-out;
+  position: relative;
+  left: 0;
+}
+
+// MOBILE
+@include touch {
+  body {
+    margin-top: 48px;
+  }
+  .side-menu {
+    & {
+      left: -250px;
+    }
+    &.is-active {
+      left: 0;
+      & + .page-inject {
+        left: 250px;
+      }
+    }
+    &::before {
+      content: url('~assets/img/logo-twist-vue-mobile.png');
+      display: flex;
+      height: 64px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      align-items: center;
+      background: #fff;
+      margin-left: 250px;
+      border-bottom: 1px solid #ddd;
+      justify-content: space-around;
+      padding-right: 75px;
+    }
+    &::after {
+      content: attr(data-title);
+      display: flex;
+      height: 64px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      align-items: center;
+      margin-left: 250px;
+      justify-content: space-around;
+      padding-left: 75px;
+    }
+  }
+  .page-inject {
+    margin-left: 0;
+  }
+}
+
+// VPC - Index page
+.vpc,
+article {
+  & {
+
+  }
+  & + .vpc {
+    margin-top: 15px;
+  }
+  > .card {
+    margin-top: 15px;
+  }
+  p.mytype {
+    margin-bottom: 0;
+    font-size: .8rem;
+    color: grey;
+  }
+  .show-type {
+    & {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    h6 {
+      margin-bottom: 0;
+      color: #a8b0b9;
+      font-size: .9rem;
+    }
+    & ~ a {
+      font-size: .8rem;
+    }
+  }
+  .name {
+    font-size: .7rem;
+  }
+  .card {
+    & {
+      // background: #eee;
+    }
+    .card-content {
+      padding: 1rem;
+    }
+  }
+  .card > .card {
+    .card-content {
+      img {
+        width: 30px;
+        vertical-align: middle;
+        margin-right: 8px;
+        & ~ a {
+          font-size: .8rem;
+        }
+      }
+    }
+  }
+  .message {
+    margin-top: 15px;
+  }
+  pre {
+    & {
+      overflow-x: scroll;
+      text-align: left;
+      font-size: .7rem;
+      background-color: #f5f5f5;
+      color: #7a7a7a;
+      outline: 1px solid #e8e8e8;
+    }
+  }
+}
+.card-content {
+  a .icon {
+    color: #41b883;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+}
+
+// FOOTER - all
+footer {
+  &.footer {
+    color: #41b883;
+    border-top: 1px solid #e8e8e8;
+  }
+}
+
+// SELECT - all
+.select {
+  .icon {
+    position: absolute;
+    width: .5em;
+    margin-top: -.375em;
+    left: 1.125em;
+    top: 50%;
+    z-index: 4;
+    & + select {
+      padding-left: 2.5em;
+    }
+  }
+}
+
+// BUTTON GROUP - all
+.field {
+  &.is-grouped {
+    &.is-centered {
+      justify-content: center;
+    }
+  }
+}
+
+// DEVELOPERS - home page
+.developers {
+  .media {
+
+  }
+  figure {
+    & {
+      margin-left: 20px;
+      margin-right: 20px;
+      margin-bottom: 20px;
+    }
+    img {
+      border-radius: 50%;
+    }
+  }
+}

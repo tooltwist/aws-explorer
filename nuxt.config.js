@@ -14,7 +14,8 @@ module.exports = {
       // '~/node_modules/bulma/css/bulma.css'
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+      { rel: 'stylesheet', href: '//fonts.googleapis.com/css?family=Lato|Open+Sans' }
     ],
     build: {
       extractCSS: true
@@ -24,12 +25,12 @@ module.exports = {
   ** Global CSS
   */
   css: [
-    '~/assets/css/main.css',
+    '~/assets/css/main.scss',
     '~/node_modules/vis/dist/vis-network.min.css',
-    // node.js module but we specify the pre-processor
-    { src: 'bulma/bulma.sass', lang: 'sass' },
-    { src: 'font-awesome/scss/font-awesome.scss', lang: 'scss' },
   ],
+  loading: {
+    color: '#41b883'
+  },
   /*
   ** Add axios globally
   */
@@ -55,6 +56,7 @@ module.exports = {
      }
   },
   modules: [
-    '@nuxtjs/bulma'
+    // '@nuxtjs/bulma'
+    'nuxt-buefy'
   ]
 }

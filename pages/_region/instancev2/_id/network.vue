@@ -1,41 +1,40 @@
 <template lang="pug">
   .page
-    .container.has-text-centered
-      //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-      h1.title Instance - Network View
-      //h2.info {{ node.key }}
-    br
-    .tabs
-      ul
-        li
-          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id") Relationships
-        li
-          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/ecs'") ECS
-        li.is-active
-          nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/network'") Network
-    .container
-      //  .columns
-      //    .column.has-text-centered(style="min-width: 0;")
-      //      h3 Current node
-      //      node-card(v-bind:node="node" show-data="true")
+    section.section
+      .container.is-fluid
+        h3.title.is-3.has-text-centered Instance - Network View
+          //- p.subtitle -
+        //- h1
 
-        //.column.has-text-centered
-        //  h3 Uses
-        //  ul
-        //    li(v-for="childId in node.children")
-        //      node-card(v-bind:node="index[childId]")
-      vis-network(v-bind:index="index" v-bind:initialNodesFn="useAsInitialNode" v-bind:rulesFn="getRuleForNode")
+        .tabs.is-centered
+          ul
+            li
+              nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id") Relationships
+            //- li
+            li
+              nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/ecs'") ECS
+            //- li
+            li.is-active
+              nuxt-link(v-bind:to="'/' + region + '/instance/' + node.id + '/network'") Network
+            //- li
+          //- ul
+        //- tabs
+        .content
+          .card
+            .card-content
+              vis-network(v-bind:index="index" v-bind:initialNodesFn="useAsInitialNode" v-bind:rulesFn="getRuleForNode")
+            //- card-content
+          //- card
+          h3 All
+          .button.is-text Yawza
+          nuxt-link.button.is-text(to="/" class="button") Home
+          nuxt-link.button.is-text(to="/stuff" class="button") Stuff
+        //- content
 
-      h3 All
-      //ul
-        //li(v-for="item in list")
-        //  router-link(v-bind:to="'/node/' + item.key") {{ item.key }}
-      .button.is-link Yawza
-      nuxt-link(to="/" class="button") Home
-      nuxt-link(to="/stuff" class="button") Stuff
-      br
+      //- container
+    //- section
+  //- page
 </template>
-
 <script>
 import NodeCard from '~/components/Card.vue'
 import GraphClient from '~/lib/graphClient'
@@ -97,22 +96,6 @@ export default {
   }
 }
 </script>
+<style>
 
-<style scoped>
-
-  .title
-  {
-    margin-top: 30px;
-  }
-  .info
-  {
-    font-weight: 300;
-    color: #9aabb1;
-    margin: 0;
-    margin-top: 10px;
-  }
-  .button
-  {
-    margin-top: 30px;
-  }
 </style>

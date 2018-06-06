@@ -1,158 +1,119 @@
 <template lang="pug">
-.page
-  .container.has-text-centered
-    //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-    h1.title All Nodes
-    hr
-    br
-    | {{$store.list}}
-    hr
-
-  .content
-    .columns
-      .column
-        h3 Environments
-        h3 VPCs
-          .vpc(v-for="node in list" v-if="node.type == 'Virtual Private Cloud'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Availability Zones
-          .vpc(v-for="node in list" v-if="node.type == 'Availability Zone'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Subnets
-          .vpc(v-for="node in list" v-if="node.type == 'Subnet'")
-            node-card(v-bind:node="node" show-type="true")
-      .column
-        h3 Internet gateways
-          .vpc(v-for="node in list" v-if="node.type == 'Internet Gateway'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 NAT Gateways
-          .vpc(v-for="node in list" v-if="node.type == 'NAT Gateway'")
-            node-card(v-bind:node="node" show-type="true")
-        //- h3 Route Tables
-        //-   .vpc(v-for="node in list" v-if="node.type == 'Route Table'")
-        //-     node-card(v-bind:node="node" show-type="true")
-      .column
-        h3 Elastic IPs
-          .vpc(v-for="node in list" v-if="node.type === 'Elastic IP'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Public IP Addresses
-          .vpc(v-for="node in list" v-if="node.type === 'Public IP Address'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Network Interfaces
-          .vpc(v-for="node in list" v-if="node.type === 'Network Interface'")
-            node-card(v-bind:node="node" show-type="true")
-      .column
-        h3 Instances
-          .vpc(v-for="node in list" v-if="node.type === 'EC2 Instance'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Jump Boxes
-          .vpc(v-for="node in list" v-if="node.type === 'Jumpbox'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 AMI Images
-          .vpc(v-for="node in list" v-if="node.type === 'AMI Image'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Key Pairs
-          .vpc(v-for="node in list" v-if="node.type === 'Key Pair'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Security Groups
-          .vpc(v-for="node in list" v-if="node.type === 'Security Group'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Other
-          .vpc(v-for="node in list" v-if="isUnknownType(node)")
-            // | {{node.key}} ,{{node.type}}.
-            node-card(v-bind:node="node" show-type="true")
-      .column
-        h3 Load Balancers
-          .vpc(v-for="node in list" v-if="node.type === 'Load Balancer'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Target Groups
-          .vpc(v-for="node in list" v-if="node.type === 'Target Group'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Clusters
-          .vpc(v-for="node in list" v-if="node.type === 'Cluster'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Services
-          .vpc(v-for="node in list" v-if="node.type === 'Service'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Tasks
-          .vpc(v-for="node in list" v-if="node.type === 'Task'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Databases
-          .vpc(v-for="node in list" v-if="node.type === 'Database'")
-            node-card(v-bind:node="node" show-type="true")
-        h3 Caches
-          .vpc(v-for="node in list" v-if="node.type === 'Cache'")
-            node-card(v-bind:node="node" show-type="true")
-    hr
-
+  .page
+    section.section
+      .container.is-fluid
+        h1.title.is-1.has-text-centered.has-text-grey-light
+          img(src='~assets/img/logo-twist-vue.png', alt='ToolTwist')
+          br
+          span.is-uppercase Aws Explorer
+        //- h1
+        .field.is-grouped.is-centered
+          p.control
+            a.button.is-primary.is-large Get Started
+          //- p
+          p.control
+            a.button.is-light.is-large GitHub
+          //- p
+        //- field
+        hr
+        br
+        h3.title.is-3.has-text-dark.has-text-centered Contributors
+        br
+        .columns.developers.is-multiline
+          .column.is-4
+            article.media
+              figure.media-left
+                p.image.is-64x64
+                  img(src='~assets/img/img-phil.png', alt='ToolTwist')
+              //- figure
+              .media-content
+                .content
+                  p
+                  p
+                    strong Phil Callender
+                  //- p
+                //- content
+              //- media-content
+            //- article
+            p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
+          //- column
+          .column.is-4
+            article.media
+              figure.media-left
+                p.image.is-64x64
+                  img(src='~assets/img/img-kelvin.jpg', alt='ToolTwist')
+              //- figure
+              .media-content
+                .content
+                  p
+                  p
+                    strong Kelvin Santos
+                  //- p
+                //- content
+              //- media-content
+            //- article
+            p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
+          //- column
+          .column.is-4
+            article.media
+              figure.media-left
+                p.image.is-64x64
+                  img(src='~assets/img/img-rodan.jpeg', alt='ToolTwist')
+              //- figure
+              .media-content
+                .content
+                  p
+                  p
+                    strong Rodan Luzuriaga
+                  //- p
+                //- content
+              //- media-content
+            //- article
+            p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
+          //- column
+        //- columns
+      //- container
+    //- section
+    section.section(style='background: #f0fff0')
+      .container.is-fluid
+        .columns
+          .column
+            h1.title Consider #[a(href='http://tooltwist.com/', style='color: inherit;') ToolTwist] if you need:
+            h2.content
+              ul
+                li APIs to turbocharge your software development
+                li Someone to build your software
+                li A tech support team for your software
+        .columns
+          .column
+            h1.title ToolTwist
+            h2.content
+              p
+              | "Quietly doing the hard stuff"
+          //- column
+  //- page
 </template>
-
 <script>
-import GraphClient from '~/lib/graphClient.js'
-import NodeCard from '~/components/Card.vue'
 
 export default {
   components: {
-    NodeCard
   },
   async asyncData (context) {
-    // console.log('asyncData. query=', context.query)
-    let reload = false
-    if (context.query.reload) {
-      reload = true
-    }
-    let region = context.params.region
-    let nodeId = context.params.id
-    context.store.commit('setRegion', region)
-    return GraphClient(region, nodeId, reload, context.error)
+
   },
   methods: {
-    isUnknownType: function (n) {
-      // console.log('isUnknownType: ' + n.type)
-      return (
-        n.type !== 'Virtual Private Cloud' &&
-        n.type !== 'Availability Zone' &&
-        n.type !== 'Subnet' &&
 
-        n.type !== 'Internet Gateway' &&
-        n.type !== 'NAT Gateway' &&
-        n.type !== 'Route Table' &&
-
-        n.type !== 'Elastic IP' &&
-        n.type !== 'Public IP Address' &&
-        n.type !== 'Network Interface' &&
-
-        n.type !== 'EC2 Instance' &&
-        n.type !== 'Jumpbox' &&
-        n.type !== 'AMI Image' &&
-        n.type !== 'Key Pair' &&
-        n.type !== 'Security Group' &&
-
-        n.type !== 'Load Balancer' &&
-        n.type !== 'Target Group' &&
-        n.type !== 'Cluster' &&
-        n.type !== 'Service' &&
-        n.type !== 'Task' &&
-        n.type !== 'Database' &&
-        n.type !== 'Cache'
-      )
-    }
   },
   head () {
     return {
-      title: 'All Nodes'
+      title: 'Home'
     }
+  },
+  created () {
+
   }
 }
 </script>
+<style>
 
-<style scoped>
-.title
-{
-  margin: 30px 0;
-}
-.vpc
-{
-  font-size: 14px;
-}
 </style>

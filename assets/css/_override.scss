@@ -1,0 +1,40 @@
+@import "~bulma/sass/utilities/initial-variables";
+@import "~bulma/sass/utilities/functions";
+
+// SAMPLE CUSTOM COLOR VAUES
+$link                               : #798693;
+$primary                            : #41b883;
+$info                               : #016FB9;
+$success                            : #91C7B1;
+$warning                            : #E3D081;
+$danger                             : #FF715B;
+
+// ALL
+$body-background-color              : #fafafa;
+$radius                             : 2px;
+$body-family                        : 'Open Sans', sans-serif;
+$title-color                        : #41b883;
+$content-heading-color              : #7a7a7a;
+
+// NAVBAR
+$navbar-height                      : 4rem;
+// $navbar-item-hover-color            : $dark;
+
+// FOOTER
+$footer-background-color            : #fafafa;
+
+// MENU
+// $menu-item-color                    : #dbdbdb;
+// $menu-item-radius                   : 0;
+$menu-item-active-background-color  : transparent;
+$menu-item-hover-background-color   : transparent;
+$menu-item-active-color             : $primary;
+$menu-item-hover-color              : $primary;
+// $menu-label-color                   : #5b7777;
+// $menu-list-border-left              : 1px solid #3a4e4e;
+
+// CARD
+$card-shadow	                      : 0 1px 3px rgba($black, 0.1), 0 0 0 0 rgba($black, 0.1);
+
+@import "~bulma";
+@import "~buefy/src/scss/buefy";

@@ -1,32 +1,29 @@
 <template lang="pug">
   .page
-    .container.has-text-centered
-      //img(src="~assets/img/logo.png" alt="Nuxt.js Logo" class="logo")
-      h1.title {{ node.key }}
-      hr
-      br
+    section.section
+      .container.is-fluid
+        h3.title.is-3.has-text-centered {{ node.key }}
+          //- p.subtitle -
+        //- h1
 
-    .container
-      .columns
-        .column.has-text-centered(style="min-width: 0;")
-          h3 Current node
-          node-card(v-bind:node="node" show-data="true")
-
-        .column.has-text-centered
-          h3 Uses
-          ul
-            li(v-for="childId in node.children")
-              node-card(v-bind:node="index[childId]")
-      hr
-
-      //h3 All
-      //ul
-      //  li(v-for="item in list")
-      //    router-link(v-bind:to="'/${$store.state.route}/node/' + item.key") {{ item.key }}
-      //nuxt-link(to="/" class="button") Home
-      //nuxt-link(to="/stuff" class="button") Stuff
+        .content
+          .columns
+            .column.has-text-centered(style="min-width: 0;")
+              h3 Current node
+              node-card(v-bind:node="node" show-data="true")
+            //- column
+            .column.has-text-centered
+              h3 Uses
+              article(v-for="childId in node.children")
+                node-card(v-bind:node="index[childId]")
+              //- article
+            //- column
+          //- columns
+        //- content
+      //- container
+    //- section
+  //- page
 </template>
-
 <script>
 import GraphClient from '~/lib/graphClient.js'
 import NodeCard from '~/components/Card.vue'
@@ -68,21 +65,6 @@ export default {
 
 }
 </script>
+<style>
 
-<style scoped>
-.title
-{
-  margin-top: 30px;
-}
-.info
-{
-  font-weight: 300;
-  color: #9aabb1;
-  margin: 0;
-  margin-top: 10px;
-}
-.button
-{
-  margin-top: 30px;
-}
 </style>
