@@ -19,24 +19,24 @@ cp SETENV Scripts/SETENV
 
 # Push everything to the SecureConfig repo in AWS CodeCommit.
 git add . && \
-git commit -m "$(date)" && \
+git commit -m "$(date "+%H:%M %d%b%Y")" && \
 git push --set-upstream origin master
 
 if [ $? != 0 ] ; then
-	echo ""
-	echo ""
-	echo "An error occurred uploading to CodeCommit."
-	echo "If you are on a Mac and get a 403 error, your credentials are probably being cached by 'Keychain Access',"
+  echo ""
+  echo ""
+  echo "An error occurred uploading to CodeCommit."
+  echo "If you are on a Mac and get a 403 error, your credentials are probably being cached by 'Keychain Access',"
   echo "but AWS resets them every 15 minutes. See a permanent fix here (option 3 works best):"
   echo ""
   echo "    https://jeanlescure.io/blog/solved-aws-codecommit-git-on-osx-fatal-unable-to-access-returned-error-403"
-	echo ""
-	echo "If you are getting a 404 error, you might be using the wrong AWS account and need to set the AWS_PROFILE"
-	echo "environment variable to refer to a profile defined in ~/.aws/credentials:"
-	echo ""
-	echo "    export AWS_PROFILE=production"
-	echo ""
-	exit 1
+  echo ""
+  echo "If you are getting a 404 error, you might be using the wrong AWS account and need to set the AWS_PROFILE"
+  echo "environment variable to refer to a profile defined in ~/.aws/credentials:"
+  echo ""
+  echo "    export AWS_PROFILE=production"
+  echo ""
+  exit 1
 fi
 
 
