@@ -3,10 +3,10 @@ const colors = require('colors')
 const myAWS = require('../server/misc/myAWS')
 
 
-function CliMysql(ip1, ip2, dbhost, dbname, username, password) {
+function CliMysql(environment, ip1, ip2, dbhost, dbname, username, password) {
   // console.log(`jumpbox ${ip1} ${ip2}`);
   let r = program.region || myAWS.INITIAL_REGION;
-  let e = program.environment || 'some-environment'
+  let e = environment || 'some-environment'
   let keyfile = `~/.ssh/nbt-${e}-${r}.pem`
 
   let localPort = Math.floor(Math.random() * 10000) + 30000
@@ -58,7 +58,7 @@ ${browserCmd}
   `.blue.bold);
   console.log();
 
-  if (!program.environment) {
+  if (!environment) {
     console.log();
     console.log('  Please note: to get the complete command, please include the option: -e <environment>');
     console.log();

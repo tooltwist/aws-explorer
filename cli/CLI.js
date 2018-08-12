@@ -5,6 +5,7 @@ const CliInstallKey = require('./CliInstallKey')
 const CliCompromised = require('./CliCompromised')
 const CliJump = require('./CliJump')
 const CliMysql = require('./CliMysql')
+const CliMysqlPrompted = require('./CliMysqlPrompted')
 const CliNbt = require('./CliNbt')
 const CliSummary = require('./CliSummary')
 const CliProvision = require('./CliProvision')
@@ -88,13 +89,22 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
       CliJump(ip1, ip2)
     });
 
-  // Login to a server via a jump box
+  // Access database via a jump box
   program
     .command('mysql <jumpbox_ipaddr> <ecshost_ipaddr> <dbhost> <dbname> <username> <password>')
     .description('Connect to MySQL database')
     .action(function(ip1, ip2, dbhost, dbname, username, password) {
       haveCommand = true
-      CliMysql(ip1, ip2, dbhost, dbname, username, password)
+      CliMysql(program.environment, ip1, ip2, dbhost, dbname, username, password)
+    });
+
+  // Access database via a jump box
+  program
+    .command('database')
+    .description('Connect to MySQL database')
+    .action(function() {
+      haveCommand = true
+      CliMysqlPrompted()
     });
 
   // Login to a server

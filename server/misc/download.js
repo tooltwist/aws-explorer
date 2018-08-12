@@ -6,7 +6,7 @@ var loadBalancersAreLoaded = false;
 var targetGroupsAreLoaded = false;
 var instancesAreLoaded = false;
 
-const debug = true;
+const debug = false;
 
 function findTargetGroupByARN(arn) {
   // console.log('findTargetGroupByARN(' + arn + ')');
