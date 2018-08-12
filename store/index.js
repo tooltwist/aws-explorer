@@ -4,7 +4,7 @@ import Vuex from 'vuex'
 // import GraphClient from '~/lib/graphClient'
 
 const createStore = () => {
-  console.log('createStore()')
+  // console.log('createStore()')
   return new Vuex.Store({
     state: {
       // counter: 0,
@@ -16,7 +16,7 @@ const createStore = () => {
     },
     actions: {
       nuxtServerInit ({ commit }, { req }) {
-        console.log('nuxtServerInit()')
+        // console.log('nuxtServerInit()')
         // let nodeId = 'abc'
         // let promise = GraphClient(nodeId, (e) => {
         //   console.log('Immediate error from GraphClient', e)

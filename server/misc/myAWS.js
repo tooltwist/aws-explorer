@@ -37,7 +37,7 @@ function downloadRegions (callback) {
 // Return the name of an AWS regions
 // e.g. us-east-1 -> (n-virginia)
 function regionDescription (regionCode) {
-  console.log('regionDescription(' + regionCode + ')')
+  // console.log('regionDescription(' + regionCode + ')')
   let region = awsRegions.get(regionCode)
   if (region) {
     // return '(' + region.name + ')'

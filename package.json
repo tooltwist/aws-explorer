@@ -43,8 +43,7 @@
     "nuxt": "^1.0.0-rc3",
     "nuxt-buefy": "0.0.4",
     "source-map-support": "^0.4.15",
-    "vis": "^4.21.0",
-    "vue-blu": "^0.1.9"
+    "vis": "^4.21.0"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",

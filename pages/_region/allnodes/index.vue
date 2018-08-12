@@ -7,11 +7,12 @@
         //- h1
         .content
           .columns.is-multiline
+
             .column
               h3 Environments
               .vpc(v-for="node in list" v-if="searchTags(node, 'Environment') && node.type == 'Virtual Private Cloud'")
                 node-card(v-bind:node="node" show-type="true")
-              h5 VPCs
+              h3 VPCs
               .vpc(v-for="node in list" v-if="node.type == 'Virtual Private Cloud'")
                 node-card(v-bind:node="node" show-type="true")
               //- vpc
@@ -24,6 +25,7 @@
                 node-card(v-bind:node="node" show-type="true")
               //- vpc
             //- column
+
             .column
               h3 Internet gateways
               .vpc(v-for="node in list" v-if="node.type == 'Internet Gateway'")
@@ -33,7 +35,12 @@
               .vpc(v-for="node in list" v-if="node.type == 'NAT Gateway'")
                 node-card(v-bind:node="node" show-type="true")
               //- vpc
+              h3 Route Tables
+              .vpc(v-for="node in list" v-if="node.type == 'Route Table'")
+                node-card(v-bind:node="node" show-type="true")
+              //- vpc
             //- column
+
             .column
               h3 Elastic IPs
               .vpc(v-for="node in list" v-if="node.type === 'Elastic IP'")
@@ -47,6 +54,7 @@
               .vpc(v-for="node in list" v-if="node.type === 'Network Interface'")
                 node-card(v-bind:node="node" show-type="true")
               //- vpc
+
             .column
               h3 Instances
               .vpc(v-for="node in list" v-if="node.type === 'EC2 Instance'")
@@ -73,7 +81,7 @@
                 // | {{node.key}} ,{{node.type}}.
                 node-card(v-bind:node="node" show-type="true")
               //- vpc
-            //- column
+
             .column
               h3 Load Balancers
               .vpc(v-for="node in list" v-if="node.type === 'Load Balancer'")
@@ -104,6 +112,7 @@
                 node-card(v-bind:node="node" show-type="true")
               //- vpc
             //- column
+
           //- columns
         //- content
       //- container

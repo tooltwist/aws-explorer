@@ -1,26 +1,20 @@
 <template lang="pug">
-  .card
+  .card.my-card(@click="jumpToNode(node)")
     .card-content(style="min-width: 0%;")
       .show-type(v-if="showType")
-        p.mytype
-          | {{node.type}}
-        //- p
-        h6.subtitle.is-6.myid
-          | {{id}}
-        //- h5
-      //- div
-      img.awsicon(src="/aws-images/Compute_AmazonEC2_instance.png")
-      router-link(v-bind:to="urlForNode(node)")
-        b-icon(icon="link", size="is-small")
-        | {{ label }}
-      //- router-link
-      .desc {{ description }}
-    //- card-content
+        .my-type {{node.type}}
+        .my-id {{id}}
+
+      // img.awsicon(src="/aws-images/Compute_AmazonEC2_instance.png")
+      // b-icon(icon="link", size="is-small")
+      .my-label {{ label }}
+
+      .my-description {{ description }}
+
     pre(v-if="showData === '' || showData === 'true'" rel="CSS")
       | {{ node.data }}
-    //- pre
-  //- card
 </template>
+
 <script>
 import types from '../lib/types'
 import urlForNode from '~/lib/urlForNode.js'
@@ -67,10 +61,12 @@ export default {
       }
       return desc
     },
-    urlForNode: function (node) {
-      /* console.log('urlForNode() method') */
+    jumpToNode: function (node) {
       let region = this.$store.state.region
-      return urlForNode(region, node)
+      let url = urlForNode(region, node)
+
+      console.log(`Jump to ${url}`, this.$router)
+      this.$router.push(url)
     }
   },
   created: function () {

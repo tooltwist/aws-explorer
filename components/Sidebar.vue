@@ -28,8 +28,8 @@
         li
           a(v-bind:href="'/' + $store.state.region + '/allnodes'") All Nodes
         //- li
-        li
-          a(v-bind:href="'/' + $store.state.region + '/cluster'") Clusters
+        //- li
+        //-   a(v-bind:href="'/' + $store.state.region + '/cluster'") Clusters
         //- li
         li
           a(v-bind:href="'/' + $store.state.region + '/vpc'") VPCs

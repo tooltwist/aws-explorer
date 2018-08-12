@@ -1,20 +1,20 @@
 <template lang="pug">
-  .card
+  .card.my-card(@click="jumpToNode(node)")
     .card-content(style="min-width: 0%;")
-      img.awsicon(src="/aws-images/General_virtualprivatecloud.png")
-      router-link(v-bind:to="urlForNode(node)")
-        b-icon(icon="link", size="is-small")
-        | {{ label }}
-      //- router-link
-      router-link(v-bind:to="urlForNode(node)")
-        b-icon(icon="link", size="is-small")
-        | {{ node.VpcId }}
-      //- router-link
-    //- card-content
+      .show-type(v-if="showType")
+        .my-type
+          img.awsicon(src="/aws-images/General_virtualprivatecloud.png")
+          | {{node.type}}
+        .my-id {{ node.data.VpcId }}
+
+      //- b-icon(icon="link", size="is-small")
+      .my-label environment = {{ label }}
+
+      //- b-icon(icon="link", size="is-small")
+      //- | {{ node.VpcId }}
+
     pre(v-if="showData === '' || showData === 'true'" rel="CSS")
       | {{ node.data }}
-    //- pre
-  //- card
 </template>
 <script>
 import urlForNode from '~/lib/urlForNode.js'
@@ -23,6 +23,7 @@ import types from '../lib/types'
 export default {
   name: 'id',
   props: [
+    'showType',
     'node',
     'showData',
     'idAsLabel'
