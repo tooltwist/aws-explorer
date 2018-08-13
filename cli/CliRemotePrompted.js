@@ -9,7 +9,7 @@ const inquirer = require('inquirer');
 
 const CliMysql = require('./CliMysql')
 
-function CliMysqlPrompted() {
+function CliRemotePrompted() {
   let region = program.region || myAWS.INITIAL_REGION;
   region = myAWS.checkAwsRegion(region);
   let regionName = capitalize(myAWS.regionDescription(region))
@@ -21,6 +21,8 @@ function CliMysqlPrompted() {
   console.log(`***   NOTE: Region is ${region} ${pad('('+regionName+')', 15)}   ***`);
   console.log(`***                                                    ***`);
   console.log(`**********************************************************`);
+  console.log();
+  console.log(`Tip: You can specify region with the -r <region> option.`);
   console.log();
   console.log();
 
@@ -137,8 +139,8 @@ function CliMysqlPrompted() {
           choices: [ ]
         };
         graph.nodes().filter(node => (node.type === types.DATABASE)).forEach((node) => {
-          console.log(`db=`, node);
-          let label = `${node.data.DBInstanceIdentifier} (${node.data.DBInstanceStatus})`
+          // console.log(`db=`, node);
+          let label = `${node.data.DBInstanceIdentifier} (${node.data.Endpoint.Address})`
           dbHosts[label] = node
           dbQuestion.choices.push(label)
         })
@@ -169,17 +171,17 @@ function CliMysqlPrompted() {
           let jumpboxNode = jumpboxes[answers.jumpboxLabel]
           // console.log(`jumpbox is `, jumpboxNode);
           let jumpboxIp = jumpboxNode.data.PublicIpAddress
-          console.log(`jumpboxIp=${jumpboxIp}`);
+          // console.log(`jumpboxIp=${jumpboxIp}`);
 
           let ecsHostNode = ecsHosts[answers.ecsHostLabel]
           // console.log(`jumpbox is `, jumpboxNode);
           let ecsHostIp = ecsHostNode.data.PrivateIpAddress
-          console.log(`ecsHostIp=${ecsHostIp}`);
+          // console.log(`ecsHostIp=${ecsHostIp}`);
 
           let dbHostNode = dbHosts[answers.dbHostLabel]
-          console.log(`db is `, dbHostNode);
+          // console.log(`db is `, dbHostNode);
           let dbHost = dbHostNode.data.Endpoint.Address
-          console.log(`dbHost=${dbHost}`);
+          // console.log(`dbHost=${dbHost}`);
 
           // Now show the commands
           CliMysql(environmentName, jumpboxIp, ecsHostIp, dbHost, answers.dbname, answers.username, answers.password)
@@ -189,4 +191,4 @@ function CliMysqlPrompted() {
   })
 }
 
-module.exports = CliMysqlPrompted
+module.exports = CliRemotePrompted

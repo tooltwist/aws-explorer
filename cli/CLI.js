@@ -5,7 +5,7 @@ const CliInstallKey = require('./CliInstallKey')
 const CliCompromised = require('./CliCompromised')
 const CliJump = require('./CliJump')
 const CliMysql = require('./CliMysql')
-const CliMysqlPrompted = require('./CliMysqlPrompted')
+const CliRemotePrompted = require('./CliRemotePrompted')
 const CliNbt = require('./CliNbt')
 const CliSummary = require('./CliSummary')
 const CliProvision = require('./CliProvision')
@@ -100,11 +100,11 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
 
   // Access database via a jump box
   program
-    .command('database')
-    .description('Connect to MySQL database')
+    .command('remote')
+    .description('Easy connection through jumpboxes (to DB or ECS Host)')
     .action(function() {
       haveCommand = true
-      CliMysqlPrompted()
+      CliRemotePrompted()
     });
 
   // Login to a server
