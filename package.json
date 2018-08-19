@@ -1,6 +1,6 @@
 {
   "name": "aws-explorer",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "AWS visualisation tool",
   "author": "Philip Callender <philip.callender@tooltwist.com>",
   "main": "index.js",
