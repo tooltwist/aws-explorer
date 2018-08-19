@@ -2,25 +2,23 @@
 
 ENVIRONMENT={{{ENVIRONMENT}}}
 APPLICATION={{{APPLICATION}}}
-
-# Region
 REGION={{{REGION}}}
-
-# S3 Bucket and logs
-S3_BUCKET=s3://nbt-{{{ENVIRONMENT}}}-configs
 LOGSTREAM=nbt-{{{ENVIRONMENT}}}-{{{APPLICATION}}}-logs
+#S3_BUCKET=s3://nbt-{{{ENVIRONMENT}}}-configs
 
 # Our application
-APPLICATION_HOST=localhost
-APPLICATION_PORT=8080
+V_APPLICATION_PORT=8080
 
 # Database
-DB_HOST=nbt-{{{ENVIRONMENT}}}.cluster-xxxxxxxxxxxx.ap-northeast-1.rds.amazonaws.com
-DB_PORT=3306
-DB_NAME=xxxxx
-DB_USERNAME=xxxxx
-DB_PASSWORD=xxxxxxxx
+V_DB_HOST=nbt-{{{ENVIRONMENT}}}.cluster-xxxxxxxxxxxx.ap-northeast-1.rds.amazonaws.com
+V_DB_PORT=3306
+V_DB_NAME=xxxxx
+V_DB_USERNAME=xxxxx
+V_DB_PASSWORD=xxxxxxxx
 
 # Cache
-REDIS_HOST=nbt-{{{ENVIRONMENT}}}-cache.xxxxxx.xxxx.xxxxx.cache.amazonaws.com
-REDIS_PORT=6379
+V_REDIS_HOST=nbt-{{{ENVIRONMENT}}}-cache.xxxxxx.xxxx.xxxxx.cache.amazonaws.com
+V_REDIS_PORT=6379
+
+# Custom variables - prefix with "V_"
+V_SOMETHING=whatever

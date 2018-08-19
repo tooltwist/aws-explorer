@@ -40,12 +40,25 @@ function getApplicationType(details, callback/* (err) */) {
       type: 'list',
       name: 'applicationType',
       message: 'Application type?',
-      choices: ['static', 'nodejs', 'golang', 'tooltwist']
+      // choices: ['static', 'nodejs', 'golang', 'java - tooltwist', 'java - other']
+      choices: ['static', 'nodejs', 'golang', 'java']
       // filter: (name) => { return name.toLowerCase(); }
     }
   ]).then(function(answers) {
     // console.log(JSON.stringify(answers, null, '  '));
-    details.applicationType = answers.applicationType;
+    switch (answers.applicationType) {
+      case 'java - tooltwist':
+        details.applicationType = 'tooltwist';
+        break;
+
+      case 'java - other':
+        details.applicationType = 'java';
+        break;
+
+      default:
+        details.applicationType = answers.applicationType;
+
+    }
     callback(null);
   })
 }
