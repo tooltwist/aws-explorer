@@ -53,7 +53,7 @@ export default {
       return desc
     },
     vpc_id: function () {
-      let vpcId = ''
+      let vpcId = 'none'
       if (this.node.data) {
         vpcId = this.node.data.VpcId
       }

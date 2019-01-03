@@ -444,7 +444,7 @@ function downloadRegions(callback) {
 // Return the name of an AWS regions
 // e.g. us-east-1 -> (n-virginia)
 function regionDescription(regionCode) {
-  console.log('regionDescription(' + regionCode + ')');
+  // console.log('regionDescription(' + regionCode + ')')
   var region = awsRegions.get(regionCode);
   if (region) {
     // return '(' + region.name + ')'
@@ -564,7 +564,7 @@ module.exports.INITIAL_REGION = INITIAL_REGION;
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 // AWS Node types
 module.exports.SUBNET = 'Subnet';
@@ -592,10 +592,32 @@ module.exports.TASK = 'Task';
 module.exports.DATABASE = 'Database';
 module.exports.CACHE = 'Cache';
 
+function descriptionFunctions(node) {
+  switch (node.type) {
+    case module.exports.SUBNET:
+      return __webpack_require__(12);
+    case module.exports.ROUTETABLE:
+      return __webpack_require__(13);
+    case module.exports.ALB:
+      return __webpack_require__(14);
+    case module.exports.DATABASE:
+      return __webpack_require__(15);
+
+    default:
+      return null;
+  }
+}
+
 module.exports.id = function (node) {
   if (!node.data) {
     return '-';
   }
+
+  var fns = descriptionFunctions(node);
+  if (fns && fns.id) {
+    return fns.id(node, { findTag: findTag, types: module.exports });
+  }
+
   switch (node.type) {
     case this.SUBNET:
       return node.data.SubnetId;
@@ -639,9 +661,6 @@ module.exports.id = function (node) {
     case this.NETIFACE:
       return node.id;
 
-    case this.ROUTETABLE:
-      return node.key + '\n--' + node.hasPublicRoutes;
-
     case this.ALB:
       return node.id;
 
@@ -663,9 +682,6 @@ module.exports.id = function (node) {
     case this.TASK:
       return node.id;
 
-    case this.DATABASE:
-      return node.key;
-
     case this.CACHE:
       return node.key;
 
@@ -675,6 +691,11 @@ module.exports.id = function (node) {
 };
 
 module.exports.label = function (node) {
+  var fns = descriptionFunctions(node);
+  if (fns && fns.label) {
+    return fns.label(node, { findTag: findTag, types: module.exports });
+  }
+
   // let label
   var name = void 0;
   switch (node.type) {
@@ -735,9 +756,6 @@ module.exports.label = function (node) {
     case this.NETIFACE:
       return 'Private IP: ' + node.data.PrivateIpAddress;
 
-    case this.ROUTETABLE:
-      return node.key + '\n--' + node.hasPublicRoutes;
-
     case this.ALB:
       return node.data.LoadBalancerName;
 
@@ -762,9 +780,6 @@ module.exports.label = function (node) {
       }
       return ' ';
 
-    case this.DATABASE:
-      return node.key;
-
     case this.CACHE:
       return node.key;
 
@@ -774,10 +789,12 @@ module.exports.label = function (node) {
 };
 
 module.exports.description = function (node) {
-  switch (node.type) {
-    case this.SUBNET:
-      return node.data.CidrBlock;
+  var fns = descriptionFunctions(node);
+  if (fns && fns.description) {
+    return fns.description(node, { findTag: findTag, types: module.exports });
+  }
 
+  switch (node.type) {
     case this.SECGRP:
       return node.data.Description;
 
@@ -821,9 +838,6 @@ module.exports.description = function (node) {
     case this.NETIFACE:
       return ' ';
 
-    case this.ROUTETABLE:
-      return node.key;
-
     case this.ALB:
       return node.data.DNSName;
 
@@ -845,9 +859,6 @@ module.exports.description = function (node) {
     case this.TASK:
       return 'version ' + node.data.version + ', ' + node.data.lastStatus.toLowerCase();
 
-    case this.DATABASE:
-      return node.key;
-
     case this.CACHE:
       return node.key;
 
@@ -857,10 +868,12 @@ module.exports.description = function (node) {
 };
 
 module.exports.describe = function (node) {
-  switch (node.type) {
-    case this.SUBNET:
-      return describeSubnet(node);
+  var fns = descriptionFunctions(node);
+  if (fns && fns.describe) {
+    return fns.describe(node, { findTag: findTag, types: module.exports });
+  }
 
+  switch (node.type) {
     case this.SECGRP:
       return describeSecurityGroup(node);
 
@@ -900,9 +913,6 @@ module.exports.describe = function (node) {
     case this.NETIFACE:
       return node.key;
 
-    case this.ROUTETABLE:
-      return node.key;
-
     case this.ALB:
       return node.key;
 
@@ -923,9 +933,6 @@ module.exports.describe = function (node) {
 
     case this.TASK:
       return describeTask(node);
-
-    case this.DATABASE:
-      return node.key;
 
     case this.CACHE:
       return node.key;
@@ -967,50 +974,6 @@ function describeVpc(node) {
     s += '  Contact: ' + contact + '<br>';
   }
   return s;
-}
-
-function describeSubnet(node) {
-  var _this = this;
-
-  // Return a description
-  var desc = 'Id: ' + node.data.SubnetId + '<br/>';
-
-  // // See if the subnet's routing table connects to an Internet Gateway
-  // let isPublicSubnet = false
-  // node.parents.forEach(parent => {
-  //   if (parent.type === module.exports.ROUTETABLE && parent.hasPublicRoutes) {
-  //     isPublicSubnet = true
-  //   }
-  // })
-  // if (isPublicSubnet) {
-  //   desc += 'PUBLIC SUBNET<br/>'
-  // } else {
-  //   desc += 'PRIVATE SUBNET<br/>'
-  // }
-
-  var name = findTag(node, 'Name');
-  if (name) {
-    desc += 'Name ' + name + '<br/>';
-  }
-
-  var description = findTag(node, 'Description');
-  if (description) {
-    desc += 'Description: ' + description + '<br/>';
-  }
-
-  // Route table?
-  var useVpcRouteTable = true;
-  node.parents.forEach(function (parent) {
-    if (parent.type === _this.ROUTETABLE) {
-      useVpcRouteTable = false;
-    }
-  });
-  if (useVpcRouteTable) {
-    desc += 'Use default route table for VPC<br/>';
-  }
-  // IP Address range
-  desc += 'CidrBlock: ' + node.data.CidrBlock + '<br/>';
-  return desc;
 }
 
 function describeSecurityGroup(node) {
@@ -1088,7 +1051,7 @@ app.set('port', port);
 app.use('/api', __WEBPACK_IMPORTED_MODULE_2__api__["a" /* default */]);
 
 // Import and Set Nuxt.js options
-var config = __webpack_require__(14);
+var config = __webpack_require__(18);
 config.dev = !("development" === 'production');
 
 // Init Nuxt.js
@@ -1176,9 +1139,9 @@ router.get('/users/:id', function (req, res, next) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_express__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__misc_graph__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__misc_graph___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__misc_graph__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lru_cache__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lru_cache__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lru_cache___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_lru_cache__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__misc_download__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__misc_download__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__misc_download___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__misc_download__);
 
 
@@ -1274,10 +1237,244 @@ module.exports.capitalize = capitalize;
 /* 12 */
 /***/ (function(module, exports) {
 
-module.exports = require("lru-cache");
+var _this = this;
+
+module.exports.id = function (node, helpers) {
+  return node.data.SubnetId;
+};
+
+module.exports.label = function (node, _ref) {
+  var findTag = _ref.findTag;
+
+  var name = findTag(node, 'Name');
+  return name || node.data.SubnetId;
+};
+
+module.exports.description = function (node, helpers) {
+  return node.data.CidrBlock;
+};
+
+module.exports.describe = function (node, _ref2) {
+  var findTag = _ref2.findTag;
+
+  // Return a description
+  var desc = 'Id: ' + node.data.SubnetId + '<br/>';
+
+  // // See if the subnet's routing table connects to an Internet Gateway
+  // let isPublicSubnet = false
+  // node.parents.forEach(parent => {
+  //   if (parent.type === module.exports.ROUTETABLE && parent.hasPublicRoutes) {
+  //     isPublicSubnet = true
+  //   }
+  // })
+  // if (isPublicSubnet) {
+  //   desc += 'PUBLIC SUBNET<br/>'
+  // } else {
+  //   desc += 'PRIVATE SUBNET<br/>'
+  // }
+
+  var name = findTag(node, 'Name');
+  if (name) {
+    desc += 'Name ' + name + '<br/>';
+  }
+
+  var description = findTag(node, 'Description');
+  if (description) {
+    desc += 'Description: ' + description + '<br/>';
+  }
+
+  // Route table?
+  var useVpcRouteTable = true;
+  node.parents.forEach(function (parent) {
+    if (parent.type === _this.ROUTETABLE) {
+      useVpcRouteTable = false;
+    }
+  });
+  if (useVpcRouteTable) {
+    desc += 'Use default route table for VPC<br/>';
+  }
+  // IP Address range
+  desc += 'CidrBlock: ' + node.data.CidrBlock + '<br/>';
+  return desc;
+};
 
 /***/ }),
 /* 13 */
+/***/ (function(module, exports) {
+
+module.exports.id = function (node, helpers) {
+  return '';
+};
+
+module.exports.label = function (node, _ref) {
+  var findTag = _ref.findTag;
+
+  if (node.hasPublicRoutes) {
+    return node.data.RouteTableId + ' (public)';
+  }
+  return node.data.RouteTableId + ' (private)';
+};
+
+module.exports.description = function (node, helpers) {
+  return '';
+};
+
+module.exports.describe = function (node, _ref2) {
+  var findTag = _ref2.findTag,
+      types = _ref2.types;
+
+  // Return a description
+  var desc = '';
+  if (node.hasPublicRoutes) {
+    desc += '  --  HAS PUBLIC ROUTES';
+  }
+  var name = node.findTag('Name');
+  if (name) {
+    desc += '\n' + name;
+  }
+  // See if this is a main route table
+  // node.data.Associations.forEach(assoc => {
+  //   if (assoc.Main) {
+  //     desc += '\nMain Route table for ' + assoc.RouteTableAssociationId
+  //   }
+  // })
+
+  // Routes
+  desc += '\n<table class="smalltable">\n';
+  node.data.Routes.forEach(function (route) {
+    if (route.GatewayId === 'local') {
+      desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;local</td></tr>\n';
+    } else {
+      var key = types.NAT + '::' + route.GatewayId;
+      desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;<a href="?node=' + key + '">' + route.GatewayId + '</a></td></tr>\n';
+    }
+  });
+  desc += '</table>';
+  return desc;
+};
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+module.exports = {
+  id: function id(node) {
+    return node.id;
+  },
+
+  label: function label(node, _ref) {
+    var findTag = _ref.findTag;
+
+    return '';
+    // return node.data.LoadBalancerName
+  },
+
+  description: function description(node) {
+    return node.data.DNSName;
+  },
+
+  describe: function describe(node, _ref2) {
+    var findTag = _ref2.findTag,
+        types = _ref2.types;
+
+    var withHealthchecks = false;
+    // return node.key
+    var desc = '';
+    desc += 'Status: ' + node.data.State.Code + '\n';
+    var dns = node.data.DNSName;
+    if (dns) {
+      desc += 'dns: <a href="http://' + dns + '" target="_blank">' + dns + '</a>\n';
+    }
+    if (node._listeners) {
+      node._listeners.forEach(function (listener) {
+        var targetGroup = listener._targetGroupNode;
+        if (!targetGroup) {
+          // No target group
+          var link = listener.Protocol.toLowerCase() + '://' + dns + ':' + listener.Port;
+          desc += '<a href="' + link + '" target="_blank">Public ' + listener.Protocol.toLowerCase() + ' / ' + listener.Port + '</a> -> NO TARGET GROUP?\n';
+        } else {
+          // Have a target group
+          // If we have the healthcheck information, we can also show the targets
+          var _link = listener.Protocol.toLowerCase() + '://' + dns + ':' + listener.Port + targetGroup.data.HealthCheckPath;
+          desc += '<a href="' + _link + '" target="_blank">Public ' + listener.Protocol.toLowerCase() + ' / ' + listener.Port + '</a> -> Target Group (<a href="?node=' + targetGroup.key + '">' + targetGroup.id + '</a>)\n';
+
+          // Add the targets for this target group, if they have been loaded
+          desc += describeTargets(targetGroup, withHealthchecks, types);
+        }
+      });
+    } else {
+      desc += 'INTERNAL ERROR: MISSING _LISTENERS\n';
+    }
+    return desc;
+  }
+};
+
+function describeTargets(targetGroup, withHealthchecks, types) {
+  var desc = '';
+  if (withHealthchecks) {
+    if (targetGroup._health && targetGroup._health.length > 0) {
+      targetGroup._health.forEach(function (health) {
+        // console.log('health=', health);
+        var key = types.INSTANCE + '::' + health.Target.Id;
+        desc += '    -->> Instance ';
+        desc += '<a href="?node=' + key + '">' + health.Target.Id + '</a>';
+        desc += ', port ' + health.Target.Port + '   (' + health.TargetHealth.State + ')\n';
+      });
+    } else {
+      desc += '    No targets\n';
+    }
+  } else {
+    desc += 'Unknown targets (--skip-healthchecks is set)\n';
+  }
+  return desc;
+}
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+module.exports = {
+  id: function id(node, helpers) {
+    // return node.key
+    return node.data.DBInstanceIdentifier;
+  },
+
+  label: function label(node, _ref) {
+    var findTag = _ref.findTag;
+
+    return node.data.DBInstanceIdentifier;
+  },
+
+  description: function description(node, helpers) {
+    if (node.data.Endpoint) {
+      return node.data.Endpoint.Address + ':' + node.data.Endpoint.Port;
+    }
+    return '';
+  },
+
+  describe: function describe(node, _ref2) {
+    var findTag = _ref2.findTag;
+
+    // return ''
+    var desc = '';
+    desc += 'DATABASE ' + node.DBInstanceIdentifier;
+    // desc += 'From: ' + node.data.Protocol.toLowerCase() + ' / ' + node.data.Port + '\n'
+    // desc += 'Healthcheck: ' + node.data.HealthCheckPath + '\n'
+
+    // Add the targets for this target group, if they have been loaded
+    // desc += describeTargets(node, withHealthchecks)
+    return desc;
+  }
+};
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports) {
+
+module.exports = require("lru-cache");
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var myAWS = __webpack_require__(2);
@@ -1288,7 +1485,7 @@ var loadBalancersAreLoaded = false;
 var targetGroupsAreLoaded = false;
 var instancesAreLoaded = false;
 
-var debug = true;
+var debug = false;
 
 function findTargetGroupByARN(arn) {
   // console.log('findTargetGroupByARN(' + arn + ')');
@@ -1337,7 +1534,7 @@ function downloadVpcs(callback) {
 }
 
 function downloadInstances(callback) {
-  if (debug) console.log('  downloadInstances()');
+  // if (debug) console.log('  downloadInstances()');
 
   myAWS.ec2().describeInstances({}, function (err, data) {
     if (err) return callback(err);
@@ -1363,11 +1560,7 @@ function downloadInstances(callback) {
 
         // Availability zone
         if (instance.Placement && instance.Placement.AvailabilityZone) {
-          var az = graph.findNode(types.AZ, instance.Placement.AvailabilityZone, null, function (node) {
-            // Return a description
-            var desc = 'Availability Zone (' + node.id + ')\n';
-            return desc;
-          });
+          var az = graph.findNode(types.AZ, instance.Placement.AvailabilityZone);
           az.addChild(i);
         }
 
@@ -1425,18 +1618,18 @@ function downloadSubnets(callback) {
 
 function downloadSecurityGroups(callback) {
   if (debug) console.log('  downloadSecurityGroups()');
-  var describe = function describe(node) {
-    var desc = '';
-    desc += '  Name: ' + node.data.GroupName + '\n';
-    desc += '  Description: ' + node.data.Description + '\n';
-    return desc;
-  };
+  // let describe = node => {
+  //   let desc = ''
+  //   desc += '  Name: ' + node.data.GroupName + '\n'
+  //   desc += '  Description: ' + node.data.Description + '\n'
+  //   return desc
+  // }
 
   myAWS.ec2().describeSecurityGroups({}, function (err, data) {
     if (err) return callback(err);
     data.SecurityGroups.forEach(function (grp) {
       // console.log('grp=', grp);
-      var g = graph.findNode(types.SECGRP, grp.GroupId, grp, describe);
+      var g = graph.findNode(types.SECGRP, grp.GroupId, grp);
 
       // Add this to it's VPC
       var v = graph.findNode(types.VPC, grp.VpcId, null);
@@ -1448,11 +1641,11 @@ function downloadSecurityGroups(callback) {
 
 function downloadNatGateways(callback) {
   if (debug) console.log('  downloadNatGateways()');
-  var describe = function describe(node) {
-    var desc = '';
-    desc += '  State: ' + node.data.State + '\n';
-    return desc;
-  };
+  // let describe = node => {
+  //   let desc = ''
+  //   desc += '  State: ' + node.data.State + '\n';
+  //   return desc
+  // }
 
   myAWS.ec2().describeNatGateways({}, function (err, data) {
     if (err) return callback(err);
@@ -1460,7 +1653,7 @@ function downloadNatGateways(callback) {
     // console.log('data=', data);
     data.NatGateways.forEach(function (grp) {
       console.log('nat is ' + grp.NatGatewayId);
-      var g = graph.findNode(types.NAT, grp.NatGatewayId, grp, describe);
+      var g = graph.findNode(types.NAT, grp.NatGatewayId, grp);
 
       if (grp.State !== 'deleted') {
         // Add this to it's subnet
@@ -1490,14 +1683,14 @@ function downloadNatGateways(callback) {
 
 function downloadInternetGateways(callback) {
   if (debug) console.log('  downloadInternetGateways()');
-  var describe = function describe(node) {
-    var desc = '';
-    var name = node.findTag('Name');
-    if (name) {
-      desc += '  Name: ' + name + '\n';
-    }
-    return desc;
-  };
+  // let describe = node => {
+  //   let desc = ''
+  //   let name = node.findTag('Name')
+  //   if (name) {
+  //     desc += '  Name: ' + name + '\n'
+  //   }
+  //   return desc
+  // }
 
   // An Internet Gateway provides the means by which the stuff in the
   // VPC connects to the Internet. I believe a NAT will quietly use
@@ -1507,7 +1700,7 @@ function downloadInternetGateways(callback) {
 
     data.InternetGateways.forEach(function (rec) {
       // console.log('\n\n\nINTERNET GATEWAY=', rec)
-      var igw = graph.findNode(types.IGW, rec.InternetGatewayId, rec, describe);
+      var igw = graph.findNode(types.IGW, rec.InternetGatewayId, rec);
 
       // See where it is attached
       rec.Attachments.forEach(function (attachment) {
@@ -1524,19 +1717,19 @@ function downloadInternetGateways(callback) {
 // Elastic IPs
 function downloadAddresses(callback) {
   if (debug) console.log('  downloadAddresses()');
-  var describe = function describe(node) {
-    // Return a description
-    var desc = '';
-    desc += '  IP Address: ' + node.data.PublicIp + '\n';
-    return desc;
-  };
+  // let describe = node => {
+  //   // Return a description
+  //   let desc = ''
+  //   desc += '  IP Address: ' + node.data.PublicIp + '\n';
+  //   return desc
+  // }
 
   myAWS.ec2().describeAddresses({}, function (err, data) {
     if (err) return callback(err);
 
     // console.log('data=', data);
     data.Addresses.forEach(function (rec) {
-      var addr = graph.findNode(types.ADDR, rec.AllocationId, rec, describe);
+      var addr = graph.findNode(types.ADDR, rec.AllocationId, rec);
 
       // Remember if it has a public IP
       if (rec.PublicIp) {
@@ -1550,18 +1743,18 @@ function downloadAddresses(callback) {
 
 function downloadAvailabilityZones(callback) {
   if (debug) console.log('  downloadAvailabilityZones()');
-  var describe = function describe(node) {
-    var desc = '';
-    // desc += '  IP Address: ' + node.data.PublicIp + '\n';
-    return desc;
-  };
+  // let describe = node => {
+  //   let desc = ''
+  //   // desc += '  IP Address: ' + node.data.PublicIp + '\n';
+  //   return desc
+  // }
 
   myAWS.ec2().describeAvailabilityZones({}, function (err, data) {
     if (err) return callback(err);
 
     // console.log('data=', data);
     data.AvailabilityZones.forEach(function (rec) {
-      var g = graph.findNode(types.AZ, rec.ZoneName, rec, describe);
+      var g = graph.findNode(types.AZ, rec.ZoneName, rec);
     });
     return callback(null);
   });
@@ -1569,10 +1762,10 @@ function downloadAvailabilityZones(callback) {
 
 function downloadKeyPairs(callback) {
   if (debug) console.log('  downloadKeyPairs()');
-  var describe = function describe(node) {
-    var desc = '';
-    return desc;
-  };
+  // let describe = node => {
+  //   let desc = ''
+  //   return desc
+  // }
 
   myAWS.ec2().describeKeyPairs({}, function (err, data) {
     if (err) return callback(err);
@@ -1580,7 +1773,7 @@ function downloadKeyPairs(callback) {
     // console.log('data=', data);
     data.KeyPairs.forEach(function (rec) {
       // This will create the node
-      graph.findNode(types.KEYPAIR, rec.KeyName, rec, describe);
+      graph.findNode(types.KEYPAIR, rec.KeyName, rec);
     });
     return callback(null);
   });
@@ -1589,11 +1782,11 @@ function downloadKeyPairs(callback) {
 // Inbound interface from the Internet
 function downloadNetworkInterfaces(callback) {
   if (debug) console.log('  downloadNetworkInterfaces()');
-  var describe = function describe(node) {
-    var desc = '';
-    desc += node.data.Description;
-    return desc;
-  };
+  // let describe = node => {
+  //   let desc = ''
+  //   desc += node.data.Description
+  //   return desc
+  // }
 
   myAWS.ec2().describeNetworkInterfaces({}, function (err, data) {
     if (err) return callback(err);
@@ -1601,7 +1794,7 @@ function downloadNetworkInterfaces(callback) {
     // console.log('data=', data);
     data.NetworkInterfaces.forEach(function (rec) {
       // console.log('\nNETWORK INTERFACE:', rec);
-      var ni = graph.findNode(types.NETIFACE, rec.NetworkInterfaceId, rec, describe);
+      var ni = graph.findNode(types.NETIFACE, rec.NetworkInterfaceId, rec);
 
       // Public IP via association
       if (rec.Association && rec.Association.PublicIp) {
@@ -1635,37 +1828,6 @@ function downloadNetworkInterfaces(callback) {
 
 function downloadRouteTables(callback) {
   if (debug) console.log('  downloadRouteTables()');
-  var describe = function describe(node) {
-    // Return a description
-    var desc = '';
-    if (node.hasPublicRoutes) {
-      desc += '  --  HAS PUBLIC ROUTES';
-    }
-    var name = node.findTag('Name');
-    if (name) {
-      desc += '\n' + name;
-    }
-    // See if this is a main route table
-    // node.data.Associations.forEach(assoc => {
-    //   if (assoc.Main) {
-    //     desc += '\nMain Route table for ' + assoc.RouteTableAssociationId
-    //   }
-    // })
-
-    // Routes
-    var gateways = [];
-    desc += '\n<table class="smalltable">\n';
-    node.data.Routes.forEach(function (route) {
-      if (route.GatewayId === 'local') {
-        desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;local</td></tr>\n';
-      } else {
-        var key = graph.keyForNode(types.NAT, route.GatewayId);
-        desc += '<tr><td>' + route.DestinationCidrBlock + '</td><td>  >>>&nbsp;&nbsp;&nbsp;<a href="?node=' + key + '">' + route.GatewayId + '</a></td></tr>\n';
-      }
-    });
-    desc += '</table>';
-    return desc;
-  };
 
   myAWS.ec2().describeRouteTables({}, function (err, data) {
     if (err) return callback(err);
@@ -1673,7 +1835,7 @@ function downloadRouteTables(callback) {
     // console.log('routeTables=', data);
     data.RouteTables.forEach(function (rec) {
       // console.log('\nRoute table:', rec);
-      var rt = graph.findNode(types.ROUTETABLE, rec.RouteTableId, rec, describe);
+      var rt = graph.findNode(types.ROUTETABLE, rec.RouteTableId, rec);
 
       // Look for routes to Internet Gateways
       var gateways = []; // Only add each gateway it once
@@ -1747,38 +1909,6 @@ function downloadLoadBalancers(withHealthchecks, callback) {
     console.log('Links between load balancers and target groups will be missing.');
   }
 
-  var describe = function describe(node) {
-    var desc = '';
-    desc += 'Status: ' + node.data.State.Code + '\n';
-    var dns = node.data.DNSName;
-    if (dns) {
-      desc += 'dns: <a href="http://' + dns + '" target="_blank">' + dns + '</a>\n';
-    }
-    if (node._listeners) {
-      node._listeners.forEach(function (listener) {
-        var targetGroup = listener._targetGroupNode;
-        if (!targetGroup) {
-
-          // No target group
-          var link = listener.Protocol.toLowerCase() + '://' + dns + ':' + listener.Port;
-          desc += '<a href="' + link + '" target="_blank">Public ' + listener.Protocol.toLowerCase() + ' / ' + listener.Port + '</a> -> NO TARGET GROUP?\n';
-        } else {
-
-          // Have a target group
-          // If we have the healthcheck information, we can also show the targets
-          var _link = listener.Protocol.toLowerCase() + '://' + dns + ':' + listener.Port + targetGroup.data.HealthCheckPath;
-          desc += '<a href="' + _link + '" target="_blank">Public ' + listener.Protocol.toLowerCase() + ' / ' + listener.Port + '</a> -> Target Group (<a href="?node=' + targetGroup.key + '">' + targetGroup.id + '</a>)\n';
-
-          // Add the targets for this target group, if they have been loaded
-          desc += describeTargets(targetGroup, withHealthchecks);
-        }
-      });
-    } else {
-      desc += 'INTERNAL ERROR: MISSING _LISTENERS\n';
-    }
-    return desc;
-  };
-
   // We load the Load Balancers here (into nodeIndex),
   // and Listeners into
   //    => load-balancer-node._listeners,
@@ -1797,7 +1927,7 @@ function downloadLoadBalancers(withHealthchecks, callback) {
         return callback(null);
       }
       var rec = data.LoadBalancers[index];
-      var alb = graph.findNode(types.ALB, rec.LoadBalancerName, rec, describe);
+      var alb = graph.findNode(types.ALB, rec.LoadBalancerName, rec);
 
       // Availability Zones and Subnets
       rec.AvailabilityZones.forEach(function (az) {
@@ -1889,17 +2019,6 @@ function downloadLoadBalancers(withHealthchecks, callback) {
 function downloadTargetGroups(withHealthchecks, callback) {
   if (debug) console.log('  downloadTargetGroups()');
 
-  // Function to describe node
-  var describe = function describe(node) {
-    var desc = '';
-    desc += 'From: ' + node.data.Protocol.toLowerCase() + ' / ' + node.data.Port + '\n';
-    desc += 'Healthcheck: ' + node.data.HealthCheckPath + '\n';
-
-    // Add the targets for this target group, if they have been loaded
-    desc += describeTargets(node, withHealthchecks);
-    return desc;
-  };
-
   // Load the definitions
   myAWS.elbv2().describeTargetGroups({}, function (err, data) {
     if (err) return callback(err);
@@ -1907,7 +2026,7 @@ function downloadTargetGroups(withHealthchecks, callback) {
     // console.log('data=', data);
     data.TargetGroups.forEach(function (rec) {
       // console.log('tg=', rec);
-      var tg = graph.findNode(types.TARGETGRP, rec.TargetGroupName, rec, describe);
+      var tg = graph.findNode(types.TARGETGRP, rec.TargetGroupName, rec);
 
       // VPC
       var vpc = graph.findNode(types.VPC, rec.VpcId);
@@ -2160,18 +2279,6 @@ function downloadClusters(callback) {
 function downloadDatabases(callback) {
   if (debug) console.log('  downloadDatabases()');
 
-  // Function to describe node
-  var describe = function describe(node) {
-    var desc = '';
-    desc += 'DATABASE ' + node.DBInstanceIdentifier;
-    // desc += 'From: ' + node.data.Protocol.toLowerCase() + ' / ' + node.data.Port + '\n'
-    // desc += 'Healthcheck: ' + node.data.HealthCheckPath + '\n'
-
-    // Add the targets for this target group, if they have been loaded
-    // desc += describeTargets(node, withHealthchecks)
-    return desc;
-  };
-
   // Load the definitions
   myAWS.rds().describeDBInstances({}, function (err, data) {
     if (err) return callback(err);
@@ -2179,7 +2286,7 @@ function downloadDatabases(callback) {
     //console.log('data=', data);
     data.DBInstances.forEach(function (rec) {
       // console.log('\n\n\nDB =>', rec);
-      var db = graph.findNode(types.DATABASE, rec.DBInstanceIdentifier, rec, describe);
+      var db = graph.findNode(types.DATABASE, rec.DBInstanceIdentifier, rec);
 
       rec.VpcSecurityGroups.forEach(function (sgDef) {
         var sg = graph.findNode(types.SECGRP, sgDef.VpcSecurityGroupId);
@@ -2277,7 +2384,7 @@ module.exports.downloadDatabases = downloadDatabases;
 module.exports.downloadEverything = downloadEverything;
 
 /***/ }),
-/* 14 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = {
