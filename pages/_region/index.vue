@@ -20,7 +20,7 @@
         h3.title.is-3.has-text-dark.has-text-centered Contributors
         br
         .columns.developers.is-multiline
-          .column.is-4
+          .column.is-3
             article.media
               figure.media-left
                 p.image.is-64x64
@@ -37,7 +37,7 @@
             //- article
             p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
           //- column
-          .column.is-4
+          .column.is-3
             article.media
               figure.media-left
                 p.image.is-64x64
@@ -54,7 +54,7 @@
             //- article
             p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
           //- column
-          .column.is-4
+          .column.is-3
             article.media
               figure.media-left
                 p.image.is-64x64
@@ -70,6 +70,23 @@
               //- media-content
             //- article
             p Velit ubi cernantur id quorum hic quis cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod illustriora est offendit, doctrina magna possumus arbitror ab aute relinqueret incididunt labore mandaremus. Noster si appellat qui esse ubi quid aut litteris ut fore.
+          //- column
+          .column.is-3
+            article.media
+              figure.media-left
+                p.image.is-64x64
+                  img(src='~assets/img/img-red.jpg', alt='ToolTwist')
+              //- figure
+              .media-content
+                .content
+                  p
+                  p
+                    strong Red Reyes
+                  //- p
+                //- content
+              //- media-content
+            //- article
+            p Velit ubi cernantur id quorum hic pogi cohaerescant voluptate illum deserunt, ab in coniunctione eu consequat fore ab expetendis consectetur, non ullamco reprehenderit, eiusmod goodlooking est offendit, doctrina gwapo possumus handsome ab aute relinqueret incididunt genius mandaremus. Smart si appellat qui cute ubi quid aut litteris ut fore.
           //- column
         //- columns
       //- container
