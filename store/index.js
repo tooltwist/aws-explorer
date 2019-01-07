@@ -12,7 +12,8 @@ const createStore = () => {
       // regionData: { node: null, index: [ ], list: [ ] }
       node: null,
       index: [ ],
-      list: [ ]
+      list: [ ],
+      envName: '12321312312'
     },
     actions: {
       nuxtServerInit ({ commit }, { req }) {
