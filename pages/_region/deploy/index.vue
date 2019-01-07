@@ -16,7 +16,6 @@
         br
         br
         steps(v-if="isVisible")
-          
         //- content
       //- container
     //- section
