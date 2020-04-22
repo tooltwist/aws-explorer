@@ -167,9 +167,9 @@ Resources:
                 - COMMITMSG=$(echo "${CommitMessage}" | sed s/\'// | sed s/\"//)
                 - pwd
                 - find . -type f | sort
-                - [ -f build-details.js ] && sed -i "s/___INSERT_VERSION_HERE___/${TAG}/" build-details.js
-                - [ -f build-details.js ] && sed -i "s/___INSERT_BUILD_NUMBER_HERE___/${CODEBUILD_BUILD_NUMBER}/" build-details.js
-                - [ -f build-details.js ] && sed -i "s/___INSERT_COMMITMSG_HERE___/${COMMITMSG}/" build-details.js
+                - test -f build-details.js && sed -i "s/___INSERT_VERSION_HERE___/${TAG}/" build-details.js
+                - test -f build-details.js && sed -i "s/___INSERT_BUILD_NUMBER_HERE___/${CODEBUILD_BUILD_NUMBER}/" build-details.js
+                - test -f build-details.js && sed -i "s/___INSERT_COMMITMSG_HERE___/${COMMITMSG}/" build-details.js
                 
             build:
               commands:
