@@ -5,7 +5,7 @@
         .my-type
           img.awsicon(src="/aws-images/General_virtualprivatecloud.png")
           | {{node.type}}
-        .my-id {{ vpc_id }}
+        .my-id {{ node.data ? node.data.VpcId : '?'}}
 
       //- b-icon(icon="link", size="is-small")
       .my-label environment = {{ label }}
@@ -51,13 +51,6 @@ export default {
         }
       }
       return desc
-    },
-    vpc_id: function () {
-      let vpcId = 'none'
-      if (this.node.data) {
-        vpcId = this.node.data.VpcId
-      }
-      return vpcId
     }
   },
   methods: {

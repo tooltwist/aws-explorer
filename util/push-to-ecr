@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+#	Push the latest docker image to the ECR repository with a specified tag.
+#
+#dir=$(cd `dirname $0`; pwd)
+#echo dir=${dir}
+IMAGE=tooltwist/aws-explorer
+ECR_REPOSITORY=tooltwist-awsexplorer2
+REGION=ap-southeast-1
+ACCOUNT_ID=278087993445
+
+# Check we have a tag parameter
+if [ "$#" != "1" ] ; then
+	echo ""
+	echo "Error: a tag for the image must be supplied. Image not pushed."
+	echo ""
+	echo "    usage: ${0} tag"
+	exit 1
+fi
+TAG=$1
+#echo ${TAG}
+
+# Login to AWS
+# This uses credentials provided in ~/.aws/credentials
+export AWS_PROFILE=personal
+echo "$" "aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+          aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+rv=$?
+if [ "$rv" != "0" ] ; then
+	echo Error status $rv
+	exit 1
+fi
+
+# Tag and push the image
+echo "$" docker tag ${IMAGE}:latest ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}
+         docker tag ${IMAGE}:latest ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}
+[ "$?" != "0" ] && exit 1
+echo "$" docker push ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}
+         docker push ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}
+[ "$?" != "0" ] && exit 1
+
+exit 0

@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "app": {
+    "name": "juice",
+    "env": "development",
+    "version": "1.0",
+    "port": "4000",
+    "basePath": "/api"
+  },
+  "db": {
+    "host": "juice_db_1",
+    "port": 3306,
+    "database": "juice",
+    "user": "root",
+    "password": null,
+    "pool": {
+      "max": 15,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    }
+  },
+  "services": {
+    "auth": {
+      "url": "http://localhost:9090",
+      "apikey": "API100ZNCYYE7FK4IIE1IWTOEBFUC",
+      "secret": "tts11qmdssx90y21dihxaerrknzsgs2ihjuxtwnysxhu9hguufd4kb",
+      "returnURL": "http://localhost:3000/create-password"
+    }
+  }
+}

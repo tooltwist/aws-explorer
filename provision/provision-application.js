@@ -102,7 +102,7 @@ function getApplicationType(details, callback/* (err) */) {
 //     apiVersion: '2006-03-01',
 //     region: currentRegion
 //   });
-//   let from = `${__dirname}/nbt-templates`;
+//   let from = `${__dirname}/cf-templates/nbt-templates`;
 //   let to = `${details.environmentName}`;
 //
 //   console.log('ok 1');
@@ -116,7 +116,7 @@ function getApplicationType(details, callback/* (err) */) {
 //     })
 //   });
 // return;
-//   let configTemplate = `${__dirname}/nbt-templates/service-static.cf`;
+//   let configTemplate = `${__dirname}/cf-templates/nbt-templates/service-static.cf`;
 //
 // }
 
@@ -126,7 +126,7 @@ function getApplicationType(details, callback/* (err) */) {
 function installFromTemplate(template, convertFn, to, callback) {
   // console.log(`installFromTemplate(${template})`);
 
-  let from = `${__dirname}/../nbt-templates/${template}`
+  let from = `${__dirname}/../cf-templates/nbt-templates/${template}`
   fs.readFile(from, {
     encoding: 'utf8'
   }, (err, fileContents) => {
@@ -227,7 +227,7 @@ function provisionApp_secureConfig(details, callback) {
         // Install the deployment template used by CloudFormation in the 'Deploy' stage of our CodePipeline.
         let template = `application-templates/Deploy/service-${details.applicationType}.cf-ORIGINAL`
         installFromTemplate(template, replaceVariables, `${configDir}/Deploy/service.cf-ORIGINAL`, err => {
-          // let deployScript = `${__dirname}/nbt-templates/application-templates/Deploy/service-${details.applicationType}.cf`;
+          // let deployScript = `${__dirname}/cf-templates/nbt-templates/application-templates/Deploy/service-${details.applicationType}.cf`;
           // fs.readFile(deployScript, { encoding: 'utf8' }, (err, fileContents) => {
           //   if (err) return callback(err);
           //   fs.writeFile(`${configDir}/Deploy/service.cf`, fileContents/*[, options]*/, err => {
@@ -250,7 +250,7 @@ function provisionApp_secureConfig(details, callback) {
                 if (err)
                   return callback(err);
 
-                // let from = `${__dirname}/nbt-templates/application-templates/1.setenv`;
+                // let from = `${__dirname}/cf-templates/nbt-templates/application-templates/1.setenv`;
                 // fs.readFile(from, { encoding: 'utf8' }, (err, fileContents) => {
                 //   if (err) return callback(err);
                 //    fileContents = fileContents
@@ -262,7 +262,7 @@ function provisionApp_secureConfig(details, callback) {
                 // Install 2.prepare
                 template = `application-templates/2.prepare`
                 installFromTemplate(template, replaceVariables, `${configDir}/2.prepare`, (err) => {
-                  // let from = `${__dirname}/nbt-templates/application-templates/2.prepare`;
+                  // let from = `${__dirname}/cf-templates/nbt-templates/application-templates/2.prepare`;
                   // fs.readFile(from, { encoding: 'utf8' }, (err, fileContents) => {
                   //   if (err) return callback(err);
                   //    fileContents = fileContents
@@ -275,7 +275,7 @@ function provisionApp_secureConfig(details, callback) {
                   // Install 3.sync
                   template = `application-templates/3.sync`
                   installFromTemplate(template, replaceVariables, `${configDir}/3.sync`, (err) => {
-                    // let from = `${__dirname}/nbt-templates/application-templates/3.sync`;
+                    // let from = `${__dirname}/cf-templates/nbt-templates/application-templates/3.sync`;
                     // fs.readFile(from, { encoding: 'utf8' }, (err, fileContents) => {
                     //   if (err) return callback(err);
                     //    fileContents = fileContents
@@ -288,7 +288,7 @@ function provisionApp_secureConfig(details, callback) {
                     // Install README
                     template = `application-templates/README`;
                     installFromTemplate(template, replaceVariables, `${configDir}/README`, (err) => {
-                      // let from = `${__dirname}/nbt-templates/application-templates/README`;
+                      // let from = `${__dirname}/cf-templates/nbt-templates/application-templates/README`;
                       // fs.readFile(from, { encoding: 'utf8' }, (err, fileContents) => {
                       //   if (err) return callback(err);
                       //    fileContents = fileContents

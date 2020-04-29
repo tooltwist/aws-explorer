@@ -143,8 +143,10 @@ export default {
   data () {
     return {
       vpcs: 2,
-      availabilityZones: 2,
-      subnets: 2,
+      // availabilityZones: 2,
+      // subnets: 2,
+      availabilityZones: 0,
+      subnets: 0,
       internet: 0,
       route: 0,
       natGateways: 0,
@@ -403,7 +405,7 @@ export default {
         let visdata = { nodes: [], edges: [], container: {} }
         Object.keys(nodesForGraph).forEach(function (key) {
           var def = nodesForGraph[key]
-          console.log('-- node --> ' + key + ' --> ', def)
+          // console.log('-- node --> ' + key + ' --> ', def)
 
           // Get the actual node definition.
           let node = theNodeIndex[key]
@@ -613,6 +615,8 @@ export default {
       this.$set(this, _id, _value)
     },
     usePresets (presets) {
+      console.log(`usePresets()`, presets);
+      
       function mode (name) {
         let val = presets[name]
         if (!val) {
@@ -649,8 +653,10 @@ export default {
     },
     presetDefault () {
       this.usePresets({
-        availabilityZones: 'show',
-        subnets: 'expand',
+        // availabilityZones: 'show',
+        // subnets: 'expand',
+        availabilityZones: 'hide',
+        subnets: 'hide',
         instances: 'show',
         jumpboxMode: 'show',
         load: 'show'
@@ -709,8 +715,10 @@ export default {
       console.log('presetAll')
       this.usePresets({
         vpc: 'expand',
-        availabilityZones: 'expand',
-        subnets: 'expand',
+        // availabilityZones: 'expand',
+        // subnets: 'expand',
+        availabilityZones: 'hide',
+        subnets: 'hide',
         internet: 'expand',
         route: 'expand',
         natGateways: 'expand',
@@ -746,7 +754,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #mynetwork {
   width: 100%;
   height: 70vh;

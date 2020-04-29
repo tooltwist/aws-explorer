@@ -1,0 +1,14 @@
+
+This directory contains scripts for deploying.
+
+
+build-on-docker
+start-on-docker
+Config
+
+	These scripts allow you to test building your application inside a Docker container
+	running on the local machine.
+
+	These are unlikely to have full functionality - the objective is to make sure the
+	Docker build is running properly, before we try to build on Amazon CodePipeline,
+	where it is difficult to debug.

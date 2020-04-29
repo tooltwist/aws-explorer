@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+#	Build mbc into a Docker container, so we can test it locally
+#
+dir=$(cd `dirname $0`; pwd)
+IMAGE_TAG=tooltwist/aws-explorer
+
+cd ${dir}/..
+pwd
+
+echo "$" docker build -t ${IMAGE_TAG} .
+         docker build -t ${IMAGE_TAG} .

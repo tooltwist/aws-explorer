@@ -1,4 +1,4 @@
-var program = require('commander');
+var { program } = require('commander');
 var myAWS = require('../server/misc/myAWS')
 
 const CliInstallKey = require('./CliInstallKey')
@@ -25,7 +25,7 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
    */
   let haveCommand = false
   program
-    .version('0.1.0')
+    .version('0.2.0')
     .option('-e, --environment <env>', 'Environment')
     .option('-p, --port <port>', 'Port for webserver', parseInt)
     .option('-r, --region <region> [' + myAWS.INITIAL_REGION + ']', 'Region')
@@ -198,17 +198,26 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
   // Parse the arguments
   program.parse(process.argv);
 
-  // See if anything got through the named arguments
-  if (program.parseOptions(process.argv).args.length <= 2) {
-    // Use the default command
-    return callback(false, true)
-    // // Start the web server
-    // startWebServer()
-  } else if (!haveCommand) {
+  console.log(`haveCommand=${haveCommand}`)
+
+  if (!haveCommand) {
     // Have some unknown command
     return callback(true, false)
     // program.help() // Exits
   }
+
+
+  // // See if anything got through the named arguments
+  // if (program.parseOptions(process.argv).args.length <= 2) {
+  //   // Use the default command
+  //   return callback(false, true)
+  //   // // Start the web server
+  //   // startWebServer()
+  // } else if (!haveCommand) {
+  //   // Have some unknown command
+  //   return callback(true, false)
+  //   // program.help() // Exits
+  // }
 }
 
 module.exports.parseCommandLine = parseCommandLine

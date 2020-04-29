@@ -3,17 +3,17 @@ const awsRegions = require('aws-regions')
 const pad = require('./util').pad
 
 const INITIAL_REGION = 'ap-northeast-1'
-var regions = [ ]
-var currentRegion = INITIAL_REGION
-// var currentRegion = null
-var awsRegion = null // Region we are currently looking at
+let regions = [ ]
+let currentRegion = INITIAL_REGION
+// let currentRegion = null
+let awsRegion = null // Region we are currently looking at
 
-var cloudformation = null
-var ec2 = null
-var elbv2 = null
-var autoscaling = null
-var ecs = null
-var rds = null
+let cloudformation = null
+let ec2 = null
+let elbv2 = null
+let autoscaling = null
+let ecs = null
+let rds = null
 
 function downloadRegions (callback) {
   console.log('  downloadRegions()')
@@ -38,6 +38,7 @@ function downloadRegions (callback) {
 // e.g. us-east-1 -> (n-virginia)
 function regionDescription (regionCode) {
   // console.log('regionDescription(' + regionCode + ')')
+  console.log(`yarp 9991`);
   let region = awsRegions.get(regionCode)
   if (region) {
     // return '(' + region.name + ')'
@@ -71,7 +72,7 @@ function checkAwsRegion (region) {
   }
 
   // See if a place name is used
-  for (var name in awsRegions.regions) {
+  for (let name in awsRegions.regions) {
     if (region.toLowerCase() === name.substring(0, region.length)) {
       region = awsRegions.regions[name].code
       break
@@ -79,6 +80,7 @@ function checkAwsRegion (region) {
   }
 
   // Check the code.
+  console.log(`yarp 9992`);
   let r = awsRegions.get(region)
   if (!r) {
     console.log('ERROR: Unknown region ' + region)

@@ -3,7 +3,7 @@
     .columns.is-centered
       .column.has-text-centered
         br
-        img(src='~assets/img/logo-twist-vue.png', alt='ToolTwist')
+        img(src='~/assets/img/logo-twist-vue.png', alt='ToolTwist')
         br
         br
         h1.title
@@ -21,7 +21,11 @@
 </template>
 <script>
 export default {
-  props: ['error']
+  props: {
+    error: {
+      type: Object
+    }
+  }
 }
 </script>
 

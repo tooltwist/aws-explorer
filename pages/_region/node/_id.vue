@@ -50,7 +50,7 @@ export default {
     let region = context.params.region
     let nodeId = context.params.id
     context.store.commit('setRegion', region)
-    return GraphClient(region, nodeId, false, context.error)
+    return GraphClient(context.$axios, region, nodeId, false, context.error)
   },
   // fetch () {
   //   // The `fetch` method is used to fill the store before rendering the page

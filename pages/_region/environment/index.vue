@@ -24,13 +24,13 @@ export default {
   components: {
     Logo
   },
+  fetch () {
+    // The `fetch` method is used to fill the store before rendering the page
+  },
   asyncData (context) {
     // called every time before loading the component
     console.log('asyncData()', context.route.params.env)
     return { environment: context.route.params.env }
-  },
-  fetch () {
-    // The `fetch` method is used to fill the store before rendering the page
   },
   head () {
     // Set Meta Tags for this Page

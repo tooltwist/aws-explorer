@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# What AWS account are we installing this at?
+export AWS_PROFILE=personal
+
+#                  _       _           _
+#  _   _ _ __   __| | __ _| |_ ___    | |__   ___ _ __ ___
+# | | | | '_ \ / _` |/ _` | __/ _ \   | '_ \ / _ \ '__/ _ \
+# | |_| | |_) | (_| | (_| | ||  __/   | | | |  __/ | |  __/
+#  \__,_| .__/ \__,_|\__,_|\__\___|   |_| |_|\___|_|  \___|
+#       |_|
+#
+# Application version, instances, and memory (dynamic information)
+#
+TAG=pig2
+DESIRED_COUNT=1
+MEMORY=260
+
+
+#
+#  _       _ _   _       _             _                              _
+# (_)_ __ (_) |_(_) __ _| |   ___  ___| |_ _   _ _ __      ___  _ __ | |_   _
+# | | '_ \| | __| |/ _` | |  / __|/ _ \ __| | | | '_ \    / _ \| '_ \| | | | |
+# | | | | | | |_| | (_| | |  \__ \  __/ |_| |_| | |_) |  | (_) | | | | | |_| |
+# |_|_| |_|_|\__|_|\__,_|_|  |___/\___|\__|\__,_| .__/    \___/|_| |_|_|\__, |
+#                                               |_|                     |___/
+#
+# Project-specific (static information)
+#
+REGION=ap-southeast-1
+ENVIRONMENT=juicetst
+APPLICATION=juice2
+REPOSITORY=tooltwist/aws-explorer
+TARGET_GROUP_ARN=arn:aws:elasticloadbalancing:ap-southeast-1:278087993445:targetgroup/juicetst-juice2/7b9f85cf93f00cbd
+SECRET_ARN=arn:aws:secretsmanager:ap-southeast-1:278087993445:secret:juicetst/juice2-UV1kia
+ROLE_ARN=arn:aws:iam::278087993445:role/nbt-juicetst-juice2-codep-CloudFormationExecutionR-KGZNDFCBSV38
+
+
+#
+#      _                     _          _                              _          _                 _
+#   __| | ___    _ __   ___ | |_    ___| |__   __ _ _ __   __ _  ___  | |__   ___| | _____      __ | |__   ___ _ __ ___
+#  / _` |/ _ \  | '_ \ / _ \| __|  / __| '_ \ / _` | '_ \ / _` |/ _ \ | '_ \ / _ \ |/ _ \ \ /\ / / | '_ \ / _ \ '__/ _ \
+# | (_| | (_) | | | | | (_) | |_  | (__| | | | (_| | | | | (_| |  __/ | |_) |  __/ | (_) \ V  V /  | | | |  __/ | |  __/
+#  \__,_|\___/  |_| |_|\___/ \__|  \___|_| |_|\__,_|_| |_|\__, |\___| |_.__/ \___|_|\___/ \_/\_/   |_| |_|\___|_|  \___|
+#                                                         |___/
+#
+# DO NOT CHANGE BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING
+#
+
+# Prepare instructions for Cloudformation.
+cli_input="$(cat <<-EOF
+{
+    "StackName": "deploy-${ENVIRONMENT}-${APPLICATION}-service",
+    "UsePreviousTemplate": true,
+    "Parameters": [
+        {
+            "ParameterKey": "Tag",
+            "ParameterValue": "${TAG}"
+        },
+        {
+            "ParameterKey": "Memory",
+            "ParameterValue": "${MEMORY}"
+        },
+        {
+            "ParameterKey": "DesiredCount",
+            "ParameterValue": "${DESIRED_COUNT}"
+        },
+        {
+            "ParameterKey": "Environment",
+            "ParameterValue": "${ENVIRONMENT}"
+        },
+        {
+            "ParameterKey": "Application",
+            "ParameterValue": "${APPLICATION}"
+        },
+        {
+            "ParameterKey": "Repository",
+            "ParameterValue": "${REPOSITORY}"
+        },
+        {
+            "ParameterKey": "TargetGroup",
+            "ParameterValue": "${TARGET_GROUP_ARN}"
+        },
+        {
+            "ParameterKey": "SecretArn",
+            "ParameterValue": "${SECRET_ARN}"
+        }
+    ],
+    "Capabilities": [
+        "CAPABILITY_NAMED_IAM"
+    ],
+    "RoleARN": "${ROLE_ARN}"
+}
+EOF
+)"
+#echo "$cli_input"
+
+#	Update the Cloudformation stack.
+echo ""
+echo "Updating stack: deploy-${ENVIRONMENT}-${APPLICATION}-service"
+echo ""
+echo "    Version: ${VERSION}"
+echo "    Instances: ${DESIRED_COUNT}"
+echo "    Memory: ${MEMORY}"
+echo ""
+tmpfile=$(mktemp)
+aws cloudformation update-stack --cli-input-json "${cli_input}"  --region ${REGION} > $tmpfile
+if [ "$?" != "0" ] ; then
+	echo "Stack not updated"
+	rm $tmpfile
+	exit 1
+fi
+
+
+#	Tell the user how they can check the update status.
+stackId=$(json StackId < $tmpfile)
+#echo stackId is ${stackId}
+rm -f $tmpfile
+echo "--------------------------------------------------------------------------------------------------------------------"
+echo "The Cloudformation stack is now being updated. You can track progress with the following command:"
+echo ""
+echo "  aws cloudformation list-stacks | json StackSummaries | json -c 'this.StackId==\"${stackId}\"'"
+echo ""
+if ! which json > /dev/null ; then
+	echo "    Note: The 'json' command can be installed with 'npm install -g json'"
+fi
+echo "--------------------------------------------------------------------------------------------------------------------"
+echo "Or view in your browser:"
+echo ""
+echo "  https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=${REGION}#/stacks/stackinfo?stackId=${stackId}"
+echo "--------------------------------------------------------------------------------------------------------------------"
+exit 0
+

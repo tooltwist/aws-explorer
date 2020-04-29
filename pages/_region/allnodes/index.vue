@@ -127,16 +127,23 @@ export default {
   components: {
     NodeCard
   },
-  async asyncData (context) {
-    // console.log('asyncData. query=', context.query)
+  async asyncData ({ $axios, query, params, store, error }) {
+    console.log('asyncData. query=', query)
     let reload = false
-    if (context.query.reload) {
+    if (query.reload) {
       reload = true
     }
-    let region = context.params.region
-    let nodeId = context.params.id
-    context.store.commit('setRegion', region)
-    return GraphClient(region, nodeId, reload, context.error)
+    console.log('yarp 1')
+    let region = params.region
+    let nodeId = params.id
+    console.log('yarp 2')
+    store.commit('setRegion', region)
+    if ($axios) {
+      console.log(`yarp 3: Have $axios`)
+    } else {
+      console.log(`yarp 3: missing $axios`)
+    }
+    return GraphClient($axios, region, nodeId, reload, error)
   },
   methods: {
     isUnknownType: function (n) {

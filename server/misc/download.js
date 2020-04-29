@@ -48,6 +48,8 @@ function downloadVpcs(callback) {
     // console.log('data=', data);
     data.Vpcs.forEach(rec => {
       // console.log('rec=', rec);
+      if (!rec) console.log(`ZUMBO 1 Missing rec`);
+      
       graph.findNode(types.VPC, rec.VpcId, rec)
     })
     return callback(null)
@@ -97,6 +99,8 @@ function downloadInstances(callback) {
         sn.addChild(i)
 
         // VPC
+        if (!instance) console.log(`WUMBO 2 - missing instance`);
+
         let vpc = graph.findNode(types.VPC, instance.VpcId)
         vpc.addChild(i)
 
@@ -126,6 +130,7 @@ function downloadSubnets(callback) {
       let sn = graph.findNode(types.SUBNET, rec.SubnetId, rec)
 
       // Add this to it's VPC
+      if (!rec) console.log(`ZUMBO 2 Missing rec`);
       let v = graph.findNode(types.VPC, rec.VpcId, null)
       v.addChild(sn)
 
@@ -153,6 +158,7 @@ function downloadSecurityGroups(callback) {
       let g = graph.findNode(types.SECGRP, grp.GroupId, grp)
 
       // Add this to it's VPC
+      if (!grp) console.log(`ZUMBO 3 Missing grp`);
       let v = graph.findNode(types.VPC, grp.VpcId, null)
       v.addChild(g)
     })
@@ -173,7 +179,7 @@ function downloadNatGateways(callback) {
 
     // console.log('data=', data);
     data.NatGateways.forEach(grp => {
-      console.log('nat is ' + grp.NatGatewayId);
+      // console.log('nat is ' + grp.NatGatewayId);
       let g = graph.findNode(types.NAT, grp.NatGatewayId, grp)
 
       if (grp.State !== 'deleted') {
@@ -182,6 +188,7 @@ function downloadNatGateways(callback) {
         sn.addChild(g)
 
         // Add this to it's VPC
+        if (!grp) console.log(`ZUMBO 4 Missing grp`);
         let v = graph.findNode(types.VPC, grp.VpcId, null)
         v.addChild(g)
 
@@ -225,6 +232,7 @@ function downloadInternetGateways(callback) {
 
       // See where it is attached
       rec.Attachments.forEach(attachment => {
+        if (!attachment) console.log(`ZUMBO 5 Missing attachment`);
         if (attachment.VpcId) {
           let vpc = graph.findNode(types.VPC, attachment.VpcId)
           vpc.addChild(igw)
@@ -340,6 +348,7 @@ function downloadNetworkInterfaces(callback) {
       subnet.addChild(ni)
 
       // VPC
+      if (!rec) console.log(`ZUMBO 6 Missing rec`);
       let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(ni)
     })
@@ -395,6 +404,7 @@ function downloadRouteTables(callback) {
       })
 
       // VPC
+      if (!rec) console.log(`ZUMBO 7 Missing rec`);
       let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(rt)
     })
@@ -448,6 +458,8 @@ function downloadLoadBalancers(withHealthchecks, callback) {
         return callback(null)
       }
       let rec = data.LoadBalancers[index]
+      if (!rec) console.log(`WUMBO 5 - unknown load balancer`);
+
       let alb = graph.findNode(types.ALB, rec.LoadBalancerName, rec)
 
       // Availability Zones and Subnets
@@ -466,6 +478,7 @@ function downloadLoadBalancers(withHealthchecks, callback) {
       })
 
       // VPC
+      if (!rec) console.log(`ZUMBO 8 Missing rec`);
       let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(alb)
 
@@ -550,6 +563,7 @@ function downloadTargetGroups(withHealthchecks, callback) {
       let tg = graph.findNode(types.TARGETGRP, rec.TargetGroupName, rec)
 
       // VPC
+      if (!rec) console.log(`ZUMBO 9 Missing rec`);
       let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(tg)
     })
@@ -723,7 +737,7 @@ function downloadClusters(callback) {
         // Next Cluster
         let clusterDef = clusterDefinitions.clusters[index]
         let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
-        console.log('Got cluster ' + clusterDef.clusterName);
+        // console.log('Got cluster ' + clusterDef.clusterName);
 
         /*
         *   Get the container instances for this cluster.

@@ -26,34 +26,28 @@
       //- p
       ul.menu-list
         li
-          nuxt-link(:to="{ path: '/' + $store.state.region + '/allnodes'}") All Nodes
+          a(v-bind:href="'/' + $store.state.region + '/allnodes'") All Nodes
         //- li
-        //li
+        //- li
         //-   a(v-bind:href="'/' + $store.state.region + '/cluster'") Clusters
         //- li
         li
-          nuxt-link(:to="{ path: '/' + $store.state.region + '/vpc'}") VPCs
+          a(v-bind:href="'/' + $store.state.region + '/vpc'") VPCs
         //- li
         li
-          nuxt-link(:to="{ path: '/' + $store.state.region + '/graph'}") Graph
+          a(v-bind:href="'/' + $store.state.region + '/graph'") Graph
         //- li
         li
-          nuxt-link(:to="{ path: '/' + $store.state.region + '/awslinks'}") AWS Links
+          a(v-bind:href="'/' + $store.state.region + '/awslinks'") AWS Links
         //- li
         li
-          nuxt-link(:to="{ path: '/' + $store.state.region + '/help'}") Help
+          a(v-bind:href="'/' + $store.state.region + '/help'") Help
         //- li
         li
           a(v-on:click="reload")
             | Reload
             b-icon(icon="autorenew", size="is-small")
           //- a
-        //- li
-        li
-          hr
-        //- li
-        li
-          nuxt-link(:to="{ path: '/' + $store.state.region + '/deploy'}") Deploy
         //- li
       //- ul
     //- aside

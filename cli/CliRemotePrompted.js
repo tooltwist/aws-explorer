@@ -43,6 +43,8 @@ function CliRemotePrompted() {
       // Patch on the name and other values
       let environments = { } // name -> { instanceNodes[] }
       list.forEach(node => {
+        // console.log(`-------- instance is ${node.id}  (${node.data.KeyName})`);
+        // console.log(`tags=`, node.data.Tags);
         node._name = ''
         node._description = ''
         node._environment = ''
@@ -140,7 +142,10 @@ function CliRemotePrompted() {
         };
         graph.nodes().filter(node => (node.type === types.DATABASE)).forEach((node) => {
           // console.log(`db=`, node);
-          let label = `${node.data.DBInstanceIdentifier} (${node.data.Endpoint.Address})`
+          let label = `${node.data.DBInstanceIdentifier}`
+          if (node.data.Endpoint) {
+            label += ` (${node.data.Endpoint.Address})`
+          }
           dbHosts[label] = node
           dbQuestion.choices.push(label)
         })

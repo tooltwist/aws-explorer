@@ -34,7 +34,7 @@ export default {
     console.log('GRAPH PAGE. Region is ' + region)
     let nodeId = null
     context.store.commit('setRegion', region)
-    return GraphClient(region, nodeId, false, context.error)
+    return GraphClient(context.$axios, region, nodeId, false, context.error)
   },
   methods: {
     useAsInitialNode: function (key, index) {
@@ -53,7 +53,9 @@ export default {
       console.log(`getRuleForNode(${key})`)
       // if (key.startsWith('Availability')) return 'show'
       if (key.startsWith('AMI ')) return 'hide'
-      if (key.startsWith('Security ')) return 'expand'
+      // if (key.startsWith('Security ')) return 'expand'
+      if (key.startsWith('Security ')) return 'hide'
+      if (key.startsWith('Availability ')) return 'hide'
       if (key.startsWith('EC2 ')) return 'expand'
       // return 'expand' // Show everything
       return 'expand'

@@ -5,7 +5,7 @@ const download = require('./download')
 const pad = require('./util').pad
 const capitalize = require('./util').capitalize
 
-function cliInstances(region) {
+function cliInstances (region) {
   region = myAWS.checkAwsRegion(region)
 
   // Clear existing list of nodes and reload everything

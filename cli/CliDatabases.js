@@ -71,7 +71,7 @@ function CliDatabases(region) {
       let type = node.data.DBInstanceClass;
       // let type = node.data.InstanceType;
       let az = node.data.AvailabilityZone
-      let public = node.data.PubliclyAccessible ? 'true' : 'false'
+      let publicAccessible = node.data.PubliclyAccessible ? 'true' : 'false'
       let endpoint = node.data.Endpoint.Address + ':' + node.data.Endpoint.Port
 
 
@@ -89,11 +89,11 @@ function CliDatabases(region) {
       // console.log(`DBSecurityGroups: `, node.data.DBSecurityGroups);
       // console.log(`DBSubnetGroup: `, node.data.DBSubnetGroup);
 
-      let row = `   ${pad(name, 20)} ${pad(state, 12)} ${pad(type, 15)} ${pad(engine, 10)} ${pad(public, 6)}   ${pad(az, 16)}  ${endpoint}`;
+      let row = `   ${pad(name, 20)} ${pad(state, 12)} ${pad(type, 15)} ${pad(engine, 10)} ${pad(publicAccessible, 6)}   ${pad(az, 16)}  ${endpoint}`;
       if (state === 'available') {
-        row = (public === 'true') ? row.red.bold : row.green.bold;
+        row = (publicAccessible === 'true') ? row.red.bold : row.green.bold;
       } else {
-        row = (public === 'true') ? row.red.dim : row.dim;
+        row = (publicAccessible === 'true') ? row.red.dim : row.dim;
       }
       console.log(row);
     });

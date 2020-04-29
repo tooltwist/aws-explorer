@@ -10,9 +10,22 @@ import download from '../misc/download'
 //             , dispose: function (key, n) { n.close() }
 //             , maxAge: 1000 * 60 * 60 }
 // , cache = LRU(options)
-let cache = LRU(10) // sets just the max size to 10 items (actually size, but default size is 1)
+let cache = new LRU(10) // sets just the max size to 10 items (actually size, but default size is 1)
 
 const router = Router()
+
+
+// Import API Routes
+router.get('/healthcheck', (req, res, next) => {
+  res.json({
+    status: 'ok',
+    version: '___INSERT_VERSION_HERE___',
+    buildNo: '___INSERT_BUILD_NUMBER_HERE___',
+    commitMsg: '___INSERT_COMMITMSG_HERE___',
+    identifier: 'Slumberblug'
+  })
+})
+
 
 /* GET user by ID. */
 router.get('/graph/:region', function (req, res, next) {
@@ -35,7 +48,7 @@ router.get('/graph/:region', function (req, res, next) {
   // Download all we need from AWS
   download.downloadEverything(region, false, err => {
     if (err) {
-      console.log(`Error downloading region ${region}`, err, err.stack);
+      console.log(`Error downloading region ${region}\n`, err, err.stack);
       res.sendStatus(500)
       return;
     }

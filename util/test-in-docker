@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+#	Run the mbc Docker container, using the home volume found in this directory.
+#
+dir=$(cd `dirname $0`; pwd)
+echo dir=${dir}
+IMAGE_TAG=tooltwist/aws-explorer
+
+# Leave command blank, to perform default startup
+CMD=/bin/bash
+CMD=
+
+#docker run -ti -p :4000 --rm -e SERVER_HOME=/Config/home juice-local-test /bin/sh
+docker run -ti \
+	-p 4000:4000 \
+	--volume=${HOME}/.aws:/root/.aws \
+	--rm \
+	-e AWS_PROFILE=personal \
+	-e AWS_NODEJS_CONNECTION_REUSE_ENABLED=1 \
+	${IMAGE_TAG} \
+	${CMD}
