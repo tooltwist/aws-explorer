@@ -133,16 +133,9 @@ export default {
     if (query.reload) {
       reload = true
     }
-    console.log('yarp 1')
     let region = params.region
     let nodeId = params.id
-    console.log('yarp 2')
     store.commit('setRegion', region)
-    if ($axios) {
-      console.log(`yarp 3: Have $axios`)
-    } else {
-      console.log(`yarp 3: missing $axios`)
-    }
     return GraphClient($axios, region, nodeId, reload, error)
   },
   methods: {

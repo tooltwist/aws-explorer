@@ -1,8 +1,7 @@
-import { Router } from 'express'
-import graph from '../misc/graph'
-// import types from '../misc/types'
-import LRU from 'lru-cache'
-import download from '../misc/download'
+const router = require('express').Router()
+const graph = require('../misc/graph')
+const LRU = require('lru-cache')
+const download = require('../misc/download')
 
 
 // , options = { max: 500
@@ -11,9 +10,6 @@ import download from '../misc/download'
 //             , maxAge: 1000 * 60 * 60 }
 // , cache = LRU(options)
 let cache = new LRU(10) // sets just the max size to 10 items (actually size, but default size is 1)
-
-const router = Router()
-
 
 // Import API Routes
 router.get('/healthcheck', (req, res, next) => {
@@ -66,4 +62,4 @@ router.get('/graph/:region', function (req, res, next) {
   });
 })
 
-export default router
+module.exports = router

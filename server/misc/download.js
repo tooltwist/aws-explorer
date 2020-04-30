@@ -774,7 +774,10 @@ function downloadClusters(callback) {
                         // console.log('checking services');
                         cluster.children.forEach(function(childKey) {
                           let child = graph.nodeWithKey(childKey);
-                          if (child.type === types.SERVICE) {
+                          if (!child) {
+                            console.log(`Unknown cluster child ${childKey}`);
+                          }
+                          if (child && child.type === types.SERVICE) {
                             let service = child;
                             let deployments = service.data.deployments;
                             for (var cnt = 0; cnt < deployments.length; cnt++) {

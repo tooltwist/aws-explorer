@@ -38,8 +38,7 @@ function downloadRegions (callback) {
 // e.g. us-east-1 -> (n-virginia)
 function regionDescription (regionCode) {
   // console.log('regionDescription(' + regionCode + ')')
-  console.log(`yarp 9991`);
-  let region = awsRegions.get(regionCode)
+  let region = awsRegions.lookup({ code: regionCode })
   if (region) {
     // return '(' + region.name + ')'
     return region.name
@@ -80,8 +79,7 @@ function checkAwsRegion (region) {
   }
 
   // Check the code.
-  console.log(`yarp 9992`);
-  let r = awsRegions.get(region)
+  let r = awsRegions.lookup({ code: region })
   if (!r) {
     console.log('ERROR: Unknown region ' + region)
     process.exit(1)

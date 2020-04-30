@@ -22,7 +22,9 @@ function CliRemotePrompted() {
   console.log(`***                                                    ***`);
   console.log(`**********************************************************`);
   console.log();
-  console.log(`Tip: You can specify region with the -r <region> option.`);
+  if (!myAWS.INITIAL_REGION) {
+    console.log(`Tip: You can specify region with the -r <region> option.`);
+  }
   console.log();
   console.log();
 

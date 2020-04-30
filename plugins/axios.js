@@ -12,6 +12,13 @@
 // import juice from '@tooltwist/juice-client'
 
 
+
+/*
+ *  Extend @nuxtjs/axios module.
+ *  See https://axios.nuxtjs.org/extend.html
+ */
+
+
 export default function ({ $axios, redirect }) {
   console.log(`axios plugin initialisation...`)
 
@@ -26,23 +33,25 @@ export default function ({ $axios, redirect }) {
   // console.log(`process.client=${process.client}`)
   // console.log(`process.server=${process.server}`)
   // console.log(`process.static=${process.static}`)
-
+  let url
   if (process.client) {
+    // Client-side access to server
     const protocol = window.location.protocol
     const hostname = window.location.hostname
     const port = window.location.port
-    const url = `${protocol}//${hostname}:${port}`
-    console.log(`Setting API endpoint on browser to ${url}`)
+    url = `${protocol}//${hostname}:${port}`
+    console.log(`Client will use API endpoint from browser: ${url}`)
     $axios.defaults.baseURL = url
   } else {
+    // Server-side access to server (used during SSR)
     const protocol = `http:`
     const hostname = `127.0.0.1`
-    // const port = process.env.PORT | 3000
-    const port = 4000
-    const url = `${protocol}//${hostname}:${port}`
-    console.log(`Setting API endpoint on server to ${url}`)
+    const port = process.env.PORT | 4000
+    url = `${protocol}//${hostname}:${port}`
+    console.log(`Client will use API endpoint from server: ${url}`)
     $axios.defaults.baseURL = url
   }
+  // $axios.setBaseURL(url)
 
   $axios.onError(error => {
     const code = parseInt(error.response && error.response.status)

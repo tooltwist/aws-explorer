@@ -84,8 +84,8 @@ export default {
       return list
     },
     subnetInAvailabilityZone: function (subnetNode, azNode) {
-      console.log('azNode=', azNode.id)
-      console.log('subnetNode=', subnetNode.data)
+      // console.log('azNode=', azNode.id)
+      // console.log('subnetNode=', subnetNode.data)
       return subnetNode.data.AvailabilityZone === azNode.id
     }
   },
