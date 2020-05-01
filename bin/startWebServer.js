@@ -15,7 +15,8 @@ function startWebServer() {
   // console.log('cmd=', cmd)
 
   // run interactive bash shell
-  execSh("node build/main.js", { cwd: dir }, function(err){
+  // execSh("node build/main.js", { cwd: dir }, function(err){
+  execSh("node server/index.js", { cwd: dir }, function(err){
     if (err) {
       console.log("Exit code: ", err.code);
       return;

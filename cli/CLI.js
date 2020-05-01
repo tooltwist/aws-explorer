@@ -6,6 +6,7 @@ const CliCompromised = require('./CliCompromised')
 const CliJump = require('./CliJump')
 const CliMysql = require('./CliMysql')
 const CliRemotePrompted = require('./CliRemotePrompted')
+const CliRemotePrompted_2020_04_01 = require('./CliRemotePrompted_2020_04_01')
 const CliNbt = require('./CliNbt')
 const CliSummary = require('./CliSummary')
 const CliProvision = require('./CliProvision')
@@ -18,7 +19,26 @@ const StartWebServer = require('../bin/startWebServer')
 
 
 
-function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
+async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
+
+  // console.log(`ARGV yarp`, process.argv);
+  if (process.argv[2] === 'remote') {
+    // return await CLIremote.parseCommandLine()
+    return await CliRemotePrompted_2020_04_01.parseCommandLine()
+  }
+
+  let defaultProfile = ''
+  let defaultProfileDesc = ''
+  if (process.env['AE_PROFILE']) {
+    defaultRegion = process.env['AE_PROFILE']
+    defaultProfileDesc = ` [${defaultRegion}]`
+  }
+
+  let defaultRegion = 'ap-southeast-1'
+  if (process.env['AE_REGION']) {
+    defaultRegion = process.env['AE_REGION']
+  }
+
 
   /*
    *  Main thread starts here.
@@ -27,8 +47,9 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
   program
     .version('0.2.0')
     .option('-e, --environment <env>', 'Environment')
-    .option('-p, --port <port>', 'Port for webserver', parseInt)
-    .option('-r, --region <region> [' + myAWS.INITIAL_REGION + ']', 'Region')
+    .option(`-p, --profile <profile>${defaultProfileDesc}`, 'Profile', defaultProfile)
+    .option('-P, --port <port>', 'Port for webserver', parseInt)
+    .option('-r, --region <region> [' + myAWS.INITIAL_REGION + ']', 'Region', defaultRegion)
     .option('-s, --skip-healthchecks', 'Skip healthchecks (faster loads, but no target group info)')
 
   // Start the website
@@ -100,11 +121,11 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
 
   // Access database via a jump box
   program
-    .command('remote')
+    .command('legacy-remote')
     .description('Easy connection through jumpboxes (to DB or ECS Host)')
-    .action(function() {
+    .action(async function() {
       haveCommand = true
-      CliRemotePrompted()
+      await CliRemotePrompted()
     });
 
   // Login to a server
@@ -202,7 +223,8 @@ function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
 
   if (!haveCommand) {
     // Have some unknown command
-    return callback(true, false)
+    // return callback(true, false)
+    return ({unknownCommand:true, useDefault:false})
     // program.help() // Exits
   }
 

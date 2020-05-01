@@ -15,22 +15,31 @@ let autoscaling = null
 let ecs = null
 let rds = null
 
-function downloadRegions (callback) {
-  console.log('  downloadRegions()')
-  ec2.describeRegions({}, (err, data) => {
-    if (err) return callback(err)
+async function downloadRegions () {
+  // console.log('  downloadRegions()')
+  if (regions.length > 0) {
+    // console.log(`regions=`, regions);
+    return regions
+  }
 
-    regions = data.Regions // Global variable
-    // console.log('regions=', regions);
-    regions = regions.sort((r1, r2) => {
-      if (r1.RegionName < r2.RegionName) {
-        return -1
-      } else if (r1.RegionName > r2.RegionName) {
-        return +1
-      }
-      return 0
+  return new Promise((resolve, reject) => {
+
+    ec2.describeRegions({}, (err, data) => {
+      if (err) return reject(err)
+
+      regions = data.Regions // Global variable
+      // console.log('regions=', regions);
+      regions = regions.sort((r1, r2) => {
+        if (r1.RegionName < r2.RegionName) {
+          return -1
+        } else if (r1.RegionName > r2.RegionName) {
+          return +1
+        }
+        return 0
+      })
+      // console.log(`regions=`, regions);
+      return resolve(regions)
     })
-    return callback(null)
   })
 }
 

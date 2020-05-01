@@ -7,15 +7,19 @@ const startWebServer = require('./startWebServer')
 var program = require('commander');
 const CLI = require('../cli/CLI')
 
-CLI.parseCommandLine((unknownCommand, useDefault) => {
-  if (unknownCommand) {
+CLI.parseCommandLine()
+  .then((result) => {
 
-    program.help() // Exits
+    if (result && result.unknownCommand) {
 
-  } else if (useDefault) {
+      program.help() // Exits
+
+    } else if (result && result.useDefault) {
 
 
-    // Start the web server
-    startWebServer()
-  }
-})
+      // Start the web server
+      startWebServer()
+    }
+  }).catch(e => {
+    console.log(`Error in parseCommandLine:`, e);
+  })

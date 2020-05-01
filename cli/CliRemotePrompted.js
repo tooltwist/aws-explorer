@@ -9,7 +9,7 @@ const inquirer = require('inquirer');
 
 const CliMysql = require('./CliMysql')
 
-function CliRemotePrompted() {
+async function CliRemotePrompted() {
   let region = program.region || myAWS.INITIAL_REGION;
   region = myAWS.checkAwsRegion(region);
   let regionName = capitalize(myAWS.regionDescription(region))
@@ -30,14 +30,12 @@ function CliRemotePrompted() {
 
   // Get a list of environments
   graph.reset();
-  download.downloadInstances(err => {
-    if (err) {
-      console.log('Error: ', err)
-    }
-    download.downloadDatabases(err => {
-      if (err) {
-        console.log('Error: ', err)
-      }
+  await download.downloadInstances()
+
+  await download.downloadDatabases()
+      // if (err) {
+      //   console.log('Error: ', err)
+      // }
 
       // Collect just the EC2 Instances
       let list = graph.nodes().filter(node => (node.type === types.INSTANCE))
@@ -194,8 +192,8 @@ function CliRemotePrompted() {
           CliMysql(environmentName, jumpboxIp, ecsHostIp, dbHost, answers.dbname, answers.username, answers.password)
         });
       });
-    })
-  })
+  //  })
+  // })
 }
 
 module.exports = CliRemotePrompted

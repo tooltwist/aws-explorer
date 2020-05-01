@@ -42,24 +42,28 @@ router.get('/graph/:region', function (req, res, next) {
   }
 
   // Download all we need from AWS
-  download.downloadEverything(region, false, err => {
-    if (err) {
+  download.downloadEverything(region, false)
+    .then(result => {
+      let index = graph.index()
+      // console.log('Have index:', index)
+      let obj = { }
+      for (var key in index) {
+        obj[key] = index[key]
+      }
+  
+      console.log('Setting value in the cache')
+      cache.set(cacheKey, obj)
+  
+      res.json(obj)
+  
+    }).catch(err => {
+    // if (err) {
       console.log(`Error downloading region ${region}\n`, err, err.stack);
       res.sendStatus(500)
       return;
-    }
-    let index = graph.index()
-    // console.log('Have index:', index)
-    let obj = { }
-    for (var key in index) {
-      obj[key] = index[key]
-    }
-
-    console.log('Setting value in the cache')
-    cache.set(cacheKey, obj)
-
-    res.json(obj)
-  });
+    // }
+    })
+  // });
 })
 
 module.exports = router

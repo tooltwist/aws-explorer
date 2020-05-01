@@ -29,6 +29,10 @@ function findInstanceById(id) {
   let all = graph.nodes();
   for (var i = 0; i < all.length; i++) {
     let node = all[i];
+
+    if (!node) {
+      console.log(`Internal error. all[${i}] is null`);
+    }
     // if (node.type === types.INSTANCE) {
     //   console.log('  instance: ', node.data.InstanceId);
     // }
@@ -40,10 +44,13 @@ function findInstanceById(id) {
   return null;
 }
 
-function downloadVpcs(callback) {
+async function downloadVpcs() {
   if (debug) console.log('  downloadVpcs()');
+
+return new Promise((resolve, reject) => {
+
   myAWS.ec2().describeVpcs({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.Vpcs.forEach(rec => {
@@ -52,19 +59,23 @@ function downloadVpcs(callback) {
       
       graph.findNode(types.VPC, rec.VpcId, rec)
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
-function downloadInstances(callback) {
-  // if (debug) console.log('  downloadInstances()');
+async function downloadInstances() {
+  if (debug) console.log('  downloadInstances()');
+
+  return new Promise((resolve, reject) => {
 
   myAWS.ec2().describeInstances({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.Reservations.forEach(res => {
       res.Instances.forEach(instance => {
+        // console.log(`yarp got an instance`, instance.ImageId);
 
         // See if it is a jumpbox
         // console.log('instance=', instance);
@@ -113,17 +124,20 @@ function downloadInstances(callback) {
       })
     })
     instancesAreLoaded = true;
-    return callback(null)
+    return resolve(null)
   })
+
+})//- Promise
 }
 
-function downloadSubnets(callback) {
+async function downloadSubnets() {
   if (debug) console.log('  downloadSubnets()');
 
   // let describe = types.describe
+  return new Promise((resolve, reject) => {
 
   myAWS.ec2().describeSubnets({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.Subnets.forEach(rec => {
@@ -138,11 +152,14 @@ function downloadSubnets(callback) {
       let az = graph.findNode(types.AZ, rec.AvailabilityZone, null)
       az.addChild(sn)
     })
-    return callback(null)
+    return resolve(null)
   })
+
+})//- Promise
+
 }
 
-function downloadSecurityGroups(callback) {
+async function downloadSecurityGroups() {
   if (debug) console.log('  downloadSecurityGroups()');
   // let describe = node => {
   //   let desc = ''
@@ -150,9 +167,10 @@ function downloadSecurityGroups(callback) {
   //   desc += '  Description: ' + node.data.Description + '\n'
   //   return desc
   // }
+return new Promise((resolve, reject) => {
 
   myAWS.ec2().describeSecurityGroups({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
     data.SecurityGroups.forEach(grp => {
       // console.log('grp=', grp);
       let g = graph.findNode(types.SECGRP, grp.GroupId, grp)
@@ -162,20 +180,52 @@ function downloadSecurityGroups(callback) {
       let v = graph.findNode(types.VPC, grp.VpcId, null)
       v.addChild(g)
     })
-    return callback(null)
+
+    // Add links between the security groups
+    let groups = graph.nodes().filter(node => (node.type === types.SECGRP))
+    // console.log(`secgrp yarp 5`, groups);
+    groups.forEach(grp => {
+      // console.log(`secgrp yarp 6 ${grp.id}`, JSON.stringify(grp.data, '', 2));
+      if (grp.data.IpPermissions) {
+        grp.data.IpPermissions.forEach(perm => {
+          perm.UserIdGroupPairs.forEach(pair => {
+            // console.log(`Security group ${grp.data.GroupId} <- ${pair.GroupId}`);
+            const from = graph.findNode(types.SECGRP, pair.GroupId, null)
+            // console.log(`   ${grp.data.GroupName} <- ${from.data.GroupName}`);
+            // console.log(`GRP=`, grp);
+            // console.log(`     (${from.data.GroupName})`);
+            // grp.addChild(from)
+            // console.log(`------------------------------------------`);
+            // console.log(`  before ${grp.id}.children=`, grp.children);
+            // console.log(`  before ${grp.id}.parents=`, grp.parents);
+            // console.log(`  before ${from.id}.children=`, from.children);
+            // console.log(`  before ${from.id}.parents=`, from.parents);
+            from.addChild(grp)
+            // console.log(`  after ${grp.id}.children=`, grp.children);
+            // console.log(`  after ${grp.id}.parents=`, grp.parents);
+            // console.log(`  after ${from.id}.children=`, from.children);
+            // console.log(`  after ${from.id}.parents=`, from.parents);
+          })
+        })
+      }
+    })
+
+    return resolve(null)
   })
+})
 }
 
-function downloadNatGateways(callback) {
+async function downloadNatGateways() {
   if (debug) console.log('  downloadNatGateways()');
   // let describe = node => {
   //   let desc = ''
   //   desc += '  State: ' + node.data.State + '\n';
   //   return desc
   // }
+  return new Promise((resolve, reject) => {
 
   myAWS.ec2().describeNatGateways({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.NatGateways.forEach(grp => {
@@ -205,11 +255,13 @@ function downloadNatGateways(callback) {
         })
       }
     })
-    return callback(null)
+    return resolve(null)
   })
+
+})//- Promise
 }
 
-function downloadInternetGateways(callback) {
+async function downloadInternetGateways() {
   if (debug) console.log('  downloadInternetGateways()');
   // let describe = node => {
   //   let desc = ''
@@ -219,12 +271,14 @@ function downloadInternetGateways(callback) {
   //   }
   //   return desc
   // }
+  return new Promise((resolve, reject) => {
+
 
   // An Internet Gateway provides the means by which the stuff in the
   // VPC connects to the Internet. I believe a NAT will quietly use
   // the Internet Gateway, but doesn't actually reference it.
   myAWS.ec2().describeInternetGateways({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     data.InternetGateways.forEach(rec => {
       // console.log('\n\n\nINTERNET GATEWAY=', rec)
@@ -239,12 +293,13 @@ function downloadInternetGateways(callback) {
         }
       })
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
 // Elastic IPs
-function downloadAddresses(callback) {
+async function downloadAddresses() {
   if (debug) console.log('  downloadAddresses()');
   // let describe = node => {
   //   // Return a description
@@ -252,9 +307,11 @@ function downloadAddresses(callback) {
   //   desc += '  IP Address: ' + node.data.PublicIp + '\n';
   //   return desc
   // }
+  return new Promise((resolve, reject) => {
+
 
   myAWS.ec2().describeAddresses({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.Addresses.forEach(rec => {
@@ -266,59 +323,68 @@ function downloadAddresses(callback) {
         ip.addChild(addr)
       }
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
-function downloadAvailabilityZones(callback) {
+async function downloadAvailabilityZones() {
   if (debug) console.log('  downloadAvailabilityZones()');
   // let describe = node => {
   //   let desc = ''
   //   // desc += '  IP Address: ' + node.data.PublicIp + '\n';
   //   return desc
   // }
+  return new Promise((resolve, reject) => {
+
 
   myAWS.ec2().describeAvailabilityZones({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.AvailabilityZones.forEach(rec => {
       let g = graph.findNode(types.AZ, rec.ZoneName, rec)
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
-function downloadKeyPairs(callback) {
+async function downloadKeyPairs() {
   if (debug) console.log('  downloadKeyPairs()');
   // let describe = node => {
   //   let desc = ''
   //   return desc
   // }
+  return new Promise((resolve, reject) => {
+
 
   myAWS.ec2().describeKeyPairs({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.KeyPairs.forEach(rec => {
       // This will create the node
       graph.findNode(types.KEYPAIR, rec.KeyName, rec)
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
 // Inbound interface from the Internet
-function downloadNetworkInterfaces(callback) {
+async function downloadNetworkInterfaces() {
   if (debug) console.log('  downloadNetworkInterfaces()');
   // let describe = node => {
   //   let desc = ''
   //   desc += node.data.Description
   //   return desc
   // }
+  return new Promise((resolve, reject) => {
+
 
   myAWS.ec2().describeNetworkInterfaces({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.NetworkInterfaces.forEach(rec => {
@@ -352,15 +418,19 @@ function downloadNetworkInterfaces(callback) {
       let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(ni)
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
-function downloadRouteTables(callback) {
+async function downloadRouteTables() {
   if (debug) console.log('  downloadRouteTables()');
 
+  return new Promise((resolve, reject) => {
+
+
   myAWS.ec2().describeRouteTables({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('routeTables=', data);
     data.RouteTables.forEach(rec => {
@@ -408,8 +478,10 @@ function downloadRouteTables(callback) {
       let vpc = graph.findNode(types.VPC, rec.VpcId)
       vpc.addChild(rt)
     })
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
+
 }
 
 function describeTargets(targetGroup, withHealthchecks) {
@@ -432,8 +504,10 @@ function describeTargets(targetGroup, withHealthchecks) {
   return desc
 }
 
-function downloadLoadBalancers(withHealthchecks, callback) {
+async function downloadLoadBalancers(withHealthchecks) {
   if (debug) console.log('  downloadLoadBalancers()');
+
+  return new Promise((resolve, reject) => {
 
   if (!targetGroupsAreLoaded) {
     console.log('ERROR: downloadLoadBalancers() called before downloadTargetGroups()');
@@ -449,13 +523,13 @@ function downloadLoadBalancers(withHealthchecks, callback) {
   //    => load-balancer-node._listeners[x]._targetGroupNode._health
   // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ELBv2.html#describeLoadBalancers-property
   myAWS.elbv2().describeLoadBalancers({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
     // console.log('data=', data);
 
     (function nextALB(index) {
       if (index >= data.LoadBalancers.length) {
         loadBalancersAreLoaded = true;
-        return callback(null)
+        return resolve(null)
       }
       let rec = data.LoadBalancers[index]
       if (!rec) console.log(`WUMBO 5 - unknown load balancer`);
@@ -487,7 +561,7 @@ function downloadLoadBalancers(withHealthchecks, callback) {
       myAWS.elbv2().describeListeners({
         LoadBalancerArn: rec.LoadBalancerArn
       }, (err, data) => {
-        if (err) return callback(err);
+        if (err) return reject(err);
 
         // console.log('listener data=', data);
         alb._listeners = data.Listeners;
@@ -532,7 +606,7 @@ function downloadLoadBalancers(withHealthchecks, callback) {
             myAWS.elbv2().describeTargetHealth({
               TargetGroupArn: targetGroup.data.TargetGroupArn
             }, (err, healthData) => {
-              if (err) return callback(err);
+              if (err) return reject(err);
               listener._targetGroupNode._health = healthData.TargetHealthDescriptions
               // console.log('target health=', healthData);
               healthData.TargetHealthDescriptions.forEach(health => {
@@ -548,14 +622,17 @@ function downloadLoadBalancers(withHealthchecks, callback) {
       }) //- describeListeners
     })(0) //- nextALB
   }) //- describeLoadBalancers
+})//- Promise
 }
 
-function downloadTargetGroups(withHealthchecks, callback) {
+async function downloadTargetGroups(withHealthchecks) {
   if (debug) console.log('  downloadTargetGroups()');
+
+  return new Promise((resolve, reject) => {
 
   // Load the definitions
   myAWS.elbv2().describeTargetGroups({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     // console.log('data=', data);
     data.TargetGroups.forEach(rec => {
@@ -568,8 +645,10 @@ function downloadTargetGroups(withHealthchecks, callback) {
       vpc.addChild(tg)
     })
     targetGroupsAreLoaded = true;
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
+
 }
 
 /*
@@ -684,22 +763,23 @@ function loadTasksForCluster(clusterName, callback/* (err,taskDefinitions) */) {
   }); //- listTasks
 }
 
-function downloadClusters(callback) {
+async function downloadClusters() {
   if (debug) console.log('  downloadClusters()');
 
+  return new Promise(async (resolve, reject) => {
   // Check the load balancers have been loaded already,
   // as we'll need to link to them from ECS services.
-  if (!loadBalancersAreLoaded) {
-    console.log('ERROR: downloadClusters() called before downloadLoadBalancers()');
-    console.log('Links between services and load balancers will be unknown.');
-  }
   if (!targetGroupsAreLoaded) {
-    console.log('ERROR: downloadClusters() called before downloadTargetGroups()');
-    console.log('Links between services and target groups will be unknown.');
+    if (debug) console.log(`- downloadClusters requires targetGroups`);
+    await downloadTargetGroups()
+  }
+  if (!loadBalancersAreLoaded) {
+    if (debug) console.log(`- downloadClusters requires loadBalancers`);
+    await downloadLoadBalancers()
   }
   if (!instancesAreLoaded) {
-    console.log('ERROR: downloadClusters() called before downloadInstances()');
-    console.log('Links between services and instances will be unknown.');
+    if (debug) console.log(`- downloadClusters requires instances`);
+    await downloadInstances()
   }
 
   let describe = (node) => {
@@ -718,38 +798,41 @@ function downloadClusters(callback) {
   */
   if (debug) console.log('  - getting list of clusters');
   myAWS.ecs().listClusters({ }, function(err, clusterList) {
-    if (err) return callback(err);
+    if (err) return reject(err);
     if (debug) console.log('  - getting cluster details');
     myAWS.ecs().describeClusters({
       clusters: clusterList.clusterArns
     }, function(err, clusterDefinitions) {
-      if (err) return callback(err);
+      if (err) return reject(err);
 
       // console.log('clusterDefinitions: ', clusterDefinitions);
+      // return resolve(null)
 
       // Loop through the clusters.
       (function nextCluster(index) {
         // Past the last cluster?
         if (index >= clusterDefinitions.clusters.length) {
-          return callback(null)
+          return resolve(null)
         }
 
         // Next Cluster
         let clusterDef = clusterDefinitions.clusters[index]
         let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
         // console.log('Got cluster ' + clusterDef.clusterName);
+        // console.log('Got cluster ' + cluster);
+
 
         /*
         *   Get the container instances for this cluster.
         */
         loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
-          if (err) return callback(err);
+          if (err) return reject(err);
 
             loadServicesForCluster(cluster, (err) => {
-              if (err) return callback(err);
+              if (err) return reject(err);
 
                 loadTasksForCluster(clusterDef.clusterName, (err, taskDefinitions) => {
-                  if (err) return callback(err);
+                  if (err) return reject(err);
 
                     // Loop through the task definitions.
                     // console.log(`taskDefinitions=`, taskDefinitions);
@@ -813,14 +896,112 @@ function downloadClusters(callback) {
       })(0); // next cluster
     }); //- describeClusters
   }); //- listClusters
+
+})//- Promise
+
 }
 
-function downloadDatabases(callback) {
+// // Get the services and tasks for clusters
+// async function downloadClusterDetails() {
+//   if (debug) console.log('  downloadClusterDetails()');
+
+//   let clusters = graph.nodes().filter(node => (node.type === types.CLUSTER))
+
+//   // Loop through the clusters.
+//   (function nextCluster(index) {
+//     // Past the last cluster?
+//     if (index >= clusters.length) {
+//       return resolve(null)
+//     }
+
+//     // Next Cluster
+//     let clusterDef = clusterDefinitions.clusters[index]
+//     let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
+//     // console.log('Got cluster ' + clusterDef.clusterName);
+
+//     /*
+//     *   Get the container instances for this cluster.
+//     */
+//     loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
+//       if (err) return reject(err);
+
+//         loadServicesForCluster(cluster, (err) => {
+//           if (err) return reject(err);
+
+//             loadTasksForCluster(clusterDef.clusterName, (err, taskDefinitions) => {
+//               if (err) return reject(err);
+
+//                 // Loop through the task definitions.
+//                 // console.log(`taskDefinitions=`, taskDefinitions);
+//                 taskDefinitions.forEach(taskDef => {
+//                   // console.log(`Task ${taskDef.taskDefinitionArn}`);
+//                   // console.log(`  startedBy:`, taskDef.startedBy);
+//                   // console.log(`  Containers:`, taskDef.containers);
+//                   // console.log(`  Last status ${taskDef.lastStatus}`);
+
+//                   // Get the task name from it's definition. For example, the end of:
+//                   // 'arn:aws:ecs:ap-southeast-1:238285074004:task-definition/nbt-trsgms1-authservice:6'
+//                   let pos = taskDef.taskDefinitionArn.lastIndexOf('/')
+//                   let taskName = taskDef.taskDefinitionArn.substring(pos + 1)
+//                   pos = taskName.lastIndexOf(':');
+//                   taskName = taskName.substring(0, pos)
+//                   // console.log(`task name is ${taskName}`);
+
+//                   // See if it was started by a service
+//                   // console.log('Looking for service parent');
+//                   let parentOfTask = cluster;
+//                   if (taskDef.startedBy) {
+//                     // console.log('checking services');
+//                     cluster.children.forEach(function(childKey) {
+//                       let child = graph.nodeWithKey(childKey);
+//                       if (!child) {
+//                         console.log(`Unknown cluster child ${childKey}`);
+//                       }
+//                       if (child && child.type === types.SERVICE) {
+//                         let service = child;
+//                         let deployments = service.data.deployments;
+//                         for (var cnt = 0; cnt < deployments.length; cnt++) {
+//                           if (deployments[cnt].id === taskDef.startedBy) {
+//                             // Yep, was started by this service.
+//                             // console.log('\n\nWas started by ', service);
+//                             parentOfTask = service;
+//                             break;
+//                           }
+//                         }//- next deployment
+//                       }//- child is a service
+//                     })// next child of the cluster
+//                   }//- startedBy != null
+
+//                   // Define the task, and add it to it's parent.
+//                   let task = graph.findNode(types.TASK, taskName, taskDef);
+//                   parentOfTask.addChild(task);
+
+//                   // Link the task to the containerInstance's EC2 instance.
+//                   let instance = instanceForContainer[taskDef.containerInstanceArn];
+//                   if (instance) {
+//                     task.addChild(instance);
+//                   } else {
+//                     console.log(`ERROR: task ${taskDef.taskArn} refers to unknown containerInstance ${taskDef.containerInstanceArn}`);
+//                   }
+
+//                 }); //- next task
+
+//                 return nextCluster(index + 1)
+//             }); //- loadTasksForCluster
+//         }); //- loadServicesForCluster
+//     }); //- loadContainerInstancesForCluster
+//   })(0); // next cluster
+
+// }//- downloadClusterDetails
+
+async function downloadDatabases() {
   if (debug) console.log('  downloadDatabases()');
+
+  return new Promise((resolve, reject) => {
 
   // Load the definitions
   myAWS.rds().describeDBInstances({}, (err, data) => {
-    if (err) return callback(err);
+    if (err) return reject(err);
 
     //console.log('data=', data);
     data.DBInstances.forEach(rec => {
@@ -839,70 +1020,39 @@ function downloadDatabases(callback) {
       // vpc.addChild(tg)
     })
     targetGroupsAreLoaded = true;
-    return callback(null)
+    return resolve(null)
   })
+})//- Promise
 }
 
 // See http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#describeSubnets-property
-function downloadEverything(region, withHealthchecks, callback/* (err) */) {
+async function downloadEverything(region, withHealthchecks) {
   console.log('downloadEverything()');
   console.log(`Region is ${region} (${myAWS.regionDescription(region)})`);
 
   myAWS.checkAwsRegion(region)
 
+  await myAWS.downloadRegions()
+
   // Clear existing list of nodes and reload everything
   graph.reset();
-  downloadSecurityGroups(err => {
-    if (err) return callback(err)
-    downloadVpcs(err => {
-      if (err) return callback(err)
-      downloadSubnets(err => {
-        if (err) return callback(err)
-        downloadNatGateways(err => {
-          if (err) return callback(err)
-          downloadInternetGateways(err => {
-            if (err) return callback(err)
-            downloadInstances(err => {
-              if (err) return callback(err)
-              downloadAddresses(err => {
-                if (err) return callback(err)
-                downloadAvailabilityZones(err => {
-                  if (err) return callback(err)
-                  downloadKeyPairs(err => {
-                    if (err) return callback(err)
-                    downloadNetworkInterfaces(err => {
-                      if (err) return callback(err)
-                      myAWS.downloadRegions(err => {
-                        if (err) return callback(err)
-                        downloadRouteTables(err => {
-                          if (err) return callback(err)
-                          downloadTargetGroups(withHealthchecks, err => { // Must be before load balancers
-                            if (err) return callback(err)
-                            downloadLoadBalancers(withHealthchecks, err => {
-                              if (err) return callback(err)
-                              downloadClusters(err => {
-                                if (err) return callback(err)
-                                downloadDatabases(err => {
-                                  if (err) return callback(err)
-
-                                  console.log('finished downloading everything');
-                                  return callback(null)
-                                })
-                              })
-                            })
-                          })
-                        })
-                      })
-                    })
-                  })
-                })
-              })
-            })
-          })
-        })
-      })
-    })
-  })
+  await downloadSecurityGroups()
+  await downloadVpcs()
+  await downloadSubnets()
+  await downloadNatGateways()
+  await downloadInternetGateways()
+  await downloadInstances()
+  await downloadAddresses()
+  await downloadAvailabilityZones()
+  await downloadKeyPairs()
+  await downloadNetworkInterfaces()
+  await downloadRouteTables()
+  await downloadTargetGroups(withHealthchecks)
+  await downloadLoadBalancers(withHealthchecks)
+  await downloadClusters()
+  await downloadDatabases()
+  if (debug) console.log('finished downloading everything');
+  return null
 }
 
 module.exports.downloadInstances = downloadInstances;
@@ -919,4 +1069,6 @@ module.exports.downloadLoadBalancers = downloadLoadBalancers;
 module.exports.downloadTargetGroups = downloadTargetGroups;
 module.exports.downloadClusters = downloadClusters;
 module.exports.downloadDatabases = downloadDatabases;
+module.exports.downloadSecurityGroups = downloadSecurityGroups;
 module.exports.downloadEverything = downloadEverything;
+module.exports.findInstanceById = findInstanceById;
