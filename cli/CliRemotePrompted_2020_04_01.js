@@ -10,7 +10,7 @@ const inquirer = require('inquirer');
 const consola = require('consola')
 const propertiesReader = require('properties-reader');
 const { exec, spawn } = require('child_process');
-
+const colors = require('colors')
 const CliMysql = require('./CliMysql')
 
 const debug = false
@@ -29,23 +29,17 @@ async function CliRemotePrompted_2020_04_01(options) {
       profileHash[section] = true
     }
   })
-  // const profileList = Object.keys(profileHash).sort()
 
-  let chosenProfile
   if (options.profile) {
     // Check the profile is valid
     //ZZZZ
-    chosenProfile = options.profile
-    // console.log(`Profile specified on command line: ${chosenProfile}`);
-    var credentials = new AWS.SharedIniFileCredentials({profile: chosenProfile});
+    options.selectedProfile = options.profile
+    // console.log(`Profile specified on command line: ${options.selectedProfile}`);
+    var credentials = new AWS.SharedIniFileCredentials({profile: options.selectedProfile});
     AWS.config.credentials = credentials;
   } else {
     // Prompt for the profile
     let defaultProfile = ''
-    // if (process.env['AE_PROFILE']) {
-    //   console.log(`Use environment variable AE_PROFILE as default profile`);
-    //   defaultProfile = process.env['AE_PROFILE']
-    // } else
     if (process.env['AWS_PROFILE']) {
       console.log(`Use environment variable AWS_PROFILE as default profile`);
       defaultProfile = process.env['AWS_PROFILE']
@@ -66,10 +60,10 @@ async function CliRemotePrompted_2020_04_01(options) {
     ];
     // profileQuestion[0].choices.push('default')
     const selection = await inquirer.prompt(profileQuestion)
-    chosenProfile = selection.profile
-    // console.log(`chosenProfile is ${chosenProfile}\n`);
+    options.selectedProfile = selection.profile
+    // console.log(`options.selectedProfile is ${options.selectedProfile}\n`);
 
-    var credentials = new AWS.SharedIniFileCredentials({profile: chosenProfile});
+    var credentials = new AWS.SharedIniFileCredentials({profile: options.selectedProfile});
     AWS.config.credentials = credentials;
   }
 
@@ -79,12 +73,11 @@ async function CliRemotePrompted_2020_04_01(options) {
 
 
   // Choose a region
-  let chosenRegion
   if (options.region) {
     // Check the region is valid
     //ZZZZ
     // console.log(`Region specified on command line: ${options.region}`);
-    chosenRegion = options.region
+    options.selectedRegion = options.region
   } else {
     // Prompt for the region
     let defaultRegion = ''
@@ -115,11 +108,11 @@ async function CliRemotePrompted_2020_04_01(options) {
     })
     regionQuestion[0].choices.sort()
     const result = await inquirer.prompt(regionQuestion)
-    chosenRegion = result.region
-    // console.log(`chosenRegion is ${chosenRegion}\n`);
+    options.selectedRegion = result.region
+    // console.log(`options.selectedRegion is ${options.selectedRegion}\n`);
   }//- if
-  const region = myAWS.checkAwsRegion(chosenRegion);
-  const regionName = capitalize(myAWS.regionDescription(region))
+  const region = myAWS.checkAwsRegion(options.selectedRegion);
+  const regionName = capitalize(myAWS.regionDescription(options.selectedRegion))
 
 
   
@@ -161,7 +154,9 @@ async function CliRemotePrompted_2020_04_01(options) {
   console.error(`Gathering information...`);
   graph.reset();
   await download.downloadInstances()
-  await download.downloadClusters()
+  if (!options.skipEcs) {
+    await download.downloadClusters()
+  }
   await download.downloadDatabases()
   await download.downloadSecurityGroups()
   console.error(`done.\n`);
@@ -201,18 +196,20 @@ async function CliRemotePrompted_2020_04_01(options) {
   };// addEandC
 
   // Add clusters
-  clist.forEach(cluster => {
-    const instancePrefix = 'EC2 Instance::'
-    cluster.children.forEach(childId => {
-      // console.log(`   -> ${childId}`);
-      if (childId.startsWith(instancePrefix)) {
-        // console.log(`   MATCH`);
-        const instanceId = childId.substring(instancePrefix.length)
-        const instance = download.findInstanceById(instanceId)
-        addEandC(`Cluster ${cluster.id}`, instance)
-      }
+  if (!options.skipEcs) {
+    clist.forEach(cluster => {
+      const instancePrefix = 'EC2 Instance::'
+      cluster.children.forEach(childId => {
+        // console.log(`   -> ${childId}`);
+        if (childId.startsWith(instancePrefix)) {
+          // console.log(`   MATCH`);
+          const instanceId = childId.substring(instancePrefix.length)
+          const instance = download.findInstanceById(instanceId)
+          addEandC(`Cluster ${cluster.id}`, instance)
+        }
+      })
     })
-  })
+  }
 
   // Add instances, and the environment they are in
   list.forEach(instance => {
@@ -312,11 +309,10 @@ async function CliRemotePrompted_2020_04_01(options) {
     }
   }
 
-  let instanceId
   console.log(`${numInstances} instances`);
   if (numInstances == 1) {
     // Select the only instance available.
-    instanceId = firstInstanceId
+    options.selectedInstanceId = firstInstanceId
   } else {
     // Select one of the instances
     const instanceQuestion = [
@@ -336,119 +332,28 @@ async function CliRemotePrompted_2020_04_01(options) {
       if (record.name) {
         label = record.name
       }
+      if (record.isJumpbox) {
+        label = label.gray
+      }
       instanceQuestion[0].choices.push({ name: label, value: instanceId })
     }
+    instanceQuestion[0].choices.sort((i1, i2) => {
+      if (i1.name < i2.name) return -1
+      if (i1.name > i2.name) return +1
+      return 0
+    })
     const instanceResult = await inquirer.prompt(instanceQuestion)
     // console.log(`instanceResult=`, instanceResult);
-    instanceId = instanceResult.instanceId
+    options.selectedInstanceId = instanceResult.instanceId
   }
-  const instance = download.findInstanceById(instanceId)
+  // const instance = download.findInstanceById(options.selectedInstanceId)
   // console.log(`SELECTED INSTANCE=\n`, instance);
 
-  const keyName = instance.data.KeyName
-  const state = instance.data.State.Name
-  const publicDns = instance.data.PublinDnsName
-  const publicIpAddress = instance.data.PublicIpAddress
-  // const state = instance.data.Monitoring.State
-  // const state = instance.data.Monitoring.State
-  // console.log(`keyName=${keyName}, state=${state}, publicDns=${publicDns}, publicIpAddress=${publicIpAddress}`);
-  
 
   // Ask what to do with the instance
-
-  // Ask which environment
-  const opQuestion = [
-    {
-      type: 'list',
-      name: 'operation',
-      message: 'operation?',
-      // choices: Object.keys(environmentsAndClusters).sort(),
-      choices: [ ],
-    },
-  ];
-  if (keyName && publicIpAddress) {
-    opQuestion[0].choices.push({ name: 'Login with SSH', value: 'ssh'})
+  for ( ; ; ) {
+    await commandsForInstance(options)
   }
-  opQuestion[0].choices.push({ name: 'Login with SSM', value: 'ssm'})
-  opQuestion[0].choices.push({ name: 'docker ps', value: 'docker-ps'})
-  
-  const opResult = await inquirer.prompt(opQuestion)
-  // console.log(`opResult=`, opResult);
-  const operation = opResult.operation
-
-  // Now run the selected operation
-  if (operation === 'ssm') {
-    console.error(``);
-    console.error(`Using the following command...`);
-    console.error(``);
-    console.error(`     AWS_PROFILE=${chosenProfile} aws ssm start-session --target ${instanceId}`)
-    console.error(``);
-    const child = spawn(`aws ssm start-session --target ${instanceId}`, {
-      stdio: 'inherit',
-      shell: true,
-      env: { AWS_PROFILE: chosenProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-    });
-    child.on('close', (code) => {
-      console.log(`Session exited with code ${code}. Goodbye.`);
-    });
-  } else if (operation === 'ssh') {
-    /*
-     *  Login using SSH
-     */
-    const cmd = `ssh -i ~/.ssh/${keyName}.pem ec2-user@${publicIpAddress}`
-    console.error(``);
-    console.error(`Using the following command...`);
-    console.error(``);
-    console.error(`     ${cmd}`)
-    console.error(``);
-    const child = spawn(cmd, {
-      stdio: 'inherit',
-      shell: true,
-      env: { AWS_PROFILE: chosenProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-    });
-    child.on('close', (code) => {
-      console.log(`Session exited with code ${code}. Goodbye.`);
-    });
-  } else if (operation === 'docker-ps') {
-    console.log(``);
-    // console.log(`The run  command...`);
-    // console.log(``);
-    // console.log(`     AWS_PROFILE=${chosenProfile} aws ssm start-session --target ${instanceId}`)
-    // console.log(`     $ sudo /bin/bash`);
-    // console.log(``);
-
-    // Start the command
-    const remoteCommand = `sudo docker ps`
-    const comment = remoteCommand
-
-    try {
-      let startReply = await startRemoteCommand(chosenProfile, instanceId, comment, remoteCommand)
-      // console.log(`startReply=`, startReply);
-      if (startReply.remoteStatus !== 'Pending') {
-        console.error(`Failed to start remote command`);
-        console.error(`Status: ${startReply.remoteStatus}`)
-        process.exit(1)
-      }
-      // console.log(`Started okay`);      
-      let remoteCommandId = startReply.remoteCommandId
-      let endReply = await waitForRemoteCommand(chosenProfile, remoteCommandId)
-      // console.log(`endReply=`, endReply);
-      if (endReply.remoteStatus !== 'Success') {
-        console.error(`Failed to run remote command`);
-        console.error(`Status: ${endReply.remoteStatus}`)
-        if (endReply.output) {
-          console.error(`Error message:\n${endReply.output}`)
-        }
-        process.exit(1)
-      }
-      console.log(endReply.output);
-      process.exit(0)
-    } catch (e) {
-      console.error(e);
-      process.exit(1)
-    }
-  }
-  
   
 
 return
@@ -623,6 +528,154 @@ return
   // })
 }
 
+async function commandsForInstance(options) {
+
+return new Promise(async (resolve, reject) => {
+
+
+  const instance = download.findInstanceById(options.selectedInstanceId)
+  const keyName = instance.data.KeyName
+  const state = instance.data.State.Name
+  const publicDns = instance.data.PublinDnsName
+  const publicIpAddress = instance.data.PublicIpAddress
+  // const state = instance.data.Monitoring.State
+  // const state = instance.data.Monitoring.State
+  // console.log(`keyName=${keyName}, state=${state}, publicDns=${publicDns}, publicIpAddress=${publicIpAddress}`);
+    // Ask which environment
+  const opQuestion = [
+    {
+      type: 'list',
+      name: 'operation',
+      message: 'operation?',
+      // choices: Object.keys(environmentsAndClusters).sort(),
+      choices: [ ],
+    },
+  ];
+  if (keyName && publicIpAddress) {
+    opQuestion[0].choices.push({ name: 'Login with SSH', value: 'ssh'})
+  }
+  opQuestion[0].choices.push({ name: 'Login with SSM', value: 'ssm'})
+  opQuestion[0].choices.push({ name: 'SSH over SSM', value: 'ssh-ssm'})
+  opQuestion[0].choices.push({ name: 'docker ps', value: 'docker-ps'})
+  opQuestion[0].choices.push({ name: 'quit', value: 'quit'})
+  
+  const opResult = await inquirer.prompt(opQuestion)
+  // console.log(`opResult=`, opResult);
+  const operation = opResult.operation
+
+  // Now run the selected operation
+  if (operation === 'quit') {
+    process.exit(0)
+  } else if (operation === 'ssm') {
+    let command = `Zaws ssm start-session --region ${options.selectedRegion} --target ${instance.id}`
+    console.error(``);
+    console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+    console.error(``);
+    const startTime = Date.now()
+    const child = spawn(command, {
+      stdio: 'inherit',
+      shell: true,
+      env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+    });
+    child.on('close', (code) => {
+      console.log(`Session exited with code ${code}.`);
+      if ((Date.now() - startTime) < 5000) {
+        ssmWikiSuggestion()
+      }
+      resolve(null)
+    });
+    return
+  } else if (operation === 'ssh-ssm') {
+    let command = `aws ssm start-session`
+      + ` --region ${options.selectedRegion}`
+      + ` --target ${instance.id}`
+      + ` --document-name AWS-StartSSHSession`
+    console.error(``);
+    console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+    console.error(``);
+    const startTime = Date.now()
+    const child = spawn(command, {
+      stdio: 'inherit',
+      shell: true,
+      env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+    });
+    child.on('close', (code) => {
+      console.log(`Session exited with code ${code}.`);
+      if ((Date.now() - startTime) < 5000) {
+        ssmWikiSuggestion()
+      }
+      resolve(null)
+    });
+    return
+  } else if (operation === 'ssh') {
+    /*
+     *  Login using SSH
+     */
+    const cmd = `ssh -i ~/.ssh/${keyName}.pem ec2-user@${publicIpAddress}`
+    console.error(``);
+    console.error(`     `+cmd.dim)
+    console.error(``);
+    const startTime = Date.now()
+    const child = spawn(cmd, {
+      stdio: 'inherit',
+      shell: true,
+      env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+    });
+    child.on('close', (code) => {
+      console.log(`Session exited with code ${code}.`);
+      if ((Date.now() - startTime) < 5000) {
+        ssmWikiSuggestion()
+      }
+      resolve(null)
+    });
+    return
+  } else if (operation === 'docker-ps') {
+
+    // Start the command
+    const remoteCommand = `sudo docker ps`
+    const comment = remoteCommand
+
+    try {
+      let startReply = await startRemoteCommand(options.selectedProfile, instance.id, comment, remoteCommand)
+      // console.log(`startReply=`, startReply);
+      if (startReply.remoteStatus !== 'Pending') {
+        console.error(`Failed to start remote command`);
+        console.error(`Status: ${startReply.remoteStatus}`)
+        // process.exit(1)
+        return resolve(null)
+      }
+      // console.log(`Started okay`);      
+      let remoteCommandId = startReply.remoteCommandId
+      let endReply = await waitForRemoteCommand(options.selectedProfile, remoteCommandId)
+      // console.log(`endReply=`, endReply);
+      if (endReply.remoteStatus !== 'Success') {
+        console.error(`Failed to run remote command`);
+        console.error(`Status: ${endReply.remoteStatus}`)
+        if (endReply.output) {
+          console.error(`Error message:\n${endReply.output}`)
+        }
+        return resolve(null)
+      }
+      console.log(endReply.output);
+      return resolve(null)
+    } catch (e) {
+      console.error(e);
+      return resolve(null)
+    }
+  }
+})
+
+}//- commandsForInstance
+
+function ssmWikiSuggestion() {
+  console.log(``);
+  console.log(`     `+`Looks like something might have gone wrong. For instructions on how to set up`.red.dim);
+  console.log(`     `+`and debug SSM connections, consult the aws-explorer wiki:`.red.dim);
+  console.log(``);
+  console.log(`     `+`https://github.com/tooltwist/aws-explorer/wiki/Setting-up-and-debugging-AWS-SSM`.blue.underline.dim);
+  console.log(``);
+  console.log(``);
+}
 
 async function startRemoteCommand(profile, instanceId, comment, remoteCommand) {
   if (debug) console.log(`startRemoteCommand(${instanceId}, ${comment})`);
@@ -635,11 +688,8 @@ async function startRemoteCommand(profile, instanceId, comment, remoteCommand) {
   + ` --output json`
 
   console.error(``);
-  console.error(`Using the following command...`);
-  console.error(``);
-  console.error(`     AWS_PROFILE=${profile} ${localCommand}`);
-  console.error(``);
-
+  console.error(`     ` + `AWS_PROFILE=${profile} ${localCommand}`.dim);
+  previouslyCheckedRemoteCommand = ''
 
   return new Promise((resolve, reject) => {
     let stdout = ''
@@ -667,6 +717,7 @@ async function startRemoteCommand(profile, instanceId, comment, remoteCommand) {
           const remoteCommandId = obj.Command.CommandId
           const remoteStatus = obj.Command.Status
           // console.log(`remoteCommandId=${remoteCommandId}`);
+          console.log(`     ` + `commandId=${remoteCommandId}`.dim);
           resolve({ remoteCommandId, remoteStatus, raw: stdout })
         } catch (e) {
           console.log(`startRemoteCommand: Error parsing output:`, e);
@@ -679,10 +730,16 @@ async function startRemoteCommand(profile, instanceId, comment, remoteCommand) {
   })
 }//- startCommand
 
+let previouslyCheckedRemoteCommand = ''
 async function checkRemoteCommand(profile, commandId) {
   if (debug) console.log(`checkRemoteCommand(${commandId})`);
 
   const command = `aws ssm list-command-invocations --command-id ${commandId} --details`
+  if (previouslyCheckedRemoteCommand !== command) {
+    console.log(`     ` + command.dim);
+    console.log(``);
+    previouslyCheckedRemoteCommand = command
+  }
   return new Promise((resolve, reject) => {
     let stdout = ''
     const child = spawn(command, {
@@ -769,6 +826,7 @@ async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
     .option('-e, --environment <env>', 'Environment')
     .option(`-p, --profile <profile>`, 'Profile')
     .option(`-r, --region <region>`, 'Region')
+    .option(`-s, --skip-ecs`, 'Skip ECS')
 
   // Access database via a jump box
   program
