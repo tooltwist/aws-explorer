@@ -12,6 +12,9 @@ const propertiesReader = require('properties-reader');
 const { exec, spawn } = require('child_process');
 const colors = require('colors')
 const CliMysql = require('./CliMysql')
+// const phpmyadminOperation = require('./phpmyadminOperation')
+const runOverSsm = require('./runOverSsm')
+const portfinder = require('portfinder');
 
 const debug = false
 
@@ -546,19 +549,29 @@ return new Promise(async (resolve, reject) => {
     {
       type: 'list',
       name: 'operation',
-      message: 'operation?',
+      message: 'What would you like to do?',
       // choices: Object.keys(environmentsAndClusters).sort(),
       choices: [ ],
     },
   ];
+  opQuestion[0].choices.push({ name: 'SSH over SSM - '+'login'.red, value: 'ssh-over-ssm-login'})
+  opQuestion[0].choices.push({ name: 'SSH over SSM - '+'docker ps'.red, value: 'ssh-over-ssm-docker-ps'})
+  opQuestion[0].choices.push({ name: 'SSH over SSM - '+'mysql'.red, value: 'ssh-over-ssm-mysql'})
+  opQuestion[0].choices.push({ name: 'SSH over SSM - '+'phpmyadmin'.red, value: 'ssh-over-ssm-phpmyadmin'})
+  opQuestion[0].choices.push({ name: 'SSH over SSM - '+'redis'.red, value: 'ssh-over-ssm-redis'})
   if (keyName && publicIpAddress) {
-    opQuestion[0].choices.push({ name: 'Login with SSH', value: 'ssh'})
+    opQuestion[0].choices.push({ name: 'SSH - login'.grey, value: 'ssh'})
   }
-  opQuestion[0].choices.push({ name: 'Login with SSM', value: 'ssm'})
-  opQuestion[0].choices.push({ name: 'SSH over SSM', value: 'ssh-ssm'})
-  opQuestion[0].choices.push({ name: 'docker ps', value: 'docker-ps'})
+  opQuestion[0].choices.push({ name: 'SSM session - '+'login'.green, value: 'ssm'})
+  opQuestion[0].choices.push({ name: 'SSM session - '+'docker ps'.green, value: 'docker-ps'})
+  // opQuestion[0].choices.push({ name: 'SSH over SSM - ?', value: 'ssh-ssm'})
+
+  // opQuestion[0].choices.push({ name: 'Port forward - ?', value: 'port-forward'})
+  // opQuestion[0].choices.push({ name: 'Start phpmyadmin', value: 'start-phpmyadmin'})
+  // opQuestion[0].choices.push({ name: 'Port forward to phpmyadmin ? ', value: 'port-forward-tophpmyadmin'})
   opQuestion[0].choices.push({ name: 'quit', value: 'quit'})
-  
+  opQuestion[0].pageSize = opQuestion[0].choices.length + 2
+
   const opResult = await inquirer.prompt(opQuestion)
   // console.log(`opResult=`, opResult);
   const operation = opResult.operation
@@ -567,7 +580,7 @@ return new Promise(async (resolve, reject) => {
   if (operation === 'quit') {
     process.exit(0)
   } else if (operation === 'ssm') {
-    let command = `Zaws ssm start-session --region ${options.selectedRegion} --target ${instance.id}`
+    let command = `aws ssm start-session --region ${options.selectedRegion} --target ${instance.id}`
     console.error(``);
     console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
     console.error(``);
@@ -585,28 +598,220 @@ return new Promise(async (resolve, reject) => {
       resolve(null)
     });
     return
-  } else if (operation === 'ssh-ssm') {
-    let command = `aws ssm start-session`
-      + ` --region ${options.selectedRegion}`
-      + ` --target ${instance.id}`
-      + ` --document-name AWS-StartSSHSession`
-    console.error(``);
-    console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
-    console.error(``);
-    const startTime = Date.now()
-    const child = spawn(command, {
-      stdio: 'inherit',
-      shell: true,
-      env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-    });
-    child.on('close', (code) => {
-      console.log(`Session exited with code ${code}.`);
-      if ((Date.now() - startTime) < 5000) {
-        ssmWikiSuggestion()
-      }
-      resolve(null)
-    });
-    return
+  } else if (operation === 'ssh-over-ssm-login') {
+    /*
+     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+     *  This will allow SSH commands to be run.
+     */
+    const { localPort, sessionId } = await startTunnelForSSH(options, instance)
+    if (sessionId === 'error') {
+      // console.error(`\nUnable to set up tunnel.`);
+      return resolve(null)
+    } else {
+      // console.log(`Tunnel is running. localport=${localPort}, sessionId=${sessionId}`);
+      // await sleep(2000)
+
+      // DO LOGIN
+      const sshCmd = `ssh -t -p ${localPort} ec2-user@127.0.0.1`
+      const { exitCode } = await shellCommand(options, sshCmd)
+      console.log(`\n\n`);
+      await closeTunnel(options, sessionId)
+      return resolve(null)
+    }
+  } else if (operation === 'ssh-over-ssm-docker-ps') {
+    /*
+     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+     *  This will allow SSH commands to be run.
+     */
+    const { localPort, sessionId } = await startTunnelForSSH(options, instance)
+    if (sessionId === 'error') {
+      // console.error(`\nUnable to set up tunnel.`);
+      return resolve(null)
+    } else {
+      // console.log(`Tunnel is running. localport=${localPort}, sessionId=${sessionId}`);
+      // await sleep(2000)
+
+      // DO LOGIN
+      const sshCmd = `ssh -t -p ${localPort} ec2-user@127.0.0.1 docker ps`
+      const { exitCode } = await shellCommand(options, sshCmd)
+      console.log(`\n\n`);
+      await closeTunnel(options, sessionId)
+      return resolve(null)
+    }
+  } else if (operation === 'ssh-over-ssm-mysql') {
+    /*
+     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+     *  Then SSH is used to run mysql inside docker.
+     */
+    const { localPort, sessionId } = await startTunnelForSSH(options, instance)
+    if (sessionId === 'error') {
+      // console.error(`\nUnable to set up tunnel.`);
+      return resolve(null)
+    } else {
+      // Tunnel is running. Now start phpmyadmin.
+      const dbhost = `test-juiceconfig.cyazdhriukql.ap-southeast-1.rds.amazonaws.com`
+      const image = `mysql`
+      const username = 'admin'
+      const password = 'M0use123'
+      const dbname = 'adlforms'
+      const containerName = `phpmyadmin-${dbname}`
+
+      // const webPort = await portfinder.getPortPromise({
+      //   port: 23000,    // minimum port
+      //   stopPort: 23999 // maximum port
+      // })
+      // const webPort = 23000 + (Math.floor(Math.random() * 1000))
+      const remoteCommand = `docker run -it --rm --name ${containerName} ${image}`
+        + ` mysql`
+        + ` -A`
+        + ` -h ${dbhost}`
+        + ` --ssl-mode=DISABLED`
+        + ` -u ${username} -p${password}`
+        + ` ${dbname}`
+      const sshCmd = `ssh -t -p ${localPort} ec2-user@127.0.0.1 ${remoteCommand}`
+      const { exitCode } = await shellCommand(options, sshCmd)
+      console.log(`\n\n`);
+      await closeTunnel(options, sessionId)
+      return resolve(null)
+    }
+  } else if (operation === 'ssh-over-ssm-phpmyadmin') {
+    /*
+     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+     *  Use SSH to run the remote command inside docker, while
+     * port forwarding to the phpmyadmin port.
+     */
+    const { localPort, sessionId } = await startTunnelForSSH(options, instance)
+    if (sessionId === 'error') {
+      // console.error(`\nUnable to set up tunnel.`);
+      return resolve(null)
+    } else {
+      // Tunnel is running. Now start phpmyadmin.
+      const dbhost = `test-juiceconfig.cyazdhriukql.ap-southeast-1.rds.amazonaws.com`
+      const image = `phpmyadmin/phpmyadmin:4.6.4-1`
+      // const webPort = 23000 + (Math.floor(Math.random() * 1000))
+      const webPort = await portfinder.getPortPromise({
+        port: 23000,    // minimum port
+        stopPort: 23999 // maximum port
+      })
+      const dbname = 'adlforms'
+      const containerName = `mysql-${dbname}`
+      console.log(`\n\n`
+        + `          Open your browser at `.green.bold
+        + `http://localhost:${webPort}`.blue.underline
+        + ` to access phpmyadmin`.green.bold
+        + `\n\n`);
+      const remoteCommand = `docker run -it --rm -p ${webPort}:80 -e PMA_HOST=${dbhost} --name ${containerName} ${image}`
+      const sshCmd = `ssh -t -p ${localPort} -L ${webPort}:127.0.0.1:${webPort} ec2-user@127.0.0.1 ${remoteCommand}`
+      const { exitCode } = await shellCommand(options, sshCmd)
+      console.log(`\n\n`);  
+      await closeTunnel(options, sessionId)
+      return resolve(null)
+    }
+  // } else if (operation === 'ssh-ssm') {
+  //   /*
+  //    *  Set up an SSH session over SSM connection
+  //    */
+  //   let command = `aws ssm start-session`
+  //     + ` --region ${options.selectedRegion}`
+  //     + ` --target ${instance.id}`
+  //     + ` --document-name AWS-StartSSHSession`
+  //   console.error(``);
+  //   console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+  //   console.error(``);
+  //   const startTime = Date.now()
+  //   const child = spawn(command, {
+  //     stdio: 'inherit',
+  //     shell: true,
+  //     env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+  //   });
+  //   child.on('close', (code) => {
+  //     console.log(`Session exited with code ${code}.`);
+  //     if ((Date.now() - startTime) < 5000) {
+  //       ssmWikiSuggestion()
+  //     }
+  //     resolve(null)
+  //   });
+  //   return
+
+  // } else if (operation === 'start-phpmyadmin') {
+  //   console.log(`operation is ${operation}`);
+  //   console.log(`zzzzz`, phpmyadminOperation);
+  //   await phpmyadminOperation.startPhpMyAdmin(options, instance)
+  //   return
+  // } else if (operation === 'port-forward-tophpmyadmin') {
+  //   console.log(`operation is ${operation}`);
+  //   await phpmyadminOperation.forwardToPhpMyAdmin(options, instance)
+  //   return
+  // } else if (operation === 'port-forward') {
+  //   /*
+  //    *  Set up a port forwarding
+  //    */
+  //   const localPort = 3308
+  //   const remotePort = 3308
+  //   const command = `aws ssm start-session`
+  //     + ` --region ${options.selectedRegion}`
+  //     + ` --target ${instance.id}`
+  //     + ` --document-name AWS-StartPortForwardingSession`
+  //     + ` --parameters '{"portNumber":["${remotePort}"],"localPortNumber":["${localPort}"]}'`
+  //   console.error(``);
+  //   console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+  //   console.error(``);
+  //   const startTime = Date.now()
+  //   const child = spawn(command, {
+  //     stdio: 'inherit',
+  //     shell: true,
+  //     env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+  //   });
+  //   child.on('close', (code) => {
+  //     console.log(`\nSession closed.`);
+  //     if ((Date.now() - startTime) < 5000) {
+  //       ssmWikiSuggestion()
+  //     }
+  //     resolve(null)
+  //   });
+  //   child.on('exit', (code) => {
+  //     console.log(`\nSession exited.`);
+  //     // if ((Date.now() - startTime) < 5000) {
+  //     //   ssmWikiSuggestion()
+  //     // }
+  //     // resolve(null)
+  //   });
+
+  //   // let tunnelCmd = `ssh -nNT -i ${keyfile} -L ${localPort}:${ip2}:22 ec2-user@${ip1} -L ${httpPort}:${ip2}:${phpmyadminPort} ec2-user@${ip1}      `
+  //   // let loginCmd = `ssh -t -i ${keyfile} -p ${localPort} ec2-user@127.0.0.1       `
+  //   // let mysqlCmd = `ssh -t -i ${keyfile} -p ${localPort} ec2-user@127.0.0.1 docker run -it --rm mysql mysql -h ${dbhost}  -u ${username} -p${password} ${dbname}       `
+  //   // let phpmyadminCmd = `ssh -t -i ${keyfile} -p ${localPort} ec2-user@127.0.0.1 docker run -it --rm -p ${phpmyadminPort}:80 -e PMA_HOST=${dbhost} phpmyadmin/phpmyadmin:4.6.4-1        `
+  //   // docker run -it --rm -p ${phpmyadminPort}:80 -e PMA_HOST=${dbhost} phpmyadmin/phpmyadmin:4.6.4-1        `
+  
+
+  //   setTimeout(async () => {
+  //     console.log(``);
+  //     console.log(``);
+  //     const killQuestion = [
+  //       {
+  //         type: 'confirm',
+  //         name: 'dropConnection',
+  //         message: 'Drop the connection?',
+  //         // choices: Object.keys(environmentsAndClusters).sort(),
+  //         // choices: [
+  
+  //         // ],
+  //       },
+  //     ];
+  //     for ( ; ; ) {
+  //       const killResult = await inquirer.prompt(killQuestion)
+  //       console.log(`killResult=`, killResult);
+  //       if (killResult.dropConnection) {
+  //         child.kill('SIGHUP')
+  //         return
+  //       }
+  //     }
+  //   }, 3000)
+  
+
+
+
+  //   return
   } else if (operation === 'ssh') {
     /*
      *  Login using SSH
@@ -636,7 +841,7 @@ return new Promise(async (resolve, reject) => {
     const comment = remoteCommand
 
     try {
-      let startReply = await startRemoteCommand(options.selectedProfile, instance.id, comment, remoteCommand)
+      let startReply = await runOverSsm.startRemoteCommand(options.selectedProfile, instance.id, comment, remoteCommand)
       // console.log(`startReply=`, startReply);
       if (startReply.remoteStatus !== 'Pending') {
         console.error(`Failed to start remote command`);
@@ -646,7 +851,7 @@ return new Promise(async (resolve, reject) => {
       }
       // console.log(`Started okay`);      
       let remoteCommandId = startReply.remoteCommandId
-      let endReply = await waitForRemoteCommand(options.selectedProfile, remoteCommandId)
+      let endReply = await runOverSsm.waitForRemoteCommand(options.selectedProfile, remoteCommandId)
       // console.log(`endReply=`, endReply);
       if (endReply.remoteStatus !== 'Success') {
         console.error(`Failed to run remote command`);
@@ -662,153 +867,171 @@ return new Promise(async (resolve, reject) => {
       console.error(e);
       return resolve(null)
     }
+  } else {
+    console.log(`Unknown operation ${operation}`);
   }
 })
 
 }//- commandsForInstance
 
 function ssmWikiSuggestion() {
-  console.log(``);
-  console.log(`     `+`Looks like something might have gone wrong. For instructions on how to set up`.red.dim);
-  console.log(`     `+`and debug SSM connections, consult the aws-explorer wiki:`.red.dim);
-  console.log(``);
-  console.log(`     `+`https://github.com/tooltwist/aws-explorer/wiki/Setting-up-and-debugging-AWS-SSM`.blue.underline.dim);
-  console.log(``);
-  console.log(``);
+  console.log(`
+
+      It looks like something might have gone wrong. For instructions on how to set up
+      and debug SSM connections, consult the aws-explorer wiki:
+      `.bold.red
+      + `https://github.com/tooltwist/aws-explorer/wiki/Setting-up-and-debugging-AWS-SSM`.blue.underline
+      + `
+
+      `);
 }
 
-async function startRemoteCommand(profile, instanceId, comment, remoteCommand) {
-  if (debug) console.log(`startRemoteCommand(${instanceId}, ${comment})`);
 
-  const localCommand = `aws ssm send-command`
-  + ` --instance-ids "${instanceId}"`
-  + ` --document-name "AWS-RunShellScript"`
-  + ` --comment "${comment}" `
-  + ` --parameters commands="${remoteCommand}"`
-  + ` --output json`
+async function startTunnelForSSH(options, instance) {
+  // console.log(`startTunnelForSSH()`);
 
-  console.error(``);
-  console.error(`     ` + `AWS_PROFILE=${profile} ${localCommand}`.dim);
-  previouslyCheckedRemoteCommand = ''
+  return new Promise(async (resolve, reject) => {
+    // let localPort = 22000 + (Math.floor(Math.random() * 1000))
+    const localPort = await portfinder.getPortPromise({
+      port: 22000,    // minimum port
+      stopPort: 22999 // maximum port
+    })
 
-  return new Promise((resolve, reject) => {
-    let stdout = ''
-    const child = spawn(localCommand, {
-      // stdio: 'inherit',
-      shell: true,
-      env: { AWS_PROFILE: profile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-    });
-    child.stdout.on('data', (data) => {
-      // console.log(`stdout: ${data}`);
-      stdout += data
-    });
-    child.stderr.on('data', (data) => {
-      console.error(`stderr: ${data}`);
-    });
-    child.on('close', (code) => {
-      // console.log(`Session exited with code ${code}. Goodbye.`);
-  
-      if (code === 0) {
-        // console.log(`OUTPUT IS:\n`, stdout);
-  
-        try {
-          let obj = JSON.parse(stdout)
-// console.log(`reply to starting is`, JSON.stringify(obj, '', 2));
-          const remoteCommandId = obj.Command.CommandId
-          const remoteStatus = obj.Command.Status
-          // console.log(`remoteCommandId=${remoteCommandId}`);
-          console.log(`     ` + `commandId=${remoteCommandId}`.dim);
-          resolve({ remoteCommandId, remoteStatus, raw: stdout })
-        } catch (e) {
-          console.log(`startRemoteCommand: Error parsing output:`, e);
-          reject(e)
-        }
-      } else {
-        reject(new Error(`Local exit status ${code}`))
-      }
-    });
-  })
-}//- startCommand
 
-let previouslyCheckedRemoteCommand = ''
-async function checkRemoteCommand(profile, commandId) {
-  if (debug) console.log(`checkRemoteCommand(${commandId})`);
+    // // AWS has not implemented this in the SDK yet
+    // var params = {
+    //   Target: instance.id,
+    //   DocumentName: 'AWS-StartPortForwardingSession',
+    //   Parameters: {
+    //     portNumber: ["22"],
+    //     localPortNumber: [`${localPort}`],
+    //   }
+    // };
+    // myAWS.ssm().startSession(params, function(err, data) {
+    //   if (err) {
+    //     console.log(`\n\n\n\nSESSION ERROR`);
+    //     console.log(err, err.stack); // an error occurred
+    //     reject(err)
+    //   }
+    //   else {
+    //     console.log(`\n\n\n\nSESSION STARTED`);
+    //     console.log(data);           // successful response
+    //     console.log(`\n\n\n\n\n`);
+    //     resolve({ localPort, sessionId: data.sessionId })
+    //   }
+    // });
 
-  const command = `aws ssm list-command-invocations --command-id ${commandId} --details`
-  if (previouslyCheckedRemoteCommand !== command) {
-    console.log(`     ` + command.dim);
-    console.log(``);
-    previouslyCheckedRemoteCommand = command
-  }
-  return new Promise((resolve, reject) => {
-    let stdout = ''
+
+    let command = `aws ssm start-session`
+      + ` --region ${options.selectedRegion}`
+      + ` --target ${instance.id}`
+      + ` --document-name AWS-StartPortForwardingSession`
+      + ` --parameters '{"portNumber":["22"],"localPortNumber":["${localPort}"]}'`
+    console.error(``);
+    console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+    console.error(``);
+    const startTime = Date.now()
+    // let stdout = ''
     const child = spawn(command, {
       // stdio: 'inherit',
       shell: true,
-      env: { AWS_PROFILE: profile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+      env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
     });
+
+    // Hopefully we'll get a session ID from the output, but we have
+    // a timeout just in case.
+    let timer = setTimeout(() => {
+      console.log(`Timeout while waiting for session ID in output of aws cli command.`);
+      resolve({ localPort, sessionId: 'error' })
+    }, 15000)
     child.stdout.on('data', (data) => {
-      // console.log(`stdout: ${data}`);
-      stdout += data
+      data = data.toString() // Convert buffer to string
+      process.stdout.write(data.blue);
+
+      // Look for a sucessful start
+      // "Starting session with SessionId: philip.callender-0d281b92d275af27a"
+      // "Port 22372 opened for sessionId philip.callender-0b12c1afb02095da3."
+      const match = /Port (\d+) opened for sessionId (.*)./.exec(data);
+      // console.log(`match is `, match);
+      if (match) {
+        clearTimeout(timer)
+        resolve({ localPort: match[1], sessionId: match[2] })
+      }
     });
+
+    // Handle stderr
     child.stderr.on('data', (data) => {
-      console.error(`stderr: ${data}`);
+      data = data.toString() // Convert buffer to string
+      // console.log(data.red);
+      process.stdout.write(data.red);
+      // Look for a connection error - "An error occurred (TargetNotConnected)..."
+      if (data.indexOf('An error occurred (TargetNotConnected)') >= 0) {
+        clearTimeout(timer)
+        ssmWikiSuggestion()
+        resolve({ localPort, sessionId: 'error' })
+      }
     });
     child.on('close', (code) => {
-      // console.log(`Local command exited with code ${code}.`);
-  
-      if (code === 0) {
-        // console.log(`STDOUT IS:\n`, stdout);
-  
-        try {
-          let obj = JSON.parse(stdout)
-          const remoteStatus = obj.CommandInvocations[0].Status
-          const output = obj.CommandInvocations[0].CommandPlugins[0].Output
-          resolve({ localStatus: code, remoteStatus, output, raw: stdout })
-        } catch (e) {
-          console.log(`checkRemoteCommand(${commandId}): Error parsing output:`, e);
-          // resolve({ localStatus: code, remoteStatus: 'Unknown', output: '', raw: stdout })
-          reject(e)
-        }
-      } else {
-        // resolve({ localStatus: code, remoteStatus: 'Unknown', output: '', raw: stdout })
-        reject(new Error(`Exit status ${code}`))
-        // resolve({ commandId, status: 'Error', output: '', code, raw: `Exit status: ${code}`})
+      console.log(`Tunnel exited with code ${code}.`);
+      // if ((Date.now() - startTime) < 5000) {
+      //   ssmWikiSuggestion()
+      // }
+    });
+  })
+}// startTunnelForSSH
+
+async function closeTunnel(options, sessionId) {
+  // console.log(`closeTunnel()`);
+  return new Promise((resolve, reject) => {
+
+    var params = {
+      SessionId: sessionId
+    };
+    myAWS.ssm().terminateSession(params, function(err, data) {
+      if (err) {
+        console.log(`terminateSession error:`);
+        console.log(err, err.stack); // an error occurred
+        reject(err)
+      }
+      else {
+        // console.log(data);           // successful response
+        resolve(null)
       }
     });
   })
-}//- startCommand
+}
 
-async function waitForRemoteCommand(profile, remoteCommandId) {
-  if (debug) console.log(`waitForRemoteCommand()`);
 
-  let result = await checkRemoteCommand(profile, remoteCommandId)
-  // console.log(`remoteStatus=${result.remoteStatus}`);
-  if (result.remoteStatus != 'InProgress') {
-    return result
-  }
-  // if (result.remoteStatus == 'Success') {
-  //   return result
-  // } else if (result.remoteStatus = 'Failed') {
-  //   setTimeout(()=>{// time for stderr to be shown
-  //     throw new Error(`Remote command failed`)
-  //   }, 500)
-  // } else if (result.remoteStatus != 'InProgress') {
-  //   console.log(`Don't know how to interpret result:\n`, result);
-  //   setTimeout(()=>{// time for stderr to be shown
-  //     throw new Error(`Unknown status`)
-  //   }, 500)
-  // }
+async function shellCommand(options, command) {
+  return new Promise((resolve, reject) => {
 
-  // Wait and try again
-  if (debug) console.log(`waiting...`);
+    console.error(``);
+    console.error(`     ` + `${command}`.dim)
+    console.error(``);
+    // const sshStartTime = Date.now()
+    const child = spawn(command, {
+      stdio: 'inherit',
+      shell: true,
+      env: { ...process.env, AWS_PROFILE: options.selectedProfile },
+    });
+    child.on('close', (code) => {
+      console.log(`Command exited with code ${code}.`);
+      // if ((Date.now() - sshStartTime) < 5000) {
+      //   ssmWikiSuggestion()
+      // }
+      resolve({ exitCode: code })
+    });
+  })//- promise
+}
+
+
+async function sleep(ms) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      waitForRemoteCommand(profile, remoteCommandId).then(resolve).catch(reject)
-    }, 500)
+      resolve()
+    }, ms)
   })
-}//- waitForRemoteCommand
-
+}
 
 
 

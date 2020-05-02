@@ -23,6 +23,7 @@
     "express": "^4.16.4",
     "nuxt": "^2.0.0",
     "nuxt-buefy": "^0.3.2",
+    "portfinder": "^1.0.26",
     "properties-reader": "^2.0.0",
     "vis": "^4.21.0-EOL"
   },

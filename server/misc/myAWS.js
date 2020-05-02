@@ -14,6 +14,7 @@ let elbv2 = null
 let autoscaling = null
 let ecs = null
 let rds = null
+let ssm = null
 
 async function downloadRegions () {
   // console.log('  downloadRegions()')
@@ -122,6 +123,10 @@ function checkAwsRegion (region) {
       apiVersion: '2014-10-31',
       region: currentRegion
     })
+    ssm = new AWS.SSM({
+      apiVersion: '2014-11-06',
+      region: currentRegion
+    });
   }
 
   return currentRegion
@@ -141,6 +146,10 @@ module.exports.ecs = function () {
 
 module.exports.rds = function () {
   return rds
+}
+
+module.exports.ssm = function () {
+  return ssm
 }
 
 module.exports.elbv2 = function () {
