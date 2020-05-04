@@ -36,12 +36,12 @@ function clusterReport() {
       if (childKey.startsWith(types.TARGETGRP)) {
         console.log(`  ${childKey}`);
 
-        let tg = graph.nodeWithKey(childKey);
+        let tg = graph.findNodeWithKey(childKey);
         tg.children.forEach(childKey => {
           if (childKey.startsWith(types.SERVICE)) {
             console.log(`    ${childKey}`);
 
-            let service = graph.nodeWithKey(childKey);
+            let service = graph.findNodeWithKey(childKey);
             service.parents.forEach(key => {
               if (key.startsWith(types.CLUSTER)) {
                 console.log(`      ${key}`);

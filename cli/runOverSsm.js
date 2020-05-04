@@ -1,6 +1,6 @@
 const { exec, spawn } = require('child_process');
 
-const DEBUG = true
+const DEBUG = false
 
 let previouslyCheckedRemoteCommand = ''
 

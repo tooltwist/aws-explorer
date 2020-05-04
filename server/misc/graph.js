@@ -143,7 +143,7 @@ function keyForNode(type, id) {
   return type + '::' + id
 }
 
-function nodeWithKey(key) {
+function findNodeWithKey(key) {
   let node = nodeIndex[key]
   return node
 }
@@ -295,7 +295,7 @@ function environments() {
 // Functions
 // module.exports.downloadRegion = downloadRegion;
 module.exports.findNode = findNode;
-module.exports.nodeWithKey = nodeWithKey;
+module.exports.findNodeWithKey = findNodeWithKey;
 module.exports.dumpAll = dumpAll;
 module.exports.keyForNode = keyForNode;
 module.exports.reset = reset;

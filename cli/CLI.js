@@ -219,7 +219,7 @@ async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
   // Parse the arguments
   program.parse(process.argv);
 
-  console.log(`haveCommand=${haveCommand}`)
+  // console.log(`haveCommand=${haveCommand}`)
 
   if (!haveCommand) {
     // Have some unknown command

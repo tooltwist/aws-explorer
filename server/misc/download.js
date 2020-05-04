@@ -856,7 +856,7 @@ async function downloadClusters() {
                       if (taskDef.startedBy) {
                         // console.log('checking services');
                         cluster.children.forEach(function(childKey) {
-                          let child = graph.nodeWithKey(childKey);
+                          let child = graph.findNodeWithKey(childKey);
                           if (!child) {
                             console.log(`Unknown cluster child ${childKey}`);
                           }
@@ -953,7 +953,7 @@ async function downloadClusters() {
 //                   if (taskDef.startedBy) {
 //                     // console.log('checking services');
 //                     cluster.children.forEach(function(childKey) {
-//                       let child = graph.nodeWithKey(childKey);
+//                       let child = graph.findNodeWithKey(childKey);
 //                       if (!child) {
 //                         console.log(`Unknown cluster child ${childKey}`);
 //                       }

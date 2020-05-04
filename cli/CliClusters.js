@@ -44,7 +44,7 @@ function clusterReport() {
       if (childKey.startsWith(types.SERVICE)) {
         console.log(`  ${childKey}`);
 
-        let service = graph.nodeWithKey(childKey);
+        let service = graph.findNodeWithKey(childKey);
         service.children.forEach(childKey => {
           if (childKey.startsWith(types.TASK)) {
             console.log(`    ${childKey}`);
@@ -56,7 +56,7 @@ function clusterReport() {
           if (key.startsWith(types.TARGETGRP)) {
             console.log(`    ${key}`);
 
-            let tg = graph.nodeWithKey(key);
+            let tg = graph.findNodeWithKey(key);
             tg.parents.forEach(key => {
               if (key.startsWith(types.ALB)) {
                 console.log(`      ${key}`);

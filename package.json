@@ -21,6 +21,7 @@
     "cross-env": "^5.2.0",
     "exec-sh": "^0.3.4",
     "express": "^4.16.4",
+    "moment": "^2.25.3",
     "nuxt": "^2.0.0",
     "nuxt-buefy": "^0.3.2",
     "portfinder": "^1.0.26",
