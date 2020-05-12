@@ -16,23 +16,13 @@ Parameters:
 
   EnvironmentName:
     Type: String
-#    Default: "juicetst"
 
   ApplicationName:
     Type: String
-#    Default: "juice1"
-
-#  Cluster:
-#    Type: String
-#    Default: "${Prefix}juicetst"
 
   DesiredCount:
     Type: Number
     Default: 1
-
-#  TargetGroup:
-#    Type: String
-##    Default: "arn:aws:elasticloadbalancing:ap-southeast-1:278087993445:targetgroup/juicetst-juice2/7b9f85cf93f00cbd"
 
   Memory:
     Type: Number
@@ -50,11 +40,6 @@ Parameters:
   Tag:
     Type: String
     Description: "A hash or tag in the ECR repository"
-#    Default: "pig1"
-
-#  SecretArn:
-#    Type: String
-##    Default: "arn:aws:secretsmanager:ap-southeast-1:278087993445:secret:juicetst/juice1-MLLqYN"
 
 
 Metadata: 
@@ -91,7 +76,7 @@ Metadata:
         default: "Version / Docker tag / Github hash"
 
 Resources:
-# Example YAML at https://serverless.com/framework/docs/providers/aws/guide/iam/
+  # Example YAML at https://serverless.com/framework/docs/providers/aws/guide/iam/
   # NOTE: This refers to the “ECS service”, not “a Service in ECS”. It allows ECS
   # to register load balancers, etc.
   #
@@ -112,16 +97,6 @@ Resources:
                 Service: ecs.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
-      #Policies:
-      #  - PolicyName: !Sub "${Prefix}access-secrets-${EnvironmentName}-${ApplicationName}"
-      #    PolicyDocument:
-      #      Statement:
-      #          - Action: secretsmanager:GetSecretValue
-      #            Effect: Allow
-      #            Resource: "*"
-# Not sure why, but the specific ARN does not work, even if manually added to the Rule.
-#                  Resource: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-Secret"}}
-
 
   #
   # This is the role used by the actual application container.
@@ -141,28 +116,18 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
-#ZZZZZ Tighten resources. Which ssm?
-#                      "Resource": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
-#                      "Resource": "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
-#                          "ssm:GetParameter",
-#                      "Resource": "*"
         - PolicyName: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}-access-config"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: secretsmanager:GetSecretValue
-#                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
-#                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Prefix}${EnvironmentName}-${ApplicationName}"
                 Resource:
                   'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-Secret'
 
               - Effect: Allow
                 Action: ssm:GetParameters
-#                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
-#                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Prefix}${EnvironmentName}-${ApplicationName}"
-                Resource:
-                  'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-ParameterStore'
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Prefix}${EnvironmentName}-${ApplicationName}"
 
   Service:
     Type: AWS::ECS::Service
@@ -175,10 +140,7 @@ Resources:
       LoadBalancers:
         - ContainerName: !Sub "${ApplicationName}App"
           ContainerPort: !Ref Port
-#          TargetGroupArn: !Ref TargetGroup
           TargetGroupArn: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-TargetGroup"}}
-
-#          TargetGroupArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:targetgroup/${EnvironmentName}-${ApplicationName}/94a54688d97e9c03"
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition

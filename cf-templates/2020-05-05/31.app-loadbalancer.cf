@@ -220,12 +220,6 @@ Outputs:
     Export:
       Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-Secret
 
-  ParameterStoreName:
-    Description: Configuration for this application
-    Value: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
-    Export:
-      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-ParameterStoreName
-
   ParameterStore:
     Description: Configuration for this application
     Value: !Ref ParameterStore
