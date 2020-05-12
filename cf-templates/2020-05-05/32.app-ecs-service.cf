@@ -1,0 +1,243 @@
+#
+#       This Cloudformation script defines an ECS Service.
+#
+#       If a CodePipeline builds Docker images for this service, it will
+#       overwrite the task's Image specification in its Deploy step.
+#
+#       Based on:
+#       https://github.com/awslabs/ecs-refarch-continuous-deployment/blob/master/templates/service.yaml
+#
+Parameters:
+
+  Prefix:
+    Description: "Prefix for AWS resource names"
+    Type: String
+    Default: "j-"
+
+  EnvironmentName:
+    Type: String
+#    Default: "juicetst"
+
+  ApplicationName:
+    Type: String
+#    Default: "juice1"
+
+#  Cluster:
+#    Type: String
+#    Default: "${Prefix}juicetst"
+
+  DesiredCount:
+    Type: Number
+    Default: 1
+
+#  TargetGroup:
+#    Type: String
+##    Default: "arn:aws:elasticloadbalancing:ap-southeast-1:278087993445:targetgroup/juicetst-juice2/7b9f85cf93f00cbd"
+
+  Memory:
+    Type: Number
+    Default: 256
+
+  Port:
+    Type: Number
+    Default: 3000
+
+  DockerImageRepository:
+    Description: "The ECR repository where Docker images are stored (e.g. tooltwist-projectname)"
+    Type: String
+    Default: "tooltwist-xxxxxxxxxx"
+
+  Tag:
+    Type: String
+    Description: "A hash or tag in the ECR repository"
+#    Default: "pig1"
+
+#  SecretArn:
+#    Type: String
+##    Default: "arn:aws:secretsmanager:ap-southeast-1:278087993445:secret:juicetst/juice1-MLLqYN"
+
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Name this stack: <environment>-<application>-service"
+        Parameters: 
+          - Prefix
+          - EnvironmentName
+          - ApplicationName
+      - 
+        Label: 
+          default: "Image to deploy"
+        Parameters: 
+          - DockerImageRepository
+          - Tag
+      - 
+        Label: 
+          default: "Configuration"
+        Parameters: 
+          - DesiredCount
+          - Memory
+          - Port
+    ParameterLabels:
+      EnvironmentName:
+        default: "Environment name"
+      ApplicationName:
+        default: "Application name"
+      DockerImageRepository:
+        default: "Repository name"
+      Tag:
+        default: "Version / Docker tag / Github hash"
+
+Resources:
+# Example YAML at https://serverless.com/framework/docs/providers/aws/guide/iam/
+  # NOTE: This refers to the “ECS service”, not “a Service in ECS”. It allows ECS
+  # to register load balancers, etc.
+  #
+  # From https://dillonbeliveau.com/2018/12/08/aws-ecs-iam-roles-demystified.html
+  # This is a role used by the ECS service itself to perform functions such as managing
+  # load balancer configuration, doing service discovery, as well as attaching network
+  # interfaces when using the `awsvpc` network mode. There is only one of these per account.
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-ECSServiceRole'
+      AssumeRolePolicyDocument:
+        Statement:
+            - Action: sts:AssumeRole
+              Effect: Allow
+              Principal:
+                Service: ecs.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
+      #Policies:
+      #  - PolicyName: !Sub "${Prefix}access-secrets-${EnvironmentName}-${ApplicationName}"
+      #    PolicyDocument:
+      #      Statement:
+      #          - Action: secretsmanager:GetSecretValue
+      #            Effect: Allow
+      #            Resource: "*"
+# Not sure why, but the specific ARN does not work, even if manually added to the Rule.
+#                  Resource: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-Secret"}}
+
+
+  #
+  # This is the role used by the actual application container.
+  # Specifically, it needs to be able to access secrets manager and parameters.
+  #
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-ECSTaskExecutionRole'
+      AssumeRolePolicyDocument:
+        Statement:
+            - Action: sts:AssumeRole
+              Effect: Allow
+              Principal:
+                Service: ecs-tasks.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+#ZZZZZ Tighten resources. Which ssm?
+#                      "Resource": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+#                      "Resource": "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+#                          "ssm:GetParameter",
+#                      "Resource": "*"
+        - PolicyName: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}-access-config"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+#                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+#                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Prefix}${EnvironmentName}-${ApplicationName}"
+                Resource:
+                  'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-Secret'
+
+              - Effect: Allow
+                Action: ssm:GetParameters
+#                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+#                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Prefix}${EnvironmentName}-${ApplicationName}"
+                Resource:
+                  'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-ParameterStore'
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+      Cluster: !Sub "${Prefix}${EnvironmentName}"
+      Role: !Ref ECSServiceRole
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - ContainerName: !Sub "${ApplicationName}App"
+          ContainerPort: !Ref Port
+#          TargetGroupArn: !Ref TargetGroup
+          TargetGroupArn: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-TargetGroup"}}
+
+#          TargetGroupArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:targetgroup/${EnvironmentName}-${ApplicationName}/94a54688d97e9c03"
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${EnvironmentName}-${ApplicationName}"
+
+      # Permissions to run task, and pull secrets
+      ExecutionRoleArn: !Ref ECSTaskExecutionRole
+
+      # From https://dillonbeliveau.com/2018/12/08/aws-ecs-iam-roles-demystified.html
+      # Not to be confused with the Task Execution Role, the Task Role is used when code running
+      # inside the container needs access to AWS resources. This is equivalent to the instance
+      # profile if the code was running directly on an EC2 instance.
+      #
+      #TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: !Sub "${ApplicationName}App"
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DockerImageRepository}:${Tag}
+          Essential: true
+          Memory: !Sub "${Memory}"
+          PortMappings:
+            - ContainerPort: !Ref Port
+              Protocol: tcp
+          Environment:
+            - Name: JUICE_CONFIG
+              Value: !Sub "secrets_manager:::ap-southeast-1:::${Prefix}${EnvironmentName}-${ApplicationName}"
+#              Value: !Sub "environment:::SECRETS_MANAGER_CONFIG"
+#              Value: !Sub "environment:::PARAMETER_STORE_CONFIG"
+            - Name: Juice_JUNK
+              Value: 1234
+            - Name: PORT
+              Value: !Ref Port
+            - Name: ALB_HOST
+              Value: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-ServiceHost"}}
+          Secrets:
+            - Name: "PARAMETER_STORE_CONFIG"
+              ValueFrom: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Prefix}${EnvironmentName}-${ApplicationName}"
+            - Name: "SECRETS_MANAGER_CONFIG"
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Prefix}${EnvironmentName}-${ApplicationName}"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              'awslogs-region': !Ref 'AWS::Region'
+              'awslogs-group': !Sub "${Prefix}${EnvironmentName}-${ApplicationName}-logs"
+              'awslogs-stream-prefix': !Sub "${ApplicationName}"
+
+Outputs:
+
+  # This next output serves no purpose, than to check the Prefix/EnvironmentName/ApplicationName
+  # combination is valid. It does this by checking for an export from the
+  # previously run load balancer creation stack.
+  LoadBalancerPreviouslyCreated:
+    Value: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-LoadBalancerCreated"}}
+  #
+  # This next export allows subsequent stacks can know that they are setting
+  # up a Prefix/Environmentname/ApplicationName that has a network already.
+  #
+  ServiceCreated:
+    Description: Export so other stacks can check this has been run.
+    Value: "true"
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-ServiceCreated

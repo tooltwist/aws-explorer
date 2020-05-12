@@ -1,0 +1,260 @@
+Parameters:
+
+  Prefix:
+    Description: "Prefix for AWS resource names"
+    Type: String
+    Default: "j-"
+
+  EnvironmentName:
+    Description: "Environment name (Note: this MUST match the previously run stacks)"
+    Type: String
+
+  ApplicationName:
+    Type: String
+
+  CostCode:
+    Description: "Who will be billed for this application?"
+    Type: String
+    Default: "0000"
+
+  HealthCheckPath:
+    Type: String
+    Default: "/"
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Name this stack: <environment>-<application>-loadbalancer"
+        Parameters: 
+          - Prefix
+          - EnvironmentName
+          - ApplicationName
+          - HealthCheckPath
+          - CostCode
+    ParameterLabels:
+      EnvironmentName:
+        default: "Environment name"
+      ApplicationName:
+        default: "Application name"
+      HealthCheckPath:
+        default: "Healthcheck path (e.g. /api/2.0/healthcheck)"
+      #CostCode:
+      #  default: "Use to work out billing"
+
+
+Resources:
+#  AssetsS3:
+#    Type: "AWS::S3::Bucket"
+#    Properties:
+#      BucketName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-assets
+
+  LogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-logs
+
+  Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+      Description: !Sub 'Configuration for ${EnvironmentName}/${ApplicationName}'
+      SecretString: '{"name": "value"}'
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: Application
+          Value: !Sub ${ApplicationName}
+        - Key: Name
+          Value: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}
+        - Key: CostCode
+          Value: !Ref CostCode
+
+  ParameterStore:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      #AllowedPattern: String
+      Description: !Sub 'Configuration for ${EnvironmentName}/${ApplicationName}'
+      Name: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+      #Policies: String
+      #Tags: Json
+      #Tier: Standard
+      Type: String
+      Value: '{"name": "value"}'
+
+  LoadBalancerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-alb
+      GroupDescription: !Sub Controls who can access the load balancer
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: "TCP"
+          FromPort: 80
+          ToPort: 80
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: "TCP"
+          FromPort: 443
+          ToPort: 443
+      VpcId:
+          'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-VPCID'
+      Tags:
+      - Key: Environment
+        Value: !Sub ${EnvironmentName}
+      - Key: Application
+        Value: !Sub ${ApplicationName}
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${EnvironmentName}-${ApplicationName}
+      Subnets:
+        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-PublicSubnet1'
+        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-PublicSubnet2'
+      SecurityGroups:
+        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-LoadBalancerSecurityGroup'
+      Tags:
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: Application
+            Value: !Sub ${ApplicationName}
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-${ApplicationName}
+          - Key: CostCode
+            Value: !Ref CostCode
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: LoadBalancer
+    Properties:
+      Name: !Sub ${EnvironmentName}-${ApplicationName}
+      VpcId:
+          'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-VPCID'
+      Port: 80
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      Tags:
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: Application
+            Value: !Sub ${ApplicationName}
+          - Key: Name
+            Value: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}
+          - Key: CostCode
+            Value: !Ref CostCode
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+
+Outputs:
+  HealthCheckPath:
+    Description: HealthCheck Path
+    Value: !Ref HealthCheckPath
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-HealthCheckPath
+
+  TargetGroup:
+    Description: Target Group
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-TargetGroup
+
+  ServiceUrl:
+    Description: Application URL
+    Value: !Sub http://${LoadBalancer.DNSName}
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-ServiceUrl
+
+  ServiceHost:
+    Description: Application URL
+    Value: !Sub ${LoadBalancer.DNSName}
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-ServiceHost
+
+  HealthcheckUrl:
+    Description: HealthCheck URL
+    Value: !Sub http://${LoadBalancer.DNSName}${HealthCheckPath}
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-HealthCheckUrl
+
+  SecretName:
+    Description: Configuration for this application
+    Value: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-SecretName
+
+  Secret:
+    Description: Configuration for this application
+    Value: !Ref Secret
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-Secret
+
+  ParameterStoreName:
+    Description: Configuration for this application
+    Value: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-ParameterStoreName
+
+  ParameterStore:
+    Description: Configuration for this application
+    Value: !Ref ParameterStore
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-ParameterStore
+
+  LogGroup:
+    Description: Application LogGroup
+    Value: !Ref LogGroup
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-LogGroup
+
+  LogPage:
+    Description: Application LogGroup page
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logStream:group=${Prefix}${EnvironmentName}-${ApplicationName}-logs"
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-LogPage
+
+  # This next output serves no purpose, than to check the Prefix/EnvironmentName
+  # combination is valid. It does this by checking for an export from the
+  # previously run network creation stack.
+  NetworkPreviouslyCreated:
+    Value: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-NetworkCreated"}}
+  #
+  # This next export allows subsequent stacks can know that they
+  # are setting up a Prefix/Environment that has a network already.
+  #
+  LoadBalancerCreated:
+    Description: Export so other stacks can check this has been run.
+    Value: "true"
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-LoadBalancerCreated
