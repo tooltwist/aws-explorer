@@ -35,7 +35,7 @@ async function CliRemotePrompted_2020_04_01(options) {
   // Load the profiles
   const homedir = require('os').homedir()
   const awsCredentialsFile = propertiesReader(`${homedir}/.aws/credentials`);
-  const profileHash = { }
+  const profileHash = {}
   awsCredentialsFile.each(propertyPath => {
     // console.log(`-> ${propertyPath}`);
     let pos = propertyPath.indexOf('.')
@@ -50,13 +50,13 @@ async function CliRemotePrompted_2020_04_01(options) {
     //ZZZZ
     options.selectedProfile = options.profile
     // console.log(`Profile specified on command line: ${options.selectedProfile}`);
-    var credentials = new AWS.SharedIniFileCredentials({profile: options.selectedProfile});
+    var credentials = new AWS.SharedIniFileCredentials({ profile: options.selectedProfile });
     AWS.config.credentials = credentials;
   } else {
     // Prompt for the profile
     let defaultProfile = ''
     if (process.env['AWS_PROFILE']) {
-      console.log(`Use environment variable AWS_PROFILE as default profile`);
+      console.log(`Using environment variable AWS_PROFILE as default profile`);
       defaultProfile = process.env['AWS_PROFILE']
     }
 
@@ -79,7 +79,7 @@ async function CliRemotePrompted_2020_04_01(options) {
     options.selectedProfile = selection.profile
     // console.log(`options.selectedProfile is ${options.selectedProfile}\n`);
 
-    var credentials = new AWS.SharedIniFileCredentials({profile: options.selectedProfile});
+    var credentials = new AWS.SharedIniFileCredentials({ profile: options.selectedProfile });
     AWS.config.credentials = credentials;
   }
 
@@ -99,7 +99,7 @@ async function CliRemotePrompted_2020_04_01(options) {
     let defaultRegion = ''
     let defaultRegionDesc = ''
     if (process.env['AE_REGION']) {
-      console.log(`Use environment variable AE_REGION as default profile`);
+      console.log(`Using environment variable AE_REGION as default profile`);
       defaultRegion = process.env['AE_REGION']
       defaultRegionDesc = ` [${defaultRegion}]`
     }
@@ -108,7 +108,7 @@ async function CliRemotePrompted_2020_04_01(options) {
         type: 'list',
         name: 'region',
         message: `AWS region [${defaultRegionDesc}]?`,
-        choices: [ ],
+        choices: [],
         default: defaultRegion,
         filter: function (val) {
           return val.toLowerCase();
@@ -132,7 +132,7 @@ async function CliRemotePrompted_2020_04_01(options) {
   const regionName = capitalize(myAWS.regionDescription(options.selectedRegion))
 
 
-  
+
   // Get a list of things people might like to connect to
   console.error(`Gathering information...`);
   graph.reset();
@@ -149,9 +149,9 @@ async function CliRemotePrompted_2020_04_01(options) {
   let dlist = graph.nodes().filter(node => (node.type === types.DATABASE))
   let slist = graph.nodes().filter(node => (node.type === types.SERVICE))
   let tlist = graph.nodes().filter(node => (node.type === types.TASK))
-  // console.log(`clusters=`, clist); 
-  // console.log(`instances=`, list); 
-  // console.log(`databases=`, dlist); 
+  // console.log(`clusters=`, clist);
+  // console.log(`instances=`, list);
+  // console.log(`databases=`, dlist);
   // console.log(`services=`, slist);
   // console.log(`tasks=`, tlist);
   tlist.forEach(task => {
@@ -190,7 +190,7 @@ async function CliRemotePrompted_2020_04_01(options) {
     let name
     let description
     let environment
-// console.log(`tags:`, instance.data.Tags);
+    // console.log(`tags:`, instance.data.Tags);
     instance.data.Tags.forEach(tag => {
       if (tag.Key == 'Name') { name = tag.Value };
       if (tag.Key == 'Description') { description = tag.Value };
@@ -256,7 +256,7 @@ async function CliRemotePrompted_2020_04_01(options) {
       type: 'list',
       name: 'connectionOption',
       message: 'What would you like to connect to?',
-      choices: [ ],
+      choices: [],
     },
   ];
   for (let label in connectionOptions) {
@@ -271,7 +271,7 @@ async function CliRemotePrompted_2020_04_01(options) {
   connectQuestion[0].choices.push({ name: 'quit'.bold, value: 'quit' })
   connectQuestion[0].pageSize = connectQuestion[0].choices.length + 2
 
-  for ( ; ; ) {
+  for (; ;) {
     // Choose what to connect to
     const connectionResult = await inquirer.prompt(connectQuestion)
     options.selectedConnectionOption = connectionResult.connectionOption
@@ -294,7 +294,7 @@ async function selectInstanceFromConnection(options) {
   for (let instanceId in options.selectedConnectionOption.instanceIndex) {
     numInstances++
     if (firstInstanceReference === null) {
-    firstInstanceReference = options.selectedConnectionOption.instanceIndex[instanceId]
+      firstInstanceReference = options.selectedConnectionOption.instanceIndex[instanceId]
     }
   }
 
@@ -307,15 +307,14 @@ async function selectInstanceFromConnection(options) {
     options.selectedDatabase = firstInstanceReference.database
     options.selectedCache = firstInstanceReference.cache
 
-    for ( ; ; ) {
+    for (; ;) {
       let reply = await commandsForInstance(options)
       if (reply === 'back') {
         return 'back'
       }
     }
   }
-  else
-  {
+  else {
     /*
      *  Multiple instances - select one.
      */
@@ -324,7 +323,7 @@ async function selectInstanceFromConnection(options) {
         type: 'list',
         name: 'instanceReference',
         message: 'Instance?',
-        choices: [ ],
+        choices: [],
       },
     ];
     for (let instanceId in options.selectedConnectionOption.instanceIndex) {
@@ -359,7 +358,7 @@ async function selectInstanceFromConnection(options) {
     instanceQuestion[0].pageSize = instanceQuestion[0].choices.length + 2
 
     // Ask what to do with the instance
-    for ( ; ; ) {
+    for (; ;) {
       const instanceResult = await inquirer.prompt(instanceQuestion)
       const instanceReference = instanceResult.instanceReference
       // console.log(`instanceReference:`, instanceReference);
@@ -386,370 +385,746 @@ async function selectInstanceFromConnection(options) {
 
 
 async function commandsForInstance(options) {
-  return new Promise(async (resolve, reject) => {
-    const instance = options.selectedInstance
-    const keyName = instance.data.KeyName
-    const publicIpAddress = instance.data.PublicIpAddress
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
 
-    // console.log(`instance is`, instance);
-    // console.log(`State.Code:`, instance.data.State.Code);
-    // console.log(`State.Name:`, instance.data.State.Name);
+        const instance = options.selectedInstance
+        const keyName = instance.data.KeyName
+        const publicIpAddress = instance.data.PublicIpAddress
 
-    // Display instance details.
-    // console.log(`instance=`, instance);
-    console.log(`\n\n  Instance ${instance.id}`.bold.blue)
-    instance.data.Tags.forEach(tag => {
-      if (tag.Key === 'Name') {
-        console.log(`         Name: ${tag.Value}`.blue);
-      } else if (tag.Key === 'Environment') {
-        console.log(`  Environment: ${tag.Value}`.blue);
-      }
-    })
-    // if (instance.data.KeyName) {
-    //   console.log(`     Key name: ${instance.data.KeyName}`.blue);
-    // }
-    if (options.selectedTask) {
-      console.log(`         Task: ${options.selectedTask.id}`.blue);
-    }
-    if (options.selectedDatabase) {
-      console.log(`db:`, options.selectedDatabase);
-      console.log(`     Database: ${options.selectedDatabase.id}`.blue);
-    }
-    console.log(``);
+        // console.log(`instance is`, instance);
+        // console.log(`State.Code:`, instance.data.State.Code);
+        // console.log(`State.Name:`, instance.data.State.Name);
 
-    // Ask what they'd like to do.
-    const opQuestion = [
-      {
-        type: 'list',
-        name: 'operation',
-        message: 'What would you like to do?',
-        choices: [ ],
-      },
-    ];
-    opQuestion[0].choices.push({ name: ' SSH over SSM - '+'login'.red, value: 'ssh-over-ssm-login'})
-    opQuestion[0].choices.push({ name: ' SSH over SSM - '+'docker ps'.red, value: 'ssh-over-ssm-docker-ps'})
-    if (options.selectedDatabase) {
-      opQuestion[0].choices.push({ name: ' SSH over SSM - '+'mysql'.red, value: 'ssh-over-ssm-mysql'})
-      opQuestion[0].choices.push({ name: ' SSH over SSM - '+'phpmyadmin'.red, value: 'ssh-over-ssm-phpmyadmin'})
-    }
-    if (options.selectedTask) {
-      // const startTime = moment(options.selectedTask.data.startedAt).fromNow(true)
-      // options.selectedTask.data.containers.forEach(container => {
-      //   const containerId = container.runtimeId
-      //   const shortId = shortContainerId()
-      //   opQuestion[0].choices.push({ name: ' SSH over SSM - '+`connect to container (up ${startTime})`.red, value: 'ssh-over-ssm-task' })
-      // })
-      // const containerId = options.selectedTask.data.containers[0].runtimeId
-      // const shortId = shortContainerId(containerId)
-      const startTime = moment(options.selectedTask.data.startedAt).fromNow(true)
-      opQuestion[0].choices.push({ name: ' SSH over SSM - '+`${options.selectedTask.id} (up ${startTime})`.red, value: 'ssh-over-ssm-task' })
-  }
-    // opQuestion[0].choices.push({ name: 'SSH over SSM - '+'redis'.red, value: 'ssh-over-ssm-redis'})
-    opQuestion[0].choices.push({ name: ' SSH over SSM - '+'open tunnel'.red, value: 'ssh-over-ssm-tunnel'})
-    if (keyName && publicIpAddress) {
-      opQuestion[0].choices.push({ name: ' SSH - login'.grey, value: 'ssh'})
-    }
-    opQuestion[0].choices.push({ name: ' SSM session - '+'login'.green, value: 'ssm'})
-    opQuestion[0].choices.push({ name: ' SSM session - '+'docker ps'.green, value: 'docker-ps'})
-    opQuestion[0].choices.push({ name: 'back'.bold, value: 'back'})
-    opQuestion[0].choices.push({ name: 'quit'.bold, value: 'quit'})
-    opQuestion[0].pageSize = opQuestion[0].choices.length + 2
-    const opResult = await inquirer.prompt(opQuestion)
-    const operation = opResult.operation
-
-    // Now run the selected operation
-    if (operation === 'quit') {
-      process.exit(0)
-    } else if (operation === 'back') {
-      return resolve('back')
-    } else if (operation === 'ssm') {
-      let command = `aws ssm start-session --region ${options.selectedRegion} --target ${instance.id}`
-      console.error(``);
-      console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
-      console.error(``);
-      const startTime = Date.now()
-      const child = spawn(command, {
-        stdio: 'inherit',
-        shell: true,
-        env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-      });
-      child.on('close', (code) => {
-        console.log(`Session exited with code ${code}.`.ssm);
-        if ((Date.now() - startTime) < 5000) {
-          ssmWikiSuggestion()
-        }
-        resolve(null)
-      });
-      return
-    } else if (operation === 'ssh-over-ssm-login') {
-      /*
-      *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
-      *  This will allow SSH commands to be run.
-      */
-      const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
-      if (sessionId === 'error') {
-        // console.error(`\nUnable to set up tunnel.`);
-        return resolve(null)
-      } else {
-        // Login
-        let sshCmd = await sshCommand(instance, keyfile, localPort, '', '')
-        const { exitCode } = await shellCommand(options, sshCmd)
-        await closeTunnel(options, sessionId)
-        console.log(`\n\n`);
-        return resolve(null)
-      }
-    } else if (operation === 'ssh-over-ssm-docker-ps') {
-      /*
-      *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
-      *  This will allow SSH commands to be run.
-      */
-      const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
-      if (sessionId === 'error') {
-        return resolve(null)
-      } else {
-        // Do the login.
-        const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 docker ps`
-        const { exitCode } = await shellCommand(options, sshCmd)
-        console.log(`\n\n`);
-        await closeTunnel(options, sessionId)
-        console.log(`\n\n`);
-        return resolve(null)
-      }
-    } else if (operation === 'ssh-over-ssm-mysql') {
-      /*
-      *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
-      *  Then SSH is used to run mysql inside docker.
-      */
-      const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
-      if (sessionId === 'error') {
-        return resolve(null)
-      } else {
-        // Tunnel is running. Now start mysql.
-        // console.log(`database is`, options.selectedDatabase);
-        const dbhost = options.selectedDatabase.data.Endpoint.Address
-        const dbQuestions = [
-          {
-            type: 'input',
-            name: 'dbname',
-            message: 'Database name?',
-          },
-          {
-            type: 'input',
-            name: 'username',
-            message: 'User name?',
-            default: 'admin'
-          },
-          {
-            type: 'password',
-            name: 'password',
-            message: 'Password?',
-          },
-        ];
-        const dbResult = await inquirer.prompt(dbQuestions)
-
-        const dbname = dbResult.dbname
-        const username = dbResult.username
-        const password = dbResult.password
-        const containerName = `mysql-${dbname}`
-        const image = `mysql`
-        const remoteCommand = `docker run -it --rm --name ${containerName} ${image}`
-          + ` mysql`
-          + ` -A`
-          + ` -h ${dbhost}`
-          + ` --ssl-mode=DISABLED`
-          + ` -u ${username} -p${password}`
-          + ` ${dbname}`
-        const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 ${remoteCommand}`
-        const { exitCode } = await shellCommand(options, sshCmd)
-        await closeTunnel(options, sessionId)
-        console.log(`\n\n`);
-        return resolve(null)
-      }
-    } else if (operation === 'ssh-over-ssm-phpmyadmin') {
-      /*
-      *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
-      *  Use SSH to run the remote command inside docker, while
-      * port forwarding to the phpmyadmin port.
-      */
-      const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
-      if (sessionId === 'error') {
-        // console.error(`\nUnable to set up tunnel.`);
-        return resolve(null)
-      } else {
-        // Tunnel is running. Now start phpmyadmin.
-        // console.log(`database is`, options.selectedDatabase);
-        const dbhost = options.selectedDatabase.data.Endpoint.Address
-        const webPort = await portfinder.getPortPromise({
-          port: 23000,    // minimum port
-          stopPort: 23999 // maximum port
+        // Display instance details.
+        // console.log(`instance=`, instance);
+        console.log(`\n\n  Instance ${instance.id}`.bold.blue)
+        instance.data.Tags.forEach(tag => {
+          if (tag.Key === 'Name') {
+            console.log(`         Name: ${tag.Value}`.blue);
+          } else if (tag.Key === 'Environment') {
+            console.log(`  Environment: ${tag.Value}`.blue);
+          }
         })
-        const dbname = 'adlforms'
-        const containerName = `mysql-${dbname}`
-        const image = `phpmyadmin/phpmyadmin:4.6.4-1`
-        console.log(`\n\n`
-          + `          Open your browser at `.green.bold
-          + `http://localhost:${webPort}`.blue.underline
-          + ` to access phpmyadmin`.green.bold
-          + `\n\n`);
-        const remoteCommand = `docker run -it --rm -p ${webPort}:80 -e PMA_HOST=${dbhost} --name ${containerName} ${image}`
-        let sshCmd = await sshCommand(instance, keyfile, localPort, webPort, remoteCommand)
-        const { exitCode } = await shellCommand(options, sshCmd)
-        await closeTunnel(options, sessionId)
-        console.log(`\n\n`);  
-        return resolve(null)
-      }
-    } else if (operation === 'ssh-over-ssm-task') {
-      /*
-       *  Connect to the Docker container inside the host instance.
-       */
-      // console.log(`task is`, options.selectedTask)
-      // console.log(`containers:`, options.selectedTask.data.containers)
-      if (options.selectedTask.data.containers.length === 1) {
-        const container = options.selectedTask.data.containers[0]
-        options.selectedContainerId = container.runtimeId
-      } else {
-        const taskQuestions = [
+        // if (instance.data.KeyName) {
+        //   console.log(`     Key name: ${instance.data.KeyName}`.blue);
+        // }
+        if (options.selectedTask) {
+          console.log(`         Task: ${options.selectedTask.id}`.blue);
+        }
+        if (options.selectedDatabase) {
+          // console.log(`db:`, options.selectedDatabase);
+          console.log(`     Database: ${options.selectedDatabase.id}`.blue);
+        }
+        console.log(``);
+
+        // Ask what they'd like to do.
+        const opQuestion = [
           {
             type: 'list',
-            name: 'containerId',
-            message: 'Container?',
-            choices: [ ]
-          }
-        ];
-        options.selectedTask.data.containers.forEach(container => {
-          const taskId = options.selectedTask.id
-          const containerId = container.runtimeId
-          console.log(`-> `, container);
-          const shortId = shortContainerId(containerId)
-          taskQuestions[0].choices.push({ name: ` ${taskId} - ${shortId}`, value: containerId})
-        })
-        const containerResult = await inquirer.prompt(taskQuestions)
-        options.selectedContainerId = containerResult.containerId
-      }
-
-      // Connect via a tunnel
-      const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
-      if (sessionId === 'error') {
-        // console.error(`\nUnable to set up tunnel.`);
-        return resolve(null)
-      } else {
-        // Tunnel is running. Now start a shell in the remote container.
-        const shortId = shortContainerId(options.selectedContainerId)
-        console.log(`\n\nLog into Docker container '${options.selectedTask.id}' (${shortId})\n`)
-        const remoteCommand = `sudo docker exec -it ${shortId} /bin/bash`
-        let sshCmd = await sshCommand(instance, keyfile, localPort, null, remoteCommand)
-        const { exitCode } = await shellCommand(options, sshCmd)
-        await closeTunnel(options, sessionId)
-        console.log(`\n\n`);  
-        return resolve(null)
-      }
-    } else if (operation === 'ssh-over-ssm-redis') {
-      // Not yet
-      return resolve(null)
-    } else if (operation === 'ssh-over-ssm-tunnel') {
-      /*
-      *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
-      *  Use SSH to run the remote command inside docker, while
-      * port forwarding to the phpmyadmin port.
-      */
-      const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
-      if (sessionId === 'error') {
-        // console.error(`\nUnable to set up tunnel.`);
-        return resolve(null)
-      } else {
-        // Tunnel is running. Now start phpmyadmin.
-          let sshCmd = await sshCommand(instance, keyfile, localPort, 0, '')
-          console.log(`
-
-          An SSH tunnel is now available to the remote server. Use the following command to connect through the tunnel:
-
-          `.green.bold
-          + `${sshCmd.blue}`+` <remote-command-goes-here>`.blue.bold
-          + `
-        `);
-
-        // Confirm finishing
-        const closeQuestion = [
-          {
-            type: 'accept',
-            name: 'closeTunnel',
-            message: 'Close the tunnel?',
+            name: 'operation',
+            message: 'What would you like to do?',
+            choices: [],
           },
         ];
-        for ( ; ; ) {
-          console.log(``);
-          console.log(`Press return when you are finished with the tunnel.`);
-          console.log(``);
-          console.log(``);
-          const closeResult = await inquirer.prompt(closeQuestion)
-          if (closeResult.closeTunnel) {
-            break;
-          }
+        opQuestion[0].choices.push({ name: ' SSH over SSM - ' + 'login'.red, value: 'ssh-over-ssm-login' })
+        opQuestion[0].choices.push({ name: ' SSH over SSM - ' + 'docker ps'.red, value: 'ssh-over-ssm-docker-ps' })
+        if (options.selectedDatabase) {
+          opQuestion[0].choices.push({ name: ' SSH over SSM - ' + 'mysql'.red, value: 'ssh-over-ssm-mysql' })
+          opQuestion[0].choices.push({ name: ' SSH over SSM - ' + 'phpmyadmin'.red, value: 'ssh-over-ssm-phpmyadmin' })
         }
-        
-        // Close the tunnel.
-        await closeTunnel(options, sessionId)
-        return resolve(null)
-      }
-    } else if (operation === 'ssh') {
-      /*
-      *  Login using SSH
-      */
-      const cmd = `ssh -i ~/.ssh/${keyName}.pem ec2-user@${publicIpAddress}`
-      console.error(``);
-      console.error(`     `+cmd.dim)
-      console.error(``);
-      const startTime = Date.now()
-      const child = spawn(cmd, {
-        stdio: 'inherit',
-        shell: true,
-        env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-      });
-      child.on('close', (code) => {
-        console.log(`Session exited with code ${code}.`);
-        if ((Date.now() - startTime) < 5000) {
-          ssmWikiSuggestion()
+        if (options.selectedTask) {
+          // const startTime = moment(options.selectedTask.data.startedAt).fromNow(true)
+          // options.selectedTask.data.containers.forEach(container => {
+          //   const containerId = container.runtimeId
+          //   const shortId = shortContainerId()
+          //   opQuestion[0].choices.push({ name: ' SSH over SSM - '+`connect to container (up ${startTime})`.red, value: 'ssh-over-ssm-task' })
+          // })
+          // const containerId = options.selectedTask.data.containers[0].runtimeId
+          // const shortId = shortContainerId(containerId)
+          const startTime = moment(options.selectedTask.data.startedAt).fromNow(true)
+          opQuestion[0].choices.push({ name: ' SSH over SSM - ' + `${options.selectedTask.id} (up ${startTime})`.red, value: 'ssh-over-ssm-task' })
         }
-        resolve(null)
-      });
-      return
-    } else if (operation === 'docker-ps') {
+        // opQuestion[0].choices.push({ name: 'SSH over SSM - '+'redis'.red, value: 'ssh-over-ssm-redis'})
+        opQuestion[0].choices.push({ name: ' SSH over SSM - ' + 'open tunnel'.red, value: 'ssh-over-ssm-tunnel' })
+        if (keyName && publicIpAddress) {
+          opQuestion[0].choices.push({ name: ' SSH - login'.grey, value: 'ssh' })
+        }
+        opQuestion[0].choices.push({ name: ' SSM session - ' + 'login'.green, value: 'ssm' })
+        opQuestion[0].choices.push({ name: ' SSM session - ' + 'docker ps'.green, value: 'docker-ps' })
+        opQuestion[0].choices.push({ name: 'back'.bold, value: 'back' })
+        opQuestion[0].choices.push({ name: 'quit'.bold, value: 'quit' })
+        opQuestion[0].pageSize = opQuestion[0].choices.length + 2
+        const opResult = await inquirer.prompt(opQuestion)
+        const operation = opResult.operation
 
-      // Start the command
-      const remoteCommand = `sudo docker ps`
-      const comment = remoteCommand
-
-      try {
-        let startReply = await runOverSsm.startRemoteCommand(options.selectedProfile, instance.id, comment, remoteCommand)
-        // console.log(`startReply=`, startReply);
-        if (startReply.remoteStatus !== 'Pending') {
-          console.error(`Failed to start remote command`);
-          console.error(`Status: ${startReply.remoteStatus}`)
-          // process.exit(1)
-          return resolve(null)
-        }
-        // console.log(`Started okay`);      
-        let remoteCommandId = startReply.remoteCommandId
-        let endReply = await runOverSsm.waitForRemoteCommand(options.selectedProfile, remoteCommandId)
-        // console.log(`endReply=`, endReply);
-        if (endReply.remoteStatus !== 'Success') {
-          console.error(`Failed to run remote command`);
-          console.error(`Status: ${endReply.remoteStatus}`)
-          if (endReply.output) {
-            console.error(`Error message:\n${endReply.output}`)
+        // Now run the selected operation
+        if (operation === 'quit') {
+          process.exit(0)
+        } else if (operation === 'back') {
+          return resolve('back')
+        } else if (operation === 'ssm') {
+          let command = `aws ssm start-session --region ${options.selectedRegion} --target ${instance.id}`
+          console.error(``);
+          console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+          console.error(``);
+          const startTime = Date.now()
+          const child = spawn(command, {
+            stdio: 'inherit',
+            shell: true,
+            env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+          });
+          child.on('close', (code) => {
+            console.log(`Session exited with code ${code}.`.ssm);
+            if ((Date.now() - startTime) < 5000) {
+              ssmWikiSuggestion()
+            }
+            resolve(null)
+          });
+          return
+        } else if (operation === 'ssh-over-ssm-login') {
+          /*
+          *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+          *  This will allow SSH commands to be run.
+          */
+          const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+          if (sessionId === 'error') {
+            // console.error(`\nUnable to set up tunnel.`);
+            return resolve(null)
+          } else {
+            // Login
+            let sshCmd = await sshCommand(instance, keyfile, localPort, '', '')
+            const { exitCode } = await shellCommand(options, sshCmd)
+            await closeTunnel(options, sessionId)
+            console.log(`\n\n`);
+            return resolve(null)
           }
+        } else if (operation === 'ssh-over-ssm-docker-ps') {
+          /*
+          *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+          *  This will allow SSH commands to be run.
+          */
+          const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+          if (sessionId === 'error') {
+            return resolve(null)
+          } else {
+            // Do the login.
+            const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 docker ps`
+            const { exitCode } = await shellCommand(options, sshCmd)
+            console.log(`\n\n`);
+            await closeTunnel(options, sessionId)
+            console.log(`\n\n`);
+            return resolve(null)
+          }
+        } else if (operation === 'ssh-over-ssm-mysql') {
+          /*
+          *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+          *  Then SSH is used to run mysql inside docker.
+          */
+          const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+          if (sessionId === 'error') {
+            return resolve(null)
+          } else {
+            // Tunnel is running. Now start mysql.
+            // console.log(`database is`, options.selectedDatabase);
+            const dbhost = options.selectedDatabase.data.Endpoint.Address
+            const dbQuestions = [
+              {
+                type: 'input',
+                name: 'dbname',
+                message: 'Database name?',
+              },
+              {
+                type: 'input',
+                name: 'username',
+                message: 'User name?',
+                default: 'admin'
+              },
+              {
+                type: 'password',
+                name: 'password',
+                message: 'Password?',
+              },
+            ];
+            const dbResult = await inquirer.prompt(dbQuestions)
+
+            const dbname = dbResult.dbname
+            const username = dbResult.username
+            const password = dbResult.password
+            const containerName = `mysql-${dbname}`
+            const image = `mysql`
+            const remoteCommand = `docker run -it --rm --name ${containerName} ${image}`
+              + ` mysql`
+              + ` -A`
+              + ` -h ${dbhost}`
+              + ` --ssl-mode=DISABLED`
+              + ` -u ${username} -p${password}`
+              + ` ${dbname}`
+            const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 ${remoteCommand}`
+            const { exitCode } = await shellCommand(options, sshCmd)
+            await closeTunnel(options, sessionId)
+            console.log(`\n\n`);
+            return resolve(null)
+          }
+        } else if (operation === 'ssh-over-ssm-phpmyadmin') {
+          /*
+          *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+          *  Use SSH to run the remote command inside docker, while
+          * port forwarding to the phpmyadmin port.
+          */
+          const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+          if (sessionId === 'error') {
+            // console.error(`\nUnable to set up tunnel.`);
+            return resolve(null)
+          } else {
+            // Tunnel is running. Now start phpmyadmin.
+            // console.log(`database is`, options.selectedDatabase);
+            const dbhost = options.selectedDatabase.data.Endpoint.Address
+            const webPort = await portfinder.getPortPromise({
+              port: 23000,    // minimum port
+              stopPort: 23999 // maximum port
+            })
+            const dbname = 'adlforms'
+            const containerName = `mysql-${dbname}`
+            const image = `phpmyadmin/phpmyadmin:4.6.4-1`
+            console.log(`\n\n`
+              + `          Open your browser at `.green.bold
+              + `http://localhost:${webPort}`.blue.underline
+              + ` to access phpmyadmin`.green.bold
+              + `\n\n`);
+            const remoteCommand = `docker run -it --rm -p ${webPort}:80 -e PMA_HOST=${dbhost} --name ${containerName} ${image}`
+            let sshCmd = await sshCommand(instance, keyfile, localPort, webPort, remoteCommand)
+            const { exitCode } = await shellCommand(options, sshCmd)
+            await closeTunnel(options, sessionId)
+            console.log(`\n\n`);
+            return resolve(null)
+          }
+        } else if (operation === 'ssh-over-ssm-task') {
+          /*
+           *  Connect to the Docker container inside the host instance.
+           */
+          // console.log(`task is`, options.selectedTask)
+          // console.log(`containers:`, options.selectedTask.data.containers)
+          if (options.selectedTask.data.containers.length === 1) {
+            const container = options.selectedTask.data.containers[0]
+            options.selectedContainerId = container.runtimeId
+          } else {
+            const taskQuestions = [
+              {
+                type: 'list',
+                name: 'containerId',
+                message: 'Container?',
+                choices: []
+              }
+            ];
+            options.selectedTask.data.containers.forEach(container => {
+              const taskId = options.selectedTask.id
+              const containerId = container.runtimeId
+              console.log(`-> `, container);
+              const shortId = shortContainerId(containerId)
+              taskQuestions[0].choices.push({ name: ` ${taskId} - ${shortId}`, value: containerId })
+            })
+            const containerResult = await inquirer.prompt(taskQuestions)
+            options.selectedContainerId = containerResult.containerId
+          }
+
+          // Connect via a tunnel
+          const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+          if (sessionId === 'error') {
+            // console.error(`\nUnable to set up tunnel.`);
+            return resolve(null)
+          } else {
+            // Tunnel is running. Now start a shell in the remote container.
+            const shortId = shortContainerId(options.selectedContainerId)
+            console.log(`\n\nLog into Docker container '${options.selectedTask.id}' (${shortId})\n`)
+            const remoteCommand = `sudo docker exec -it ${shortId} /bin/bash`
+            let sshCmd = await sshCommand(instance, keyfile, localPort, null, remoteCommand)
+            const { exitCode } = await shellCommand(options, sshCmd)
+            await closeTunnel(options, sessionId)
+            console.log(`\n\n`);
+            return resolve(null)
+          }
+        } else if (operation === 'ssh-over-ssm-redis') {
+          // Not yet
           return resolve(null)
+        } else if (operation === 'ssh-over-ssm-tunnel') {
+          /*
+          *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+          *  Use SSH to run the remote command inside docker, while
+          * port forwarding to the phpmyadmin port.
+          */
+          const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+          if (sessionId === 'error') {
+            // console.error(`\nUnable to set up tunnel.`);
+            return resolve(null)
+          } else {
+            // Tunnel is running. Now start phpmyadmin.
+            let sshCmd = await sshCommand(instance, keyfile, localPort, 0, '')
+            console.log(`
+
+              An SSH tunnel is now available to the remote server. Use the following command to connect through the tunnel:
+              (The credentials will remain valid for 60 seconds)
+
+              `.green.bold
+              + `${sshCmd.blue}` + ` <remote-command-goes-here>`.blue.bold
+              + `
+            `);
+
+            // Confirm finishing
+            const closeQuestion = [
+              {
+                type: 'accept',
+                name: 'closeTunnel',
+                message: 'Close the tunnel?',
+              },
+            ];
+            for (; ;) {
+              console.log(``);
+              console.log(`Press return when you are finished with the tunnel.`);
+              console.log(``);
+              console.log(``);
+              const closeResult = await inquirer.prompt(closeQuestion)
+              if (closeResult.closeTunnel) {
+                break;
+              }
+            }
+
+            // Close the tunnel.
+            await closeTunnel(options, sessionId)
+            return resolve(null)
+          }
+        } else if (operation === 'ssh') {
+          /*
+          *  Login using SSH
+          */
+          const cmd = `ssh -i ~/.ssh/${keyName}.pem ec2-user@${publicIpAddress}`
+          console.error(``);
+          console.error(`     ` + cmd.dim)
+          console.error(``);
+          const startTime = Date.now()
+          const child = spawn(cmd, {
+            stdio: 'inherit',
+            shell: true,
+            env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+          });
+          child.on('close', (code) => {
+            console.log(`Session exited with code ${code}.`);
+            if ((Date.now() - startTime) < 5000) {
+              ssmWikiSuggestion()
+            }
+            resolve(null)
+          });
+          return
+        } else if (operation === 'docker-ps') {
+
+          // Start the command
+          const remoteCommand = `sudo docker ps`
+          const comment = remoteCommand
+
+          try {
+            let startReply = await runOverSsm.startRemoteCommand(options.selectedProfile, instance.id, comment, remoteCommand)
+            // console.log(`startReply=`, startReply);
+            if (startReply.remoteStatus !== 'Pending') {
+              console.error(`Failed to start remote command`);
+              console.error(`Status: ${startReply.remoteStatus}`)
+              // process.exit(1)
+              return resolve(null)
+            }
+            // console.log(`Started okay`);
+            let remoteCommandId = startReply.remoteCommandId
+            let endReply = await runOverSsm.waitForRemoteCommand(options.selectedProfile, remoteCommandId)
+            // console.log(`endReply=`, endReply);
+            if (endReply.remoteStatus !== 'Success') {
+              console.error(`Failed to run remote command`);
+              console.error(`Status: ${endReply.remoteStatus}`)
+              if (endReply.output) {
+                console.error(`Error message:\n${endReply.output}`)
+              }
+              return resolve(null)
+            }
+            console.log(endReply.output);
+            return resolve(null)
+          } catch (e) {
+            console.error(e);
+            return resolve(null)
+          }
+        } else {
+          console.log(`Unknown operation ${operation}`);
         }
-        console.log(endReply.output);
-        return resolve(null)
-      } catch (e) {
-        console.error(e);
-        return resolve(null)
+      } catch (err) {
+        reject(err)
       }
-    } else {
-      console.log(`Unknown operation ${operation}`);
-    }
-  })//- promise
+    })()//- call async function immediately
+  })//- Promise
+
+
+
+  // return new Promise(async (resolve, reject) => {
+  //   const instance = options.selectedInstance
+  //   const keyName = instance.data.KeyName
+  //   const publicIpAddress = instance.data.PublicIpAddress
+
+  //   // console.log(`instance is`, instance);
+  //   // console.log(`State.Code:`, instance.data.State.Code);
+  //   // console.log(`State.Name:`, instance.data.State.Name);
+
+  //   // Display instance details.
+  //   // console.log(`instance=`, instance);
+  //   console.log(`\n\n  Instance ${instance.id}`.bold.blue)
+  //   instance.data.Tags.forEach(tag => {
+  //     if (tag.Key === 'Name') {
+  //       console.log(`         Name: ${tag.Value}`.blue);
+  //     } else if (tag.Key === 'Environment') {
+  //       console.log(`  Environment: ${tag.Value}`.blue);
+  //     }
+  //   })
+  //   // if (instance.data.KeyName) {
+  //   //   console.log(`     Key name: ${instance.data.KeyName}`.blue);
+  //   // }
+  //   if (options.selectedTask) {
+  //     console.log(`         Task: ${options.selectedTask.id}`.blue);
+  //   }
+  //   if (options.selectedDatabase) {
+  //     console.log(`db:`, options.selectedDatabase);
+  //     console.log(`     Database: ${options.selectedDatabase.id}`.blue);
+  //   }
+  //   console.log(``);
+
+  //   // Ask what they'd like to do.
+  //   const opQuestion = [
+  //     {
+  //       type: 'list',
+  //       name: 'operation',
+  //       message: 'What would you like to do?',
+  //       choices: [ ],
+  //     },
+  //   ];
+  //   opQuestion[0].choices.push({ name: ' SSH over SSM - '+'login'.red, value: 'ssh-over-ssm-login'})
+  //   opQuestion[0].choices.push({ name: ' SSH over SSM - '+'docker ps'.red, value: 'ssh-over-ssm-docker-ps'})
+  //   if (options.selectedDatabase) {
+  //     opQuestion[0].choices.push({ name: ' SSH over SSM - '+'mysql'.red, value: 'ssh-over-ssm-mysql'})
+  //     opQuestion[0].choices.push({ name: ' SSH over SSM - '+'phpmyadmin'.red, value: 'ssh-over-ssm-phpmyadmin'})
+  //   }
+  //   if (options.selectedTask) {
+  //     // const startTime = moment(options.selectedTask.data.startedAt).fromNow(true)
+  //     // options.selectedTask.data.containers.forEach(container => {
+  //     //   const containerId = container.runtimeId
+  //     //   const shortId = shortContainerId()
+  //     //   opQuestion[0].choices.push({ name: ' SSH over SSM - '+`connect to container (up ${startTime})`.red, value: 'ssh-over-ssm-task' })
+  //     // })
+  //     // const containerId = options.selectedTask.data.containers[0].runtimeId
+  //     // const shortId = shortContainerId(containerId)
+  //     const startTime = moment(options.selectedTask.data.startedAt).fromNow(true)
+  //     opQuestion[0].choices.push({ name: ' SSH over SSM - '+`${options.selectedTask.id} (up ${startTime})`.red, value: 'ssh-over-ssm-task' })
+  //   }
+  //   // opQuestion[0].choices.push({ name: 'SSH over SSM - '+'redis'.red, value: 'ssh-over-ssm-redis'})
+  //   opQuestion[0].choices.push({ name: ' SSH over SSM - '+'open tunnel'.red, value: 'ssh-over-ssm-tunnel'})
+  //   if (keyName && publicIpAddress) {
+  //     opQuestion[0].choices.push({ name: ' SSH - login'.grey, value: 'ssh'})
+  //   }
+  //   opQuestion[0].choices.push({ name: ' SSM session - '+'login'.green, value: 'ssm'})
+  //   opQuestion[0].choices.push({ name: ' SSM session - '+'docker ps'.green, value: 'docker-ps'})
+  //   opQuestion[0].choices.push({ name: 'back'.bold, value: 'back'})
+  //   opQuestion[0].choices.push({ name: 'quit'.bold, value: 'quit'})
+  //   opQuestion[0].pageSize = opQuestion[0].choices.length + 2
+  //   const opResult = await inquirer.prompt(opQuestion)
+  //   const operation = opResult.operation
+
+  //   // Now run the selected operation
+  //   if (operation === 'quit') {
+  //     process.exit(0)
+  //   } else if (operation === 'back') {
+  //     return resolve('back')
+  //   } else if (operation === 'ssm') {
+  //     let command = `aws ssm start-session --region ${options.selectedRegion} --target ${instance.id}`
+  //     console.error(``);
+  //     console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+  //     console.error(``);
+  //     const startTime = Date.now()
+  //     const child = spawn(command, {
+  //       stdio: 'inherit',
+  //       shell: true,
+  //       env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+  //     });
+  //     child.on('close', (code) => {
+  //       console.log(`Session exited with code ${code}.`.ssm);
+  //       if ((Date.now() - startTime) < 5000) {
+  //         ssmWikiSuggestion()
+  //       }
+  //       resolve(null)
+  //     });
+  //     return
+  //   } else if (operation === 'ssh-over-ssm-login') {
+  //     /*
+  //     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+  //     *  This will allow SSH commands to be run.
+  //     */
+  //     const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+  //     if (sessionId === 'error') {
+  //       // console.error(`\nUnable to set up tunnel.`);
+  //       return resolve(null)
+  //     } else {
+  //       // Login
+  //       let sshCmd = await sshCommand(instance, keyfile, localPort, '', '')
+  //       const { exitCode } = await shellCommand(options, sshCmd)
+  //       await closeTunnel(options, sessionId)
+  //       console.log(`\n\n`);
+  //       return resolve(null)
+  //     }
+  //   } else if (operation === 'ssh-over-ssm-docker-ps') {
+  //     /*
+  //     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+  //     *  This will allow SSH commands to be run.
+  //     */
+  //     const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+  //     if (sessionId === 'error') {
+  //       return resolve(null)
+  //     } else {
+  //       // Do the login.
+  //       const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 docker ps`
+  //       const { exitCode } = await shellCommand(options, sshCmd)
+  //       console.log(`\n\n`);
+  //       await closeTunnel(options, sessionId)
+  //       console.log(`\n\n`);
+  //       return resolve(null)
+  //     }
+  //   } else if (operation === 'ssh-over-ssm-mysql') {
+  //     /*
+  //     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+  //     *  Then SSH is used to run mysql inside docker.
+  //     */
+  //     const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+  //     if (sessionId === 'error') {
+  //       return resolve(null)
+  //     } else {
+  //       // Tunnel is running. Now start mysql.
+  //       // console.log(`database is`, options.selectedDatabase);
+  //       const dbhost = options.selectedDatabase.data.Endpoint.Address
+  //       const dbQuestions = [
+  //         {
+  //           type: 'input',
+  //           name: 'dbname',
+  //           message: 'Database name?',
+  //         },
+  //         {
+  //           type: 'input',
+  //           name: 'username',
+  //           message: 'User name?',
+  //           default: 'admin'
+  //         },
+  //         {
+  //           type: 'password',
+  //           name: 'password',
+  //           message: 'Password?',
+  //         },
+  //       ];
+  //       const dbResult = await inquirer.prompt(dbQuestions)
+
+  //       const dbname = dbResult.dbname
+  //       const username = dbResult.username
+  //       const password = dbResult.password
+  //       const containerName = `mysql-${dbname}`
+  //       const image = `mysql`
+  //       const remoteCommand = `docker run -it --rm --name ${containerName} ${image}`
+  //         + ` mysql`
+  //         + ` -A`
+  //         + ` -h ${dbhost}`
+  //         + ` --ssl-mode=DISABLED`
+  //         + ` -u ${username} -p${password}`
+  //         + ` ${dbname}`
+  //       const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 ${remoteCommand}`
+  //       const { exitCode } = await shellCommand(options, sshCmd)
+  //       await closeTunnel(options, sessionId)
+  //       console.log(`\n\n`);
+  //       return resolve(null)
+  //     }
+  //   } else if (operation === 'ssh-over-ssm-phpmyadmin') {
+  //     /*
+  //     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+  //     *  Use SSH to run the remote command inside docker, while
+  //     * port forwarding to the phpmyadmin port.
+  //     */
+  //     const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+  //     if (sessionId === 'error') {
+  //       // console.error(`\nUnable to set up tunnel.`);
+  //       return resolve(null)
+  //     } else {
+  //       // Tunnel is running. Now start phpmyadmin.
+  //       // console.log(`database is`, options.selectedDatabase);
+  //       const dbhost = options.selectedDatabase.data.Endpoint.Address
+  //       const webPort = await portfinder.getPortPromise({
+  //         port: 23000,    // minimum port
+  //         stopPort: 23999 // maximum port
+  //       })
+  //       const dbname = 'adlforms'
+  //       const containerName = `mysql-${dbname}`
+  //       const image = `phpmyadmin/phpmyadmin:4.6.4-1`
+  //       console.log(`\n\n`
+  //         + `          Open your browser at `.green.bold
+  //         + `http://localhost:${webPort}`.blue.underline
+  //         + ` to access phpmyadmin`.green.bold
+  //         + `\n\n`);
+  //       const remoteCommand = `docker run -it --rm -p ${webPort}:80 -e PMA_HOST=${dbhost} --name ${containerName} ${image}`
+  //       let sshCmd = await sshCommand(instance, keyfile, localPort, webPort, remoteCommand)
+  //       const { exitCode } = await shellCommand(options, sshCmd)
+  //       await closeTunnel(options, sessionId)
+  //       console.log(`\n\n`);
+  //       return resolve(null)
+  //     }
+  //   } else if (operation === 'ssh-over-ssm-task') {
+  //     /*
+  //      *  Connect to the Docker container inside the host instance.
+  //      */
+  //     // console.log(`task is`, options.selectedTask)
+  //     // console.log(`containers:`, options.selectedTask.data.containers)
+  //     if (options.selectedTask.data.containers.length === 1) {
+  //       const container = options.selectedTask.data.containers[0]
+  //       options.selectedContainerId = container.runtimeId
+  //     } else {
+  //       const taskQuestions = [
+  //         {
+  //           type: 'list',
+  //           name: 'containerId',
+  //           message: 'Container?',
+  //           choices: [ ]
+  //         }
+  //       ];
+  //       options.selectedTask.data.containers.forEach(container => {
+  //         const taskId = options.selectedTask.id
+  //         const containerId = container.runtimeId
+  //         console.log(`-> `, container);
+  //         const shortId = shortContainerId(containerId)
+  //         taskQuestions[0].choices.push({ name: ` ${taskId} - ${shortId}`, value: containerId})
+  //       })
+  //       const containerResult = await inquirer.prompt(taskQuestions)
+  //       options.selectedContainerId = containerResult.containerId
+  //     }
+
+  //     // Connect via a tunnel
+  //     const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+  //     if (sessionId === 'error') {
+  //       // console.error(`\nUnable to set up tunnel.`);
+  //       return resolve(null)
+  //     } else {
+  //       // Tunnel is running. Now start a shell in the remote container.
+  //       const shortId = shortContainerId(options.selectedContainerId)
+  //       console.log(`\n\nLog into Docker container '${options.selectedTask.id}' (${shortId})\n`)
+  //       const remoteCommand = `sudo docker exec -it ${shortId} /bin/bash`
+  //       let sshCmd = await sshCommand(instance, keyfile, localPort, null, remoteCommand)
+  //       const { exitCode } = await shellCommand(options, sshCmd)
+  //       await closeTunnel(options, sessionId)
+  //       console.log(`\n\n`);
+  //       return resolve(null)
+  //     }
+  //   } else if (operation === 'ssh-over-ssm-redis') {
+  //     // Not yet
+  //     return resolve(null)
+  //   } else if (operation === 'ssh-over-ssm-tunnel') {
+  //     /*
+  //     *  Use SSM to set up a tunnel to port 22 INSIDE the instance.
+  //     *  Use SSH to run the remote command inside docker, while
+  //     * port forwarding to the phpmyadmin port.
+  //     */
+  //     const { localPort, sessionId, keyfile } = await startTunnelForSSH(options, instance)
+  //     if (sessionId === 'error') {
+  //       // console.error(`\nUnable to set up tunnel.`);
+  //       return resolve(null)
+  //     } else {
+  //       // Tunnel is running. Now start phpmyadmin.
+  //         let sshCmd = await sshCommand(instance, keyfile, localPort, 0, '')
+  //         console.log(`
+
+  //         An SSH tunnel is now available to the remote server. Use the following command to connect through the tunnel:
+  //         (The credentials will remain valid for 60 seconds)
+
+  //         `.green.bold
+  //         + `${sshCmd.blue}`+` <remote-command-goes-here>`.blue.bold
+  //         + `
+  //       `);
+
+  //       // Confirm finishing
+  //       const closeQuestion = [
+  //         {
+  //           type: 'accept',
+  //           name: 'closeTunnel',
+  //           message: 'Close the tunnel?',
+  //         },
+  //       ];
+  //       for ( ; ; ) {
+  //         console.log(``);
+  //         console.log(`Press return when you are finished with the tunnel.`);
+  //         console.log(``);
+  //         console.log(``);
+  //         const closeResult = await inquirer.prompt(closeQuestion)
+  //         if (closeResult.closeTunnel) {
+  //           break;
+  //         }
+  //       }
+
+  //       // Close the tunnel.
+  //       await closeTunnel(options, sessionId)
+  //       return resolve(null)
+  //     }
+  //   } else if (operation === 'ssh') {
+  //     /*
+  //     *  Login using SSH
+  //     */
+  //     const cmd = `ssh -i ~/.ssh/${keyName}.pem ec2-user@${publicIpAddress}`
+  //     console.error(``);
+  //     console.error(`     `+cmd.dim)
+  //     console.error(``);
+  //     const startTime = Date.now()
+  //     const child = spawn(cmd, {
+  //       stdio: 'inherit',
+  //       shell: true,
+  //       env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+  //     });
+  //     child.on('close', (code) => {
+  //       console.log(`Session exited with code ${code}.`);
+  //       if ((Date.now() - startTime) < 5000) {
+  //         ssmWikiSuggestion()
+  //       }
+  //       resolve(null)
+  //     });
+  //     return
+  //   } else if (operation === 'docker-ps') {
+
+  //     // Start the command
+  //     const remoteCommand = `sudo docker ps`
+  //     const comment = remoteCommand
+
+  //     try {
+  //       let startReply = await runOverSsm.startRemoteCommand(options.selectedProfile, instance.id, comment, remoteCommand)
+  //       // console.log(`startReply=`, startReply);
+  //       if (startReply.remoteStatus !== 'Pending') {
+  //         console.error(`Failed to start remote command`);
+  //         console.error(`Status: ${startReply.remoteStatus}`)
+  //         // process.exit(1)
+  //         return resolve(null)
+  //       }
+  //       // console.log(`Started okay`);
+  //       let remoteCommandId = startReply.remoteCommandId
+  //       let endReply = await runOverSsm.waitForRemoteCommand(options.selectedProfile, remoteCommandId)
+  //       // console.log(`endReply=`, endReply);
+  //       if (endReply.remoteStatus !== 'Success') {
+  //         console.error(`Failed to run remote command`);
+  //         console.error(`Status: ${endReply.remoteStatus}`)
+  //         if (endReply.output) {
+  //           console.error(`Error message:\n${endReply.output}`)
+  //         }
+  //         return resolve(null)
+  //       }
+  //       console.log(endReply.output);
+  //       return resolve(null)
+  //     } catch (e) {
+  //       console.error(e);
+  //       return resolve(null)
+  //     }
+  //   } else {
+  //     console.log(`Unknown operation ${operation}`);
+  //   }
+  // })//- promise
 }//- commandsForInstance
 
 const addConnectionOption = (label, instance, task, database, cache) => {
@@ -757,7 +1132,7 @@ const addConnectionOption = (label, instance, task, database, cache) => {
   if (!entry) {
     entry = {
       label,
-      instanceIndex: { } // instanceId => { name, description, database, isJumpbox }
+      instanceIndex: {} // instanceId => { name, description, database, isJumpbox }
     }
     connectionOptions[label] = entry
   }
@@ -779,8 +1154,8 @@ function ssmWikiSuggestion() {
       It looks like something might have gone wrong. For instructions on how to set up
       and debug SSM connections, consult the aws-explorer wiki:
       `.bold.red
-      + `https://github.com/tooltwist/aws-explorer/wiki/Setting-up-and-debugging-AWS-SSM`.blue.underline
-      + `
+    + `https://github.com/tooltwist/aws-explorer/wiki/Setting-up-and-debugging-AWS-SSM`.blue.underline
+    + `
 
       `);
 }
@@ -793,96 +1168,200 @@ function ssmWikiSuggestion() {
 async function startTunnelForSSH(options, instance) {
   // console.log(`startTunnelForSSH()`);
 
-  return new Promise(async (resolve, reject) => {
-    // let localPort = 22000 + (Math.floor(Math.random() * 1000))
-    const localPort = await portfinder.getPortPromise({
-      port: 22000,    // minimum port
-      stopPort: 22999 // maximum port
-    })
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        // let localPort = 22000 + (Math.floor(Math.random() * 1000))
+        const localPort = await portfinder.getPortPromise({
+          port: 22000,    // minimum port
+          stopPort: 22999 // maximum port
+        })
 
-    // Generate a temporary keypair
-    const keyfile = temporaryKeypairFile()
-    const publicKeyfile = `${keyfile}.pub`
-    const keypairCmd = `ssh-keygen -t rsa -f ${keyfile} -N ''`
-    console.error(``);
-    console.error(`     ` + `${keypairCmd}`.dim)
-    try {
-      execSync(keypairCmd)
-    } catch (e) {
-      console.log(`Error while generating keypair:`, e);
-      resolve({ localPort: -1, sessionId: 'error', keyfile: null })
-    }
+        // Generate a temporary keypair
+        const keyfile = temporaryKeypairFile()
+        const publicKeyfile = `${keyfile}.pub`
+        const keypairCmd = `ssh-keygen -t rsa -f ${keyfile} -N ''`
+        console.error(``);
+        console.error(`     ` + `${keypairCmd}`.dim)
+        try {
+          execSync(keypairCmd)
+        } catch (e) {
+          console.log(`Error while generating keypair:`, e);
+          resolve({ localPort: -1, sessionId: 'error', keyfile: null })
+        }
 
-    // Send the keypair to AWS
-    // See https://nullsweep.com/a-better-way-to-ssh-in-aws/
-    let sendKeyCmd = `aws ec2-instance-connect send-ssh-public-key`
-      + ` --instance-id ${instance.id}`
-      + ` --availability-zone ${instance.data.Placement.AvailabilityZone}`
-      + ` --instance-os-user ssm-user`
-      + ` --ssh-public-key file://${publicKeyfile}`
-    console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${sendKeyCmd}`.dim)
-    try {
-      execSync(sendKeyCmd, { env: { AWS_PROFILE: options.selectedProfile } })
-    } catch (e) {
-      console.log(`Error while generating keypair:`, e);
-      resolve({ localPort: -1, sessionId: 'error', keyfile: null })
-    }
+        // Send the keypair to AWS
+        // See https://nullsweep.com/a-better-way-to-ssh-in-aws/
+        // See https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2-instance-connect/send-ssh-public-key.html
+        let sendKeyCmd = `aws ec2-instance-connect send-ssh-public-key`
+          + ` --instance-id ${instance.id}`
+          + ` --instance-os-user ec2-user`
+          + ` --availability-zone ${instance.data.Placement.AvailabilityZone}`
+          + ` --ssh-public-key file://${publicKeyfile}`
+        console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${sendKeyCmd}`.dim)
+        // console.log(`\n\n\n\n\n HERE WE GO....\n\n\n`)
+        try {
+          execSync(sendKeyCmd, { env: { AWS_PROFILE: options.selectedProfile } })
+        } catch (e) {
+          console.log(`Error while generating keypair:`, e);
+          resolve({ localPort: -1, sessionId: 'error', keyfile: null })
+        }
 
-    // Start the tunnel
-    // aws ssm start-session --target %h --document AWS-StartSSHSession --parameters portNumber=%p --region=eu-west-1
-    let command = `aws ssm start-session`
-      + ` --region ${options.selectedRegion}`
-      + ` --target ${instance.id}`
-      + ` --document-name AWS-StartPortForwardingSession`
-      + ` --parameters '{"portNumber":["22"],"localPortNumber":["${localPort}"]}'`
-    console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
-    const startTime = Date.now()
-    // let stdout = ''
-    const child = spawn(command, {
-      // stdio: 'inherit',
-      shell: true,
-      env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
-    });
+        // Wait a short while.
+        await sleep(2000)
 
-    // Hopefully we'll get a session ID from the output, but we have a timeout just in case.
-    let timer = setTimeout(() => {
-      console.log(`Timeout while waiting for session ID in output of aws cli command.`);
-      resolve({ localPort, sessionId: 'error', keyfile: null })
-    }, 15000)
-    child.stdout.on('data', (data) => {
-      data = data.toString() // Convert buffer to string
-      process.stdout.write(data.dim);
+        // Start the tunnel
+        // aws ssm start-session --target %h --document AWS-StartSSHSession --parameters portNumber=%p --region=eu-west-1
+        let command = `aws ssm start-session`
+          + ` --region ${options.selectedRegion}`
+          + ` --target ${instance.id}`
+          + ` --document-name AWS-StartPortForwardingSession`
+          + ` --parameters '{"portNumber":["22"],"localPortNumber":["${localPort}"]}'`
+        console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+        const startTime = Date.now()
+        // let stdout = ''
+        const child = spawn(command, {
+          // stdio: 'inherit',
+          shell: true,
+          env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+        });
 
-      // Look for a sucessful start
-      // "Starting session with SessionId: philip.callender-0d281b92d275af27a"
-      // "Port 22372 opened for sessionId philip.callender-0b12c1afb02095da3."
-      const match = /Port (\d+) opened for sessionId (.*)./.exec(data);
-      // console.log(`match is `, match);
-      if (match) {
-        clearTimeout(timer)
-        resolve({ localPort: match[1], sessionId: match[2], keyfile })
+        // Hopefully we'll get a session ID from the output, but we have a timeout just in case.
+        let timer = setTimeout(() => {
+          console.log(`Timeout while waiting for session ID in output of aws cli command.`);
+          resolve({ localPort, sessionId: 'error', keyfile: null })
+        }, 15000)
+        child.stdout.on('data', (data) => {
+          data = data.toString() // Convert buffer to string
+          process.stdout.write(data.dim);
+
+          // Look for a sucessful start
+          // "Starting session with SessionId: philip.callender-0d281b92d275af27a"
+          // "Port 22372 opened for sessionId philip.callender-0b12c1afb02095da3."
+          const match = /Port (\d+) opened for sessionId (.*)./.exec(data);
+          // console.log(`match is `, match);
+          if (match) {
+            clearTimeout(timer)
+            resolve({ localPort: match[1], sessionId: match[2], keyfile })
+          }
+        });
+
+        // Handle stderr
+        child.stderr.on('data', (data) => {
+          data = data.toString() // Convert buffer to string
+          // console.log(data.red);
+          process.stdout.write(data.red.dim);
+          // Look for a connection error - "An error occurred (TargetNotConnected)..."
+          if (data.indexOf('An error occurred (TargetNotConnected)') >= 0) {
+            clearTimeout(timer)
+            ssmWikiSuggestion()
+            resolve({ localPort, sessionId: 'error', keyfile: null })
+          }
+        });
+        child.on('close', (code) => {
+          // console.log(`Tunnel exited with code ${code}.`);
+          // if ((Date.now() - startTime) < 5000) {
+          //   ssmWikiSuggestion()
+          // }
+        });
+      } catch (err) {
+        reject(err)
       }
-    });
+    })()//- call async function immediately
+  })//- Promise
 
-    // Handle stderr
-    child.stderr.on('data', (data) => {
-      data = data.toString() // Convert buffer to string
-      // console.log(data.red);
-      process.stdout.write(data.red.dim);
-      // Look for a connection error - "An error occurred (TargetNotConnected)..."
-      if (data.indexOf('An error occurred (TargetNotConnected)') >= 0) {
-        clearTimeout(timer)
-        ssmWikiSuggestion()
-        resolve({ localPort, sessionId: 'error', keyfile: null })
-      }
-    });
-    child.on('close', (code) => {
-      // console.log(`Tunnel exited with code ${code}.`);
-      // if ((Date.now() - startTime) < 5000) {
-      //   ssmWikiSuggestion()
-      // }
-    });
-  })
+  //   return new Promise(async (resolve, reject) => {
+  //     // let localPort = 22000 + (Math.floor(Math.random() * 1000))
+  //     const localPort = await portfinder.getPortPromise({
+  //       port: 22000,    // minimum port
+  //       stopPort: 22999 // maximum port
+  //     })
+
+  //     // Generate a temporary keypair
+  //     const keyfile = temporaryKeypairFile()
+  //     const publicKeyfile = `${keyfile}.pub`
+  //     const keypairCmd = `ssh-keygen -t rsa -f ${keyfile} -N ''`
+  //     console.error(``);
+  //     console.error(`     ` + `${keypairCmd}`.dim)
+  //     try {
+  //       execSync(keypairCmd)
+  //     } catch (e) {
+  //       console.log(`Error while generating keypair:`, e);
+  //       resolve({ localPort: -1, sessionId: 'error', keyfile: null })
+  //     }
+
+  //     // Send the keypair to AWS
+  //     // See https://nullsweep.com/a-better-way-to-ssh-in-aws/
+  //     // See https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2-instance-connect/send-ssh-public-key.html
+  //     let sendKeyCmd = `aws ec2-instance-connect send-ssh-public-key`
+  //       + ` --instance-id ${instance.id}`
+  //       + ` --instance-os-user ec2-user`
+  //       + ` --availability-zone ${instance.data.Placement.AvailabilityZone}`
+  //       + ` --ssh-public-key file://${publicKeyfile}`
+  //     console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${sendKeyCmd}`.dim)
+  // console.log(`\n\n\n\n\n HERE WE GO....\n\n\n`)
+  //     try {
+  //       execSync(sendKeyCmd, { env: { AWS_PROFILE: options.selectedProfile } })
+  //     } catch (e) {
+  //       console.log(`Error while generating keypair:`, e);
+  //       resolve({ localPort: -1, sessionId: 'error', keyfile: null })
+  //     }
+
+  //     // Start the tunnel
+  //     // aws ssm start-session --target %h --document AWS-StartSSHSession --parameters portNumber=%p --region=eu-west-1
+  //     let command = `aws ssm start-session`
+  //       + ` --region ${options.selectedRegion}`
+  //       + ` --target ${instance.id}`
+  //       + ` --document-name AWS-StartPortForwardingSession`
+  //       + ` --parameters '{"portNumber":["22"],"localPortNumber":["${localPort}"]}'`
+  //     console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${command}`.dim)
+  //     const startTime = Date.now()
+  //     // let stdout = ''
+  //     const child = spawn(command, {
+  //       // stdio: 'inherit',
+  //       shell: true,
+  //       env: { AWS_PROFILE: options.selectedProfile, PATH: '/usr/local/bin:/bin:/usr/bin' },
+  //     });
+
+  //     // Hopefully we'll get a session ID from the output, but we have a timeout just in case.
+  //     let timer = setTimeout(() => {
+  //       console.log(`Timeout while waiting for session ID in output of aws cli command.`);
+  //       resolve({ localPort, sessionId: 'error', keyfile: null })
+  //     }, 15000)
+  //     child.stdout.on('data', (data) => {
+  //       data = data.toString() // Convert buffer to string
+  //       process.stdout.write(data.dim);
+
+  //       // Look for a sucessful start
+  //       // "Starting session with SessionId: philip.callender-0d281b92d275af27a"
+  //       // "Port 22372 opened for sessionId philip.callender-0b12c1afb02095da3."
+  //       const match = /Port (\d+) opened for sessionId (.*)./.exec(data);
+  //       // console.log(`match is `, match);
+  //       if (match) {
+  //         clearTimeout(timer)
+  //         resolve({ localPort: match[1], sessionId: match[2], keyfile })
+  //       }
+  //     });
+
+  //     // Handle stderr
+  //     child.stderr.on('data', (data) => {
+  //       data = data.toString() // Convert buffer to string
+  //       // console.log(data.red);
+  //       process.stdout.write(data.red.dim);
+  //       // Look for a connection error - "An error occurred (TargetNotConnected)..."
+  //       if (data.indexOf('An error occurred (TargetNotConnected)') >= 0) {
+  //         clearTimeout(timer)
+  //         ssmWikiSuggestion()
+  //         resolve({ localPort, sessionId: 'error', keyfile: null })
+  //       }
+  //     });
+  //     child.on('close', (code) => {
+  //       // console.log(`Tunnel exited with code ${code}.`);
+  //       // if ((Date.now() - startTime) < 5000) {
+  //       //   ssmWikiSuggestion()
+  //       // }
+  //     });
+  //   })
 }// startTunnelForSSH
 
 function temporaryKeypairFile() {
@@ -906,7 +1385,7 @@ async function closeTunnel(options, sessionId) {
     var params = {
       SessionId: sessionId
     };
-    myAWS.ssm().terminateSession(params, function(err, data) {
+    myAWS.ssm().terminateSession(params, function (err, data) {
       if (err) {
         console.log(`terminateSession error:`);
         console.log(err, err.stack); // an error occurred
@@ -936,7 +1415,7 @@ async function sshCommand(instance, keyfile, localPort, forwardPort, remoteComma
     + ` -o UserKnownHostsFile=/dev/null`
     + ` ec2-user@127.0.0.1`
     + ` ${remoteCommand}`
-// console.log(`Remote command is ${command}`);
+  // console.log(`Remote command is ${command}`);
   return command
 }
 
@@ -996,7 +1475,7 @@ async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
   program
     .command('remote')
     .description('Connect to AWS instances')
-    .action(function() {
+    .action(function () {
       // console.log(`program.opts()`, program.opts());
       haveCommand = true
       CliRemotePrompted_2020_04_01(program.opts())
@@ -1011,7 +1490,7 @@ async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
   program.parse(process.argv);
 
   // console.log(`haveCommand=${haveCommand}`)
-  
+
   // if (!haveCommand) {
   //   return ({unknownCommand:true, useDefault:false})
   // }
