@@ -1,0 +1,35 @@
+#
+#       This Cloudformation script defines an ECR Repository.
+#
+Parameters:
+  DockerImageRepository:
+    Description: "Base on Github project (e.g. tooltwist-projectname)"
+    Type: String
+    Default: "tooltwist-xxxxxxxxxx"
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Name this stack: ecr-<github_owner>-<repository_name>r"
+        Parameters: 
+          - DockerImageRepository
+    ParameterLabels:
+      DockerImageRepository:
+        default: "ECR repository name"
+
+Resources:
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    Properties:
+      RepositoryName: !Sub "${DockerImageRepository}"
+
+
+Outputs:
+  EcrRepository:
+    Description: Repository for Docker images
+    Value: !GetAtt EcrRepository.Arn
+    Export:
+      Name: !Sub ecr-${DockerImageRepository}-arn

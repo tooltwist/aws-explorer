@@ -1,0 +1,73 @@
+
+#
+#   We use our CloudFormationExecutionRole when we execute scripts
+#   using the AWS CLI, for example to promote a new version of a
+#   service.
+#
+#   Run this stack if the role was not created in 11.env-network.cf (before 2002-09-02)
+#
+
+Parameters:
+  Prefix:
+    Description: "Prefix for AWS resource names"
+    Type: String
+    Default: "j-"
+
+  EnvironmentName:
+    Description: "Environment name (Note: this MUST match the previously run stacks)"
+    Type: String
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Name this stack: <environment>-role"
+        Parameters:
+          - Prefix
+          - EnvironmentName
+
+  ParameterLabels:
+    EnvironmentName:
+      default: "Environment name"
+
+Resources:
+  CloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Retain
+    Properties:
+      RoleName: !Sub "${Prefix}${EnvironmentName}-CloudFormationExecutionRole"
+      Description: Role assumed while running these Cloudformation scripts
+#      Path: !Sub /aws-explorer/${EnvironmentName}/CloudFormationExecutionRole/
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "cloudformation.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - ecs:*
+                  - ecr:*
+                  - iam:*
+                  - elasticloadbalancing:*
+
+
+#
+# Values that may be used elsewhere.
+#
+Outputs:
+  CloudFormationExecutionRole:
+    Description: Cloudformation Execution Role
+    Value: !Ref CloudFormationExecutionRole
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-CloudFormationExecutionRole

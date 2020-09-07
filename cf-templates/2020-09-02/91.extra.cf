@@ -1,0 +1,348 @@
+Parameters:
+
+  Prefix:
+    Description: "Prefix for AWS resource names"
+    Type: String
+    Default: "j-"
+
+  EnvironmentName:
+    Description: "Environment name (Note: this MUST match the previously run stacks)"
+    Type: String
+
+  ApplicationName:
+    Description: "Application name (Note: this MUST match the previously run stacks)"
+    Type: String
+
+  Suffix:
+    Description: "Suffix to identify this variant"
+    Type: String
+    Default: "extra"
+
+  RuleSequence:
+    Type: Number
+    Default: 1
+
+  Path:
+    Type: String
+    Default: "/extra/*"
+
+  HealthCheckPath:
+    Type: String
+    Default: "/extra/healthcheck"
+
+  DesiredCount:
+    Type: Number
+    Default: 1
+
+  Memory:
+    Type: Number
+    Default: 256
+
+  Port:
+    Type: Number
+    Default: 3000
+
+  DockerImageRepository:
+    Description: "The ECR repository where Docker images are stored (e.g. tooltwist-projectname)"
+    Type: String
+    Default: "tooltwist-xxxxxxxxxx"
+
+  Tag:
+    Type: String
+    Description: "A hash or tag in the ECR repository"
+
+  EnvironmentVariableName:
+    Type: String
+    Description: "Name"
+    Default: IS_EXTRA
+
+  EnvironmentVariableValue:
+    Type: String
+    Description: "Value"
+    Default: true
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Name this stack: <environment>-<application>-<suffix>"
+        Parameters:
+          - Prefix
+          - EnvironmentName
+          - ApplicationName
+          - Suffix
+      -
+        Label:
+          default: "Image to deploy"
+        Parameters:
+          - DockerImageRepository
+          - Tag
+      -
+        Label:
+          default: "Configuration"
+        Parameters:
+          - DesiredCount
+          - Memory
+          - Port
+      -
+        Label:
+          default: "Paths"
+        Parameters:
+          - RuleSequence
+          - Path
+          - HealthCheckPath
+      -
+        Label:
+          default: "Environment Variable passed to Container"
+        Parameters:
+          - EnvironmentVariableName
+          - EnvironmentVariableValue
+
+    ParameterLabels:
+      EnvironmentName:
+        default: "Environment name"
+      ApplicationName:
+        default: "Application name"
+      Path:
+        default: "Path prefix to route to this service (e.g. /api/admin)"
+      DockerImageRepository:
+        default: "Repository name"
+      Tag:
+        default: "Version / Docker tag / Github hash"
+      RuleSequence:
+        default: "Rule sequence number in Load Balancer Listener"
+      EnvironmentVariableName:
+        default: "Name"
+      EnvironmentVariableValue:
+        default: "Value"
+
+
+Resources:
+#  AssetsS3:
+#    Type: "AWS::S3::Bucket"
+#    Properties:
+#      BucketName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-assets
+
+#  LogGroup:
+#    Type: "AWS::Logs::LogGroup"
+#    Properties:
+#      LogGroupName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}${Suffix}-logs
+
+#  Secret:
+#    Type: AWS::SecretsManager::Secret
+#    Properties:
+#      Name: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+#      Description: !Sub 'Configuration for ${EnvironmentName}/${ApplicationName}'
+#      SecretString: '{"name": "value"}'
+#      Tags:
+#        - Key: Environment
+#          Value: !Sub ${EnvironmentName}
+#        - Key: Application
+#          Value: !Sub ${ApplicationName}
+#        - Key: Name
+#          Value: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}
+#        - Key: CostCode
+#          Value: !Ref CostCode
+
+#  ParameterStore:
+#    Type: AWS::SSM::Parameter
+#    Properties:
+#      #AllowedPattern: String
+#      Description: !Sub 'Configuration for ${EnvironmentName}/${ApplicationName}'
+#      Name: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
+#      #Policies: String
+#      #Tags: Json
+#      #Tier: Standard
+#      Type: String
+#      Value: '{"name": "value"}'
+
+#  LoadBalancerSecurityGroup:
+#    Type: "AWS::EC2::SecurityGroup"
+#    Properties:
+#      GroupName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-alb
+#      GroupDescription: !Sub Controls who can access the load balancer
+#      SecurityGroupIngress:
+#        - CidrIp: "0.0.0.0/0"
+#          IpProtocol: "TCP"
+#          FromPort: 80
+#          ToPort: 80
+#        - CidrIp: "0.0.0.0/0"
+#          IpProtocol: "TCP"
+#          FromPort: 443
+#          ToPort: 443
+#      VpcId:
+#          'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-VPCID'
+#      Tags:
+#      - Key: Environment
+#        Value: !Sub ${EnvironmentName}
+#      - Key: Application
+#        Value: !Sub ${ApplicationName}
+
+#  LoadBalancer:
+#    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+#    Properties:
+#      Name: !Sub ${EnvironmentName}-${ApplicationName}
+#      Subnets:
+#        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-PublicSubnet1'
+#        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-PublicSubnet2'
+#      SecurityGroups:
+#        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-LoadBalancerSecurityGroup'
+#      Tags:
+#          - Key: Environment
+#            Value: !Sub ${EnvironmentName}
+#          - Key: Application
+#            Value: !Sub ${ApplicationName}
+#          - Key: Name
+#            Value: !Sub ${EnvironmentName}-${ApplicationName}
+#          - Key: CostCode
+#            Value: !Ref CostCode
+
+#  LoadBalancerListener:
+#    Type: AWS::ElasticLoadBalancingV2::Listener
+#    Properties:
+#      LoadBalancerArn: !Ref LoadBalancer
+#      Port: 80
+#      Protocol: HTTP
+#      DefaultActions:
+#        - Type: forward
+#          TargetGroupArn: !Ref ExtraTargetGroup
+
+  ExtraTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+#    DependsOn:
+#          'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-LoadBalancer'
+    Properties:
+      Name: !Sub ${EnvironmentName}-${ApplicationName}-${Suffix}
+      VpcId:
+          'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-VPCID'
+      Port: 80
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      Tags:
+          - Key: Environment
+            Value: !Sub ${EnvironmentName}
+          - Key: Application
+            Value: !Sub ${ApplicationName}
+          - Key: Name
+            Value: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}
+#          - Key: CostCode
+#            Value: !Ref CostCode
+
+  # Add a rule to the existing listener
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn:
+          'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-${ApplicationName}-LoadBalancerListener'
+      Priority: !Ref RuleSequence
+#      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - !Sub ${Path}
+      Actions:
+        - TargetGroupArn: !Ref ExtraTargetGroup
+          Type: forward
+
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}"
+      Cluster: !Sub "${Prefix}${EnvironmentName}"
+      Role: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-ECSServiceRole"}}
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - ContainerName: !Sub "${ApplicationName}-${Suffix}App"
+          ContainerPort: !Ref Port
+          TargetGroupArn: !Ref ExtraTargetGroup
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${EnvironmentName}-${ApplicationName}-${Suffix}"
+
+      # Permissions to run task, and pull secrets
+      ExecutionRoleArn: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-ECSTaskExecutionRole"}}
+
+
+      # From https://dillonbeliveau.com/2018/12/08/aws-ecs-iam-roles-demystified.html
+      # Not to be confused with the Task Execution Role, the Task Role is used when code running
+      # inside the container needs access to AWS resources. This is equivalent to the instance
+      # profile if the code was running directly on an EC2 instance.
+      #
+      #TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: !Sub "${ApplicationName}-${Suffix}App"
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DockerImageRepository}:${Tag}
+          Essential: true
+          Memory: !Sub "${Memory}"
+          PortMappings:
+            - ContainerPort: !Ref Port
+              Protocol: tcp
+          Environment:
+            - Name: JUICE_CONFIG
+              Value: !Sub "secrets_manager:::ap-southeast-1:::${Prefix}${EnvironmentName}-${ApplicationName}"
+#              Value: !Sub "environment:::SECRETS_MANAGER_CONFIG"
+#              Value: !Sub "environment:::PARAMETER_STORE_CONFIG"
+            - Name: !Ref EnvironmentVariableName
+              Value: !Ref EnvironmentVariableValue
+            - Name: PORT
+              Value: !Ref Port
+            - Name: ALB_HOST
+              Value: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-ServiceHost"}}
+          Secrets:
+            - Name: "PARAMETER_STORE_CONFIG"
+              ValueFrom: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Prefix}${EnvironmentName}-${ApplicationName}"
+            - Name: "SECRETS_MANAGER_CONFIG"
+#              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Prefix}${EnvironmentName}-${ApplicationName}"
+              ValueFrom: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-Secret"}}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              'awslogs-region': !Ref 'AWS::Region'
+              'awslogs-group': !Sub "${Prefix}${EnvironmentName}-${ApplicationName}-logs"
+              'awslogs-stream-prefix': !Sub "${ApplicationName}-${Suffix}"
+
+Outputs:
+  HealthCheckPath:
+    Description: HealthCheck Path
+    Value: !Ref HealthCheckPath
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}-HealthCheckPath
+
+  ExtraTargetGroup:
+    Description: Extra Target Group
+    Value: !Ref ExtraTargetGroup
+    Export:
+      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}-TargetGroup
+
+#  ServiceUrl:
+#    Description: Application URL
+#    Value: !Sub http://${LoadBalancer.DNSName}${Path}
+#    Export:
+#      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}-ServiceUrl
+
+#  ServiceHost:
+#    Description: Application URL
+#    Value: !Sub ${LoadBalancer.DNSName}
+#    Export:
+#      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}-ServiceHost
+
+#  HealthcheckUrl:
+#    Description: HealthCheck URL
+#    Value: !Sub http://${LoadBalancer.DNSName}${HealthCheckPath}
+#    Export:
+#      Name: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}-HealthCheckUrl
