@@ -294,7 +294,7 @@ Resources:
               Protocol: tcp
           Environment:
             - Name: JUICE_CONFIG
-              Value: !Sub "secrets_manager:::ap-southeast-1:::${Prefix}${EnvironmentName}-${ApplicationName}"
+              Value: !Sub "secrets_manager:::${AWS::Region}:::${Prefix}${EnvironmentName}-${ApplicationName}"
 #              Value: !Sub "environment:::SECRETS_MANAGER_CONFIG"
 #              Value: !Sub "environment:::PARAMETER_STORE_CONFIG"
             - Name: !Ref EnvironmentVariableName
