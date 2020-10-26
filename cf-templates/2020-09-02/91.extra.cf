@@ -130,19 +130,19 @@ Resources:
 #    Properties:
 #      LogGroupName: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}${Suffix}-logs
 
-#  Secret:
-#    Type: AWS::SecretsManager::Secret
-#    Properties:
-#      Name: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}"
-#      Description: !Sub 'Configuration for ${EnvironmentName}/${ApplicationName}'
-#      SecretString: '{"name": "value"}'
-#      Tags:
-#        - Key: Environment
-#          Value: !Sub ${EnvironmentName}
-#        - Key: Application
-#          Value: !Sub ${ApplicationName}
-#        - Key: Name
-#          Value: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}
+  Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}"
+      Description: !Sub 'Configuration for ${EnvironmentName}/${ApplicationName}-${Suffix}'
+      SecretString: '{"name": "value"}'
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+        - Key: Application
+          Value: !Sub ${ApplicationName}
+        - Key: Name
+          Value: !Sub ${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}
 #        - Key: CostCode
 #          Value: !Ref CostCode
 
@@ -294,7 +294,7 @@ Resources:
               Protocol: tcp
           Environment:
             - Name: JUICE_CONFIG
-              Value: !Sub "secrets_manager:::${AWS::Region}:::${Prefix}${EnvironmentName}-${ApplicationName}"
+              Value: !Sub "secrets_manager:::${AWS::Region}:::${Prefix}${EnvironmentName}-${ApplicationName}-${Suffix}"
 #              Value: !Sub "environment:::SECRETS_MANAGER_CONFIG"
 #              Value: !Sub "environment:::PARAMETER_STORE_CONFIG"
             - Name: !Ref EnvironmentVariableName
@@ -308,7 +308,7 @@ Resources:
               ValueFrom: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Prefix}${EnvironmentName}-${ApplicationName}"
             - Name: "SECRETS_MANAGER_CONFIG"
 #              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Prefix}${EnvironmentName}-${ApplicationName}"
-              ValueFrom: {"Fn::ImportValue" : {"Fn::Sub" : "${Prefix}${EnvironmentName}-${ApplicationName}-Secret"}}
+              ValueFrom: !Ref Secret
           LogConfiguration:
             LogDriver: awslogs
             Options:

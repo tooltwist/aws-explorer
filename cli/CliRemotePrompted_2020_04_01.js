@@ -1,3 +1,38 @@
+const USE_TEMPORARY_KEYFILE = false
+
+async function closeTunnel(options, sessionId) {
+  // console.log(`closeTunnel()`);
+  return new Promise((resolve, reject) => {
+
+    // Remove the temporary keypair
+    const keypairFile = temporaryKeypairFile()
+    console.error(`     ` + `rm ${keypairFile} ${keypairFile}.pub`.dim);
+    try {
+      fs.unlinkSync(`${keypairFile}`)
+      fs.unlinkSync(`${keypairFile}.pub`)
+    } catch (e) {
+      // ignore the error
+    }
+
+    var params = {
+      SessionId: sessionId
+    };
+    myAWS.ssm().terminateSession(params, function (err, data) {
+      if (err) {
+        console.log(`terminateSession error:`);
+        console.log(err, err.stack); // an error occurred
+        reject(err)
+      }
+      else {
+        // console.log(data);           // successful response
+        // Give the tunnel time to write it's exit status.
+        setTimeout(() => {
+          resolve(null)
+        }, 500)
+      }
+    });
+  })//- promise
+}//- closeTunnel
 const AWS = require('aws-sdk')
 const program = require('commander');
 const myAWS = require('../server/misc/myAWS')
@@ -497,6 +532,7 @@ async function commandsForInstance(options) {
             let sshCmd = await sshCommand(instance, keyfile, localPort, '', '')
             const { exitCode } = await shellCommand(options, sshCmd)
             await closeTunnel(options, sessionId)
+            await cleanUp()
             console.log(`\n\n`);
             return resolve(null)
           }
@@ -514,6 +550,7 @@ async function commandsForInstance(options) {
             const { exitCode } = await shellCommand(options, sshCmd)
             console.log(`\n\n`);
             await closeTunnel(options, sessionId)
+            await cleanUp()
             console.log(`\n\n`);
             return resolve(null)
           }
@@ -564,6 +601,7 @@ async function commandsForInstance(options) {
             const sshCmd = `ssh -i ${keyfile} -t -p ${localPort} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@127.0.0.1 ${remoteCommand}`
             const { exitCode } = await shellCommand(options, sshCmd)
             await closeTunnel(options, sessionId)
+            await cleanUp()
             console.log(`\n\n`);
             return resolve(null)
           }
@@ -597,6 +635,7 @@ async function commandsForInstance(options) {
             let sshCmd = await sshCommand(instance, keyfile, localPort, webPort, remoteCommand)
             const { exitCode } = await shellCommand(options, sshCmd)
             await closeTunnel(options, sessionId)
+            await cleanUp()
             console.log(`\n\n`);
             return resolve(null)
           }
@@ -642,6 +681,7 @@ async function commandsForInstance(options) {
             let sshCmd = await sshCommand(instance, keyfile, localPort, null, remoteCommand)
             const { exitCode } = await shellCommand(options, sshCmd)
             await closeTunnel(options, sessionId)
+            await cleanUp()
             console.log(`\n\n`);
             return resolve(null)
           }
@@ -692,6 +732,7 @@ async function commandsForInstance(options) {
 
             // Close the tunnel.
             await closeTunnel(options, sessionId)
+            await cleanUp()
             return resolve(null)
           }
         } else if (operation === 'ssh') {
@@ -1167,6 +1208,7 @@ function ssmWikiSuggestion() {
  */
 async function startTunnelForSSH(options, instance) {
   // console.log(`startTunnelForSSH()`);
+  // console.log(`startTunnelForSSH()`, instance);
 
   return new Promise((resolve, reject) => {
     (async () => {
@@ -1177,38 +1219,47 @@ async function startTunnelForSSH(options, instance) {
           stopPort: 22999 // maximum port
         })
 
-        // Generate a temporary keypair
-        const keyfile = temporaryKeypairFile()
-        const publicKeyfile = `${keyfile}.pub`
-        const keypairCmd = `ssh-keygen -t rsa -f ${keyfile} -N ''`
-        console.error(``);
-        console.error(`     ` + `${keypairCmd}`.dim)
-        try {
-          execSync(keypairCmd)
-        } catch (e) {
-          console.log(`Error while generating keypair:`, e);
-          resolve({ localPort: -1, sessionId: 'error', keyfile: null })
-        }
+        let keyfile
+        if (USE_TEMPORARY_KEYFILE) {
 
-        // Send the keypair to AWS
-        // See https://nullsweep.com/a-better-way-to-ssh-in-aws/
-        // See https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2-instance-connect/send-ssh-public-key.html
-        let sendKeyCmd = `aws ec2-instance-connect send-ssh-public-key`
-          + ` --instance-id ${instance.id}`
-          + ` --instance-os-user ec2-user`
-          + ` --availability-zone ${instance.data.Placement.AvailabilityZone}`
-          + ` --ssh-public-key file://${publicKeyfile}`
-        console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${sendKeyCmd}`.dim)
-        // console.log(`\n\n\n\n\n HERE WE GO....\n\n\n`)
-        try {
-          execSync(sendKeyCmd, { env: { AWS_PROFILE: options.selectedProfile } })
-        } catch (e) {
-          console.log(`Error while generating keypair:`, e);
-          resolve({ localPort: -1, sessionId: 'error', keyfile: null })
-        }
+          // Generate a temporary keypair, if it doesn't already exist.
+          await cleanUp()
+          keyfile = temporaryKeypairFile()
+          const publicKeyfile = `${keyfile}.pub`
+          const keypairCmd = `ssh-keygen -t rsa -f ${keyfile} -N ''`
+          console.error(``);
+          console.error(`     ` + `${keypairCmd}`.dim)
+          try {
+            execSync(keypairCmd)
+          } catch (e) {
+            console.log(`Error while generating keypair:`, e);
+            resolve({ localPort: -1, sessionId: 'error', keyfile: null })
+          }
 
-        // Wait a short while.
-        await sleep(2000)
+          // Send the keypair to AWS
+          // See https://nullsweep.com/a-better-way-to-ssh-in-aws/
+          // See https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2-instance-connect/send-ssh-public-key.html
+          let sendKeyCmd = `aws ec2-instance-connect send-ssh-public-key`
+            + ` --instance-id ${instance.id}`
+            + ` --instance-os-user ec2-user`
+            + ` --availability-zone ${instance.data.Placement.AvailabilityZone}`
+            + ` --ssh-public-key file://${publicKeyfile}`
+          console.error(`     ` + `AWS_PROFILE=${options.selectedProfile} ${sendKeyCmd}`.dim)
+          // console.log(`\n\n\n\n\n HERE WE GO....\n\n\n`)
+          try {
+            execSync(sendKeyCmd, { env: { AWS_PROFILE: options.selectedProfile } })
+          } catch (e) {
+            console.log(`Error while generating keypair:`, e);
+            resolve({ localPort: -1, sessionId: 'error', keyfile: null })
+          }
+
+          // Wait a short while.
+          await sleep(2000)
+        } else {
+
+          // Use the normal instance keypair
+          keyfile = `~/.ssh/${instance.data.KeyName}.pem`
+        }
 
         // Start the tunnel
         // aws ssm start-session --target %h --document AWS-StartSSHSession --parameters portNumber=%p --region=eu-west-1
@@ -1368,7 +1419,7 @@ function temporaryKeypairFile() {
   return `/tmp/aws-explorer-keypair-${process.pid}`
 }
 
-async function closeTunnel(options, sessionId) {
+async function cleanUp() {
   // console.log(`closeTunnel()`);
   return new Promise((resolve, reject) => {
 
@@ -1381,6 +1432,23 @@ async function closeTunnel(options, sessionId) {
     } catch (e) {
       // ignore the error
     }
+    resolve(null)
+  })//- promise
+}//- closeTunnel
+
+async function closeTunnel(options, sessionId) {
+  // console.log(`closeTunnel()`);
+  return new Promise((resolve, reject) => {
+
+    // // Remove the temporary keypair
+    // const keypairFile = temporaryKeypairFile()
+    // console.error(`     ` + `rm ${keypairFile} ${keypairFile}.pub`.dim);
+    // try {
+    //   fs.unlinkSync(`${keypairFile}`)
+    //   fs.unlinkSync(`${keypairFile}.pub`)
+    // } catch (e) {
+    //   // ignore the error
+    // }
 
     var params = {
       SessionId: sessionId

@@ -7,13 +7,13 @@ Parameters:
     Type: String
     Default: "tooltwist-xxxxxxxxxx"
 
-Metadata: 
-  AWS::CloudFormation::Interface: 
-    ParameterGroups: 
-      - 
-        Label: 
-          default: "Name this stack: ecr-<github_owner>-<repository_name>r"
-        Parameters: 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Name this stack: ecr-<github_owner>-<repository_name>"
+        Parameters:
           - DockerImageRepository
     ParameterLabels:
       DockerImageRepository:

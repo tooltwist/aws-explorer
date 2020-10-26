@@ -109,7 +109,7 @@ Resources:
         - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-PublicSubnet1'
         - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-PublicSubnet2'
       SecurityGroups:
-        - 'Fn::ImportValue': !Sub '${Prefix}${EnvironmentName}-LoadBalancerSecurityGroup'
+        - !Ref LoadBalancerSecurityGroup
       Tags:
           - Key: Environment
             Value: !Sub ${EnvironmentName}

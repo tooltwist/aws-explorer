@@ -186,7 +186,7 @@ async function downloadSecurityGroups() {
       // console.log(`secgrp yarp 5`, groups);
       groups.forEach(grp => {
         // console.log(`secgrp yarp 6 ${grp.id}`, JSON.stringify(grp.data, '', 2));
-        if (grp.data.IpPermissions) {
+        if (grp.data && grp.data.IpPermissions) {
           grp.data.IpPermissions.forEach(perm => {
             perm.UserIdGroupPairs.forEach(pair => {
               // console.log(`Security group ${grp.data.GroupId} <- ${pair.GroupId}`);
