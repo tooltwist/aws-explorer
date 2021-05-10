@@ -783,9 +783,9 @@ async function downloadClusters() {
   */
   if (debug) console.log('  - getting list of clusters');
   const clusterList = await myAWS.ecs().listClusters({}).promise()
-  console.log(`clusterList=`, clusterList)
+  // console.log(`clusterList=`, clusterList)
   for (const clusterArn of clusterList.clusterArns) {
-    console.log(`clusterArn=`, clusterArn)
+    // console.log(`clusterArn=`, clusterArn)
     // myAWS.ecs().listClusters({}, function (err, clusterList) {
     //   if (err) return reject(err);
     if (debug) console.log('  - getting cluster details');
@@ -795,11 +795,11 @@ async function downloadClusters() {
         // clusters: clusterList.clusterArns}
         clusters: [clusterArn]
       }).promise()
-      console.log(`clusterDefinitions=`, clusterDefinitions)
+      // console.log(`clusterDefinitions=`, clusterDefinitions)
       clusterDef = clusterDefinitions.clusters[0]
     } catch (err) {
       if (err.code === 'AccessDeniedException') {
-        console.log(`IGNORE CLUSTER ${clusterArn}`)
+        // console.log(`IGNORE CLUSTER ${clusterArn}`)
         // This user role cannot access this cluster
         continue
       }
