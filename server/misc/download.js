@@ -754,11 +754,11 @@ function loadTasksForCluster(clusterName, callback/* (err,taskDefinitions) */) {
       cluster: clusterName
     };
     if (debug) console.log('- getting task details');
-    myAWS.ecs().describeTasks(params, function (err, taskDefinitions) {
+    myAWS.ecs().describeTasks(params, function (err, taskList) {
       if (err) return callback(err);
 
       // Have the task definitions
-      return callback(null, taskDefinitions.tasks);
+      return callback(null, taskList.tasks);
     }); //- describeTasks
   }); //- listTasks
 }

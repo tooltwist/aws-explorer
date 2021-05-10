@@ -15,6 +15,7 @@ let autoscaling = null
 let ecs = null
 let rds = null
 let ssm = null
+let CloudWatchLogs = null
 
 async function downloadRegions () {
   // console.log('  downloadRegions()')
@@ -127,6 +128,10 @@ function checkAwsRegion (region) {
       apiVersion: '2014-11-06',
       region: currentRegion
     });
+    CloudWatchLogs = new AWS.CloudWatchLogs({
+      apiVersion: '2014-03-28',
+      region: currentRegion
+    });
   }
 
   return currentRegion
@@ -158,6 +163,10 @@ module.exports.elbv2 = function () {
 
 module.exports.autoscaling = function () {
   return autoscaling
+}
+
+module.exports.CloudWatchLogs = function () {
+  return CloudWatchLogs
 }
 
 module.exports.region = function () {
