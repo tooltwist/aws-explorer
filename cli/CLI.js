@@ -45,7 +45,7 @@ async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
    */
   let haveCommand = false
   program
-    .version('0.2.0')
+    .version('v2')
     .option('-e, --environment <env>', 'Environment')
     .option(`-p, --profile <profile>${defaultProfileDesc}`, 'Profile', defaultProfile)
     .option('-P, --port <port>', 'Port for webserver', parseInt)

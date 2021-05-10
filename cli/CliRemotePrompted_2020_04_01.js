@@ -497,8 +497,12 @@ async function commandsForInstance(options) {
         opQuestion[0].choices.push({ name: ' SSM session - ' + 'docker ps'.green, value: 'docker-ps' })
         if (options.selectedTask) {
           opQuestion[0].choices.push({ name: ' Tail Logfile', value: 'tail-logfile' })
-          opQuestion[0].choices.push({ name: ' View Logfile - a few minutes', value: 'view-logfile' })
-          opQuestion[0].choices.push({ name: ' Export Logfile', value: 'dump-logfile' })
+          opQuestion[0].choices.push({ name: ' View Logfile (latest 3 minutes)', value: 'view-logfile' })
+          opQuestion[0].choices.push({ name: ' View Logfile (latest 30 minutes)', value: 'view-logfile-30minutes' })
+          opQuestion[0].choices.push({ name: ' View Logfile (latest 3 hours)', value: 'view-logfile-3hours' })
+          opQuestion[0].choices.push({ name: ' Export 3 hours of logfile', value: 'dump-logfile-3hours' })
+          opQuestion[0].choices.push({ name: ' Export 3 days of logfile', value: 'dump-logfile-3days' })
+          opQuestion[0].choices.push({ name: ' Export entire logfile', value: 'dump-logfile' })
         }
         opQuestion[0].choices.push({ name: 'back'.bold, value: 'back' })
         opQuestion[0].choices.push({ name: 'quit'.bold, value: 'quit' })
@@ -702,8 +706,8 @@ async function commandsForInstance(options) {
           /*
            *  Tail a logfile for the selected task
            */
-          console.log(`YARP TAIL`)
-          askThenDumpCloudWatchLog(options, LOG_DURATION_TAIL, function (err) {
+          createDumpfile = false
+          askThenDumpCloudWatchLog(options, LOG_DURATION_TAIL, createDumpfile, function (err) {
             if (err) return reject(err)
             return resolve(null)
           })
@@ -712,17 +716,65 @@ async function commandsForInstance(options) {
           /*
            *  Export a logfile for the selected task
            */
-          const duration = 4 * 60 // four minutes
-          askThenDumpCloudWatchLog(options, duration, function (err) {
+          const duration = 3 * 60 // four minutes
+          createDumpfile = false
+          askThenDumpCloudWatchLog(options, duration, createDumpfile, function (err) {
+            if (err) return reject(err)
+            return resolve(null)
+          })
+        } else if (operation === 'view-logfile-30minutes') {
+
+          /*
+           *  Export a logfile for the selected task
+           */
+          const duration = 30 * 60
+          createDumpfile = false
+          askThenDumpCloudWatchLog(options, duration, createDumpfile, function (err) {
+            if (err) return reject(err)
+            return resolve(null)
+          })
+        } else if (operation === 'view-logfile-3hours') {
+
+          /*
+           *  Export a logfile for the selected task
+           */
+          const duration = 3 * 60 * 60 // four minutes
+          createDumpfile = false
+          askThenDumpCloudWatchLog(options, duration, createDumpfile, function (err) {
             if (err) return reject(err)
             return resolve(null)
           })
         } else if (operation === 'dump-logfile') {
 
           /*
-           *  Export a logfile for the selected task
+           *  Export entire logfile for the selected task
            */
-          askThenDumpCloudWatchLog(options, LOG_DURATION_ENTIRE_LOG, function (err) {
+          createDumpfile = true
+          askThenDumpCloudWatchLog(options, LOG_DURATION_ENTIRE_LOG, createDumpfile, function (err) {
+            if (err) return reject(err)
+            return resolve(null)
+          })
+
+        } else if (operation === 'dump-logfile-3hours') {
+
+          /*
+           *  Export latest 3 hours of a logfile for the selected task
+           */
+          createDumpfile = true
+          const duration = 3 * 60 * 60 // four minutes
+          askThenDumpCloudWatchLog(options, duration, createDumpfile, function (err) {
+            if (err) return reject(err)
+            return resolve(null)
+          })
+
+        } else if (operation === 'dump-logfile-3days') {
+
+          /*
+           *  Export latest 3 days of a logfile for the selected task
+           */
+          createDumpfile = true
+          const duration = 3 * 24 * 60 * 60 // four minutes
+          askThenDumpCloudWatchLog(options, duration, createDumpfile, function (err) {
             if (err) return reject(err)
             return resolve(null)
           })
@@ -997,7 +1049,7 @@ async function startTunnelForSSH(options, instance) {
 
 }// startTunnelForSSH
 
-function askThenDumpCloudWatchLog(options, duration, callback) {
+function askThenDumpCloudWatchLog(options, duration, createDumpfile, callback) {
   // console.log(`askThenDumpCloudWatchLog(${duration})`)
 
   // console.log(`task is`, options.selectedTask)
@@ -1031,8 +1083,8 @@ function askThenDumpCloudWatchLog(options, duration, callback) {
     const group = logConfiguration.options['awslogs-group']
     // const region = logConfiguration.options['awslogs-region']
     const streamPrefix = logConfiguration.options['awslogs-stream-prefix']
-    console.log(`group=`, group)
-    console.log(`streamPrefix=`, streamPrefix)
+    // console.log(`group=`, group)
+    // console.log(`streamPrefix=`, streamPrefix)
 
     // See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudWatchLogs.html#describeLogStreams-property
     var params = {
@@ -1073,7 +1125,7 @@ function askThenDumpCloudWatchLog(options, duration, callback) {
       var startTime = 0
       const endTime = 0
       const startToken = null
-      if (duration === LOG_DURATION_ENTIRE_LOG) {
+      if (createDumpfile) {
         const dumpFile = `/tmp/${streamName.replace(/\//g, "_")}_${moment(lastEventTimestamp).format('YYYYMMDD_HHmmss')}.txt`
         console.log()
         console.log()
@@ -1085,6 +1137,9 @@ function askThenDumpCloudWatchLog(options, duration, callback) {
         try {
           fs.unlinkSync(dumpFile) // In case it already exists
         } catch (e) { /* do nothing */ }
+        if (duration !== LOG_DURATION_ENTIRE_LOG) {
+          startTime = lastEventTimestamp - (duration * 1000)
+        }
         dumpCloudWatchLog_2(group, streamName, startTime, endTime, startToken, dumpFile, callback)
       } else if (duration === LOG_DURATION_TAIL) {
 
@@ -1098,11 +1153,11 @@ function askThenDumpCloudWatchLog(options, duration, callback) {
         console.log()
         setTimeout(function() {
           dumpFile = 'tail'
-          const startTime = lastEventTimestamp - (60 * 1000) // Last minute
+          startTime = lastEventTimestamp - (60 * 1000) // Last minute
           dumpCloudWatchLog_2(group, streamName, startTime, endTime, startToken, dumpFile, callback)
         }, 3000)
       } else {
-        const startTime = lastEventTimestamp - (duration * 1000)
+        startTime = lastEventTimestamp - (duration * 1000)
         dumpCloudWatchLog_2(group, streamName, startTime, endTime, startToken, dumpFile, callback)
       }
 
@@ -1287,7 +1342,7 @@ async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
      */
     let haveCommand = false
     program
-      .version('0.2.0')
+      .version('v2')
       .option('-e, --environment <env>', 'Environment')
       .option(`-p, --profile <profile>`, 'Profile')
       .option(`-r, --region <region>`, 'Region')
