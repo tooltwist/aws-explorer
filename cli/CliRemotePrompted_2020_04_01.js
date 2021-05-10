@@ -1151,14 +1151,19 @@ function askThenDumpCloudWatchLog(options, duration, createDumpfile, callback) {
         console.log(`Press Control-C to exit`)
         console.log()
         console.log()
-        setTimeout(function() {
+        setTimeout(function () {
           dumpFile = 'tail'
           startTime = lastEventTimestamp - (60 * 1000) // Last minute
           dumpCloudWatchLog_2(group, streamName, startTime, endTime, startToken, dumpFile, callback)
         }, 3000)
       } else {
+        console.log()
+        console.log()
         startTime = lastEventTimestamp - (duration * 1000)
-        dumpCloudWatchLog_2(group, streamName, startTime, endTime, startToken, dumpFile, callback)
+        dumpCloudWatchLog_2(group, streamName, startTime, endTime, startToken, dumpFile, function (err) {
+          console.log('--- end ---')
+          return callback(err)
+        })
       }
 
 
@@ -1212,7 +1217,7 @@ function dumpCloudWatchLog_2(group, streamName, startTime, endTime, nextToken, d
     } else if (dumpFile === 'tail') {
       // Tailing - Wait a bit and maybe get some more
       // console.log(`TAIL... wait a bit`)
-      setTimeout(function() {
+      setTimeout(function () {
         startTime = finalTime
         dumpCloudWatchLog_2(group, streamName, startTime, endTime, nextToken, dumpFile, callback)
       }, 3000)
@@ -1225,153 +1230,153 @@ function dumpCloudWatchLog_2(group, streamName, startTime, endTime, nextToken, d
 
 
 function temporaryKeypairFile() {
-    return `/tmp/aws-explorer-keypair-${process.pid}`
-  }
+  return `/tmp/aws-explorer-keypair-${process.pid}`
+}
 
 async function cleanUp() {
-    // console.log(`closeTunnel()`);
-    return new Promise((resolve, reject) => {
+  // console.log(`closeTunnel()`);
+  return new Promise((resolve, reject) => {
 
-      // Remove the temporary keypair
-      const keypairFile = temporaryKeypairFile()
-      console.error(`     ` + `rm ${keypairFile} ${keypairFile}.pub`.dim);
-      try {
-        fs.unlinkSync(`${keypairFile}`)
-        fs.unlinkSync(`${keypairFile}.pub`)
-      } catch (e) {
-        // ignore the error
-      }
-      resolve(null)
-    })//- promise
-  }//- closeTunnel
+    // Remove the temporary keypair
+    const keypairFile = temporaryKeypairFile()
+    console.error(`     ` + `rm ${keypairFile} ${keypairFile}.pub`.dim);
+    try {
+      fs.unlinkSync(`${keypairFile}`)
+      fs.unlinkSync(`${keypairFile}.pub`)
+    } catch (e) {
+      // ignore the error
+    }
+    resolve(null)
+  })//- promise
+}//- closeTunnel
 
 async function closeTunnel(options, sessionId) {
-    // console.log(`closeTunnel()`);
-    return new Promise((resolve, reject) => {
+  // console.log(`closeTunnel()`);
+  return new Promise((resolve, reject) => {
 
-      // // Remove the temporary keypair
-      // const keypairFile = temporaryKeypairFile()
-      // console.error(`     ` + `rm ${keypairFile} ${keypairFile}.pub`.dim);
-      // try {
-      //   fs.unlinkSync(`${keypairFile}`)
-      //   fs.unlinkSync(`${keypairFile}.pub`)
-      // } catch (e) {
-      //   // ignore the error
-      // }
+    // // Remove the temporary keypair
+    // const keypairFile = temporaryKeypairFile()
+    // console.error(`     ` + `rm ${keypairFile} ${keypairFile}.pub`.dim);
+    // try {
+    //   fs.unlinkSync(`${keypairFile}`)
+    //   fs.unlinkSync(`${keypairFile}.pub`)
+    // } catch (e) {
+    //   // ignore the error
+    // }
 
-      var params = {
-        SessionId: sessionId
-      };
-      myAWS.ssm().terminateSession(params, function (err, data) {
-        if (err) {
-          console.log(`terminateSession error:`);
-          console.log(err, err.stack); // an error occurred
-          reject(err)
-        }
-        else {
-          // console.log(data);           // successful response
-          // Give the tunnel time to write it's exit status.
-          setTimeout(() => {
-            resolve(null)
-          }, 500)
-        }
-      });
-    })//- promise
-  }//- closeTunnel
+    var params = {
+      SessionId: sessionId
+    };
+    myAWS.ssm().terminateSession(params, function (err, data) {
+      if (err) {
+        console.log(`terminateSession error:`);
+        console.log(err, err.stack); // an error occurred
+        reject(err)
+      }
+      else {
+        // console.log(data);           // successful response
+        // Give the tunnel time to write it's exit status.
+        setTimeout(() => {
+          resolve(null)
+        }, 500)
+      }
+    });
+  })//- promise
+}//- closeTunnel
 
 async function sshCommand(instance, keyfile, localPort, forwardPort, remoteCommand) {
-    // console.log(`sshCommand: `, instance);
-    // console.log(`KeyName is ${instance.data.KeyName}`);
+  // console.log(`sshCommand: `, instance);
+  // console.log(`KeyName is ${instance.data.KeyName}`);
 
-    const command = `ssh -t`
-      + ` -p ${localPort}`
-      // + (instance.data.KeyName ? ` -i ~/.ssh/${instance.data.KeyName}.pem` : ``)
-      + (keyfile ? ` -i ${keyfile}` : ``)
-      + (forwardPort ? ` -L ${forwardPort}:127.0.0.1:${forwardPort}` : ``)
-      + ` -o StrictHostKeyChecking=no`
-      + ` -o UserKnownHostsFile=/dev/null`
-      + ` ec2-user@127.0.0.1`
-      + ` ${remoteCommand}`
-    // console.log(`Remote command is ${command}`);
-    return command
-  }
+  const command = `ssh -t`
+    + ` -p ${localPort}`
+    // + (instance.data.KeyName ? ` -i ~/.ssh/${instance.data.KeyName}.pem` : ``)
+    + (keyfile ? ` -i ${keyfile}` : ``)
+    + (forwardPort ? ` -L ${forwardPort}:127.0.0.1:${forwardPort}` : ``)
+    + ` -o StrictHostKeyChecking=no`
+    + ` -o UserKnownHostsFile=/dev/null`
+    + ` ec2-user@127.0.0.1`
+    + ` ${remoteCommand}`
+  // console.log(`Remote command is ${command}`);
+  return command
+}
 
 
 async function shellCommand(options, command) {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
 
-      console.error(``);
-      console.error(`     ` + `${command}`.dim)
-      console.error(``);
-      // const sshStartTime = Date.now()
-      const child = spawn(command, {
-        stdio: 'inherit',
-        shell: true,
-        env: { ...process.env, AWS_PROFILE: options.selectedProfile },
-      });
-      child.on('close', (code) => {
-        // console.log(`Command exited with code ${code}.`);
-        // if ((Date.now() - sshStartTime) < 5000) {
-        //   ssmWikiSuggestion()
-        // }
-        resolve({ exitCode: code })
-      });
-    })//- promise
-  }
+    console.error(``);
+    console.error(`     ` + `${command}`.dim)
+    console.error(``);
+    // const sshStartTime = Date.now()
+    const child = spawn(command, {
+      stdio: 'inherit',
+      shell: true,
+      env: { ...process.env, AWS_PROFILE: options.selectedProfile },
+    });
+    child.on('close', (code) => {
+      // console.log(`Command exited with code ${code}.`);
+      // if ((Date.now() - sshStartTime) < 5000) {
+      //   ssmWikiSuggestion()
+      // }
+      resolve({ exitCode: code })
+    });
+  })//- promise
+}
 
 
 async function sleep(ms) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve()
-      }, ms)
-    })
-  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve()
+    }, ms)
+  })
+}
 
 function shortContainerId(containerId) {
-    return containerId.substring(0, 12)
-  }
+  return containerId.substring(0, 12)
+}
 
 
 async function parseCommandLine(callback/*(unknownCommand, useDefault)*/) {
 
-    // console.log(`YYYYY YAAAARRRRRPPPPP  CLIremote()`);
+  // console.log(`YYYYY YAAAARRRRRPPPPP  CLIremote()`);
 
-    /*
-     *  Main thread starts here.
-     */
-    let haveCommand = false
-    program
-      .version('v2')
-      .option('-e, --environment <env>', 'Environment')
-      .option(`-p, --profile <profile>`, 'Profile')
-      .option(`-r, --region <region>`, 'Region')
-      .option(`-s, --skip-ecs`, 'Skip ECS')
+  /*
+   *  Main thread starts here.
+   */
+  let haveCommand = false
+  program
+    .version('v2')
+    .option('-e, --environment <env>', 'Environment')
+    .option(`-p, --profile <profile>`, 'Profile')
+    .option(`-r, --region <region>`, 'Region')
+    .option(`-s, --skip-ecs`, 'Skip ECS')
 
-    // Access database via a jump box
-    program
-      .command('remote')
-      .description('Connect to AWS instances')
-      .action(function () {
-        // console.log(`program.opts()`, program.opts());
-        haveCommand = true
-        CliRemotePrompted_2020_04_01(program.opts())
-          .then(result => {
+  // Access database via a jump box
+  program
+    .command('remote')
+    .description('Connect to AWS instances')
+    .action(function () {
+      // console.log(`program.opts()`, program.opts());
+      haveCommand = true
+      CliRemotePrompted_2020_04_01(program.opts())
+        .then(result => {
 
-          }).catch(e => {
-            console.log(e);
-          })
-      });
+        }).catch(e => {
+          console.log(e);
+        })
+    });
 
-    // Parse the arguments
-    program.parse(process.argv);
+  // Parse the arguments
+  program.parse(process.argv);
 
-    // console.log(`haveCommand=${haveCommand}`)
+  // console.log(`haveCommand=${haveCommand}`)
 
-    // if (!haveCommand) {
-    //   return ({unknownCommand:true, useDefault:false})
-    // }
-  }
+  // if (!haveCommand) {
+  //   return ({unknownCommand:true, useDefault:false})
+  // }
+}
 
 module.exports.parseCommandLine = parseCommandLine
 // module.exports. = CliRemotePrompted_2020_04_01

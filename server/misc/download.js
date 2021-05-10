@@ -654,37 +654,33 @@ async function downloadTargetGroups(withHealthchecks) {
 /*
 *   Get the container instances for a cluster.
 */
-function loadContainerInstancesForCluster(cluster, callback/* (err, instanceForContainer) */) {
+async function loadContainerInstancesForCluster(cluster) {
   let clusterName = cluster.data.clusterName;
   if (debug) console.log(`  - getting list of container instances (cluster=${clusterName})`);
   let instanceForContainer = []; // containerInstanceArn -> node of EC2 instance
-  myAWS.ecs().listContainerInstances({
+  const containerInstanceList = await myAWS.ecs().listContainerInstances({
     cluster: clusterName
-  }, function (err, containerInstanceList) {
-    if (err) return callback(err);
-    if (containerInstanceList.containerInstanceArns.length == 0) {
-      return callback(null, instanceForContainer);
-    }
-    var params = {
-      cluster: clusterName,
-      containerInstances: containerInstanceList.containerInstanceArns
-    };
-    if (debug) console.log(`  - getting container instance details (cluster=${clusterName}, ${containerInstanceList.containerInstanceArns.length} container instances)`);
-    myAWS.ecs().describeContainerInstances(params, function (err, containerDefinitions) {
-      if (err) return callback(err);
+  }).promise()
+  if (containerInstanceList.containerInstanceArns.length == 0) {
+    return []
+  }
+  if (debug) console.log(`  - getting container instance details (cluster=${clusterName}, ${containerInstanceList.containerInstanceArns.length} container instances)`);
+  var params = {
+    cluster: clusterName,
+    containerInstances: containerInstanceList.containerInstanceArns
+  };
+  const containerDefinitions = await myAWS.ecs().describeContainerInstances(params).promise()
 
-      // Add the container instances to our graph
-      // console.log(`containerDefinitions=`, containerDefinitions);
-      containerDefinitions.containerInstances.forEach(function (containerDef) {
-        let instance = findInstanceById(containerDef.ec2InstanceId)
-        cluster.addChild(instance);
+  // Add the container instances to our graph
+  // console.log(`containerDefinitions=`, containerDefinitions);
+  containerDefinitions.containerInstances.forEach(function (containerDef) {
+    let instance = findInstanceById(containerDef.ec2InstanceId)
+    cluster.addChild(instance);
 
-        // Remember this, so we can create a link between tasks and this EC2 instance
-        instanceForContainer[containerDef.containerInstanceArn] = instance;
-      }); // next containerInstance
-      return callback(null, instanceForContainer);
-    });//- describeContainerInstances
-  });//- listContainerInstances
+    // Remember this, so we can create a link between tasks and this EC2 instance
+    instanceForContainer[containerDef.containerInstanceArn] = instance;
+  }); // next containerInstance
+  return instanceForContainer
 };//- function loadContainerInstancesForCluster()
 
 /*
@@ -692,446 +688,221 @@ function loadContainerInstancesForCluster(cluster, callback/* (err, instanceForC
 *
 *   https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#describeServices-property
 */
-function loadServicesForCluster(cluster, callback/* (err) */) {
+async function loadServicesForCluster(cluster) {
   if (debug) console.log(`  - getting list of services for cluster ${cluster.data.clusterName}`);
 
   let clusterName = cluster.data.clusterName;
   let clusterArn = cluster.data.clusterArn;
-  myAWS.ecs().listServices({
+  const serviceListData = await myAWS.ecs().listServices({
     cluster: clusterName
-  }, function (err, serviceListData) {
-    if (err) return callback(err);
-    if (serviceListData.serviceArns.length === 0) {
-      return callback(null)
-    }
-    if (debug) console.log('  - getting service details');
-    myAWS.ecs().describeServices({
-      services: serviceListData.serviceArns,
-      cluster: clusterArn
-    }, function (err, serviceDefinitions) {
-      if (err) return callback(err);
+  }).promise()
+  if (serviceListData.serviceArns.length === 0) {
+    return null
+  }
+  if (debug) console.log('  - getting service details');
+  const serviceDefinitions = await myAWS.ecs().describeServices({
+    services: serviceListData.serviceArns,
+    cluster: clusterArn
+  }).promise()
 
-      // console.log('serviceDefinitions=', serviceDefinitions);
-      // console.log(`Got services`);
-      serviceDefinitions.services.forEach(serviceDef => {
+  // console.log('serviceDefinitions=', serviceDefinitions);
+  // console.log(`Got services`);
+  serviceDefinitions.services.forEach(serviceDef => {
 
-        // Next Service
-        // console.log('serviceDef=', serviceDef);
-        let service = graph.findNode(types.SERVICE, serviceDef.serviceName, serviceDef)
-        cluster.addChild(service);
+    // Next Service
+    // console.log('serviceDef=', serviceDef);
+    let service = graph.findNode(types.SERVICE, serviceDef.serviceName, serviceDef)
+    cluster.addChild(service);
 
-        // Find the load balancer nodes for this service.
-        serviceDef.loadBalancers.forEach(lb => {
-          let tg = findTargetGroupByARN(lb.targetGroupArn);
-          if (tg) {
-            tg.addChild(service);
-            // service.addChild(tg);
-          } else {
-            console.log(`ERROR: Service ${service.key} refers to unknown target group ${lb.targetGroupArn}`);
-          }
-        }); //- next load balancer
-      }); //- next service
-      return callback(null);
-    }); //- describeServices
-  }); //- listServices
+    // Find the load balancer nodes for this service.
+    serviceDef.loadBalancers.forEach(lb => {
+      let tg = findTargetGroupByARN(lb.targetGroupArn);
+      if (tg) {
+        tg.addChild(service);
+        // service.addChild(tg);
+      } else {
+        console.log(`ERROR: Service ${service.key} refers to unknown target group ${lb.targetGroupArn}`);
+      }
+    }); //- next load balancer
+  }); //- next service
+  return null
 }//- loadServicesForCluster
 
 /*
 *   Get the task definitions for a cluster.
 */
-function loadTasksForCluster(clusterName, callback/* (err,taskDefinitions) */) {
+async function loadTasksForCluster(clusterName) {
   if (debug) console.log(`  - getting list of tasks (cluster=${clusterName})`);
-  myAWS.ecs().listTasks({
+  const taskList = await myAWS.ecs().listTasks({
     cluster: clusterName
-  }, function (err, taskList) {
-    if (err) return callback(err);
-    // console.log('taskList=', taskList); // successful response
-    if (taskList.taskArns.length === 0) {
-      return callback(null, []); // No tasks
-    }
-    var params = {
-      tasks: taskList.taskArns,
-      cluster: clusterName
-    };
-    if (debug) console.log('- getting task details');
-    myAWS.ecs().describeTasks(params, function (err, taskList) {
-      if (err) return callback(err);
-
-      // Have the task definitions
-      return callback(null, taskList.tasks);
-    }); //- describeTasks
-  }); //- listTasks
+  }).promise()
+  // console.log('taskList=', taskList); // successful response
+  if (taskList.taskArns.length === 0) {
+    return [] // No tasks
+  }
+  var params = {
+    tasks: taskList.taskArns,
+    cluster: clusterName
+  };
+  if (debug) console.log('- getting task details');
+  const taskDetails = await myAWS.ecs().describeTasks(params).promise()
+  return taskDetails.tasks
 }
 
 async function downloadClusters() {
   if (debug) console.log('  downloadClusters()');
 
-  return new Promise((resolve, reject) => {
-    (async () => {
-      try {
+  // Check the load balancers have been loaded already,
+  // as we'll need to link to them from ECS services.
+  if (!targetGroupsAreLoaded) {
+    if (debug) console.log(`- downloadClusters requires targetGroups`);
+    await downloadTargetGroups()
+  }
+  if (!loadBalancersAreLoaded) {
+    if (debug) console.log(`- downloadClusters requires loadBalancers`);
+    await downloadLoadBalancers()
+  }
+  if (!instancesAreLoaded) {
+    if (debug) console.log(`- downloadClusters requires instances`);
+    await downloadInstances()
+  }
 
-        // Check the load balancers have been loaded already,
-        // as we'll need to link to them from ECS services.
-        if (!targetGroupsAreLoaded) {
-          if (debug) console.log(`- downloadClusters requires targetGroups`);
-          await downloadTargetGroups()
-        }
-        if (!loadBalancersAreLoaded) {
-          if (debug) console.log(`- downloadClusters requires loadBalancers`);
-          await downloadLoadBalancers()
-        }
-        if (!instancesAreLoaded) {
-          if (debug) console.log(`- downloadClusters requires instances`);
-          await downloadInstances()
-        }
+  let describe = (node) => {
+    let desc = ''
+    let name = node.findTag('Name');
+    if (name) {
+      desc += '  Name: ' + name + '\n'
+    }
+    return desc
+  }
 
-        let describe = (node) => {
-          let desc = ''
-          let name = node.findTag('Name');
-          if (name) {
-            desc += '  Name: ' + name + '\n'
-          }
-          return desc
-        }
-
-        /*
-        *   Get the clusters for this region.
-        *
-        *   See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#listClusters-property
-        */
-        if (debug) console.log('  - getting list of clusters');
-        myAWS.ecs().listClusters({}, function (err, clusterList) {
-          if (err) return reject(err);
-          if (debug) console.log('  - getting cluster details');
-          myAWS.ecs().describeClusters({
-            clusters: clusterList.clusterArns
-          }, function (err, clusterDefinitions) {
-            if (err) return reject(err);
-
-            // console.log('clusterDefinitions: ', clusterDefinitions);
-            // return resolve(null)
-
-            // Loop through the clusters.
-            (function nextCluster(index) {
-              // Past the last cluster?
-              if (index >= clusterDefinitions.clusters.length) {
-                return resolve(null)
-              }
-
-              // Next Cluster
-              let clusterDef = clusterDefinitions.clusters[index]
-              let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
-              // console.log('Got cluster ' + clusterDef.clusterName);
-              // console.log('Got cluster ' + cluster);
-
-
-              /*
-              *   Get the container instances for this cluster.
-              */
-              loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
-                if (err) return reject(err);
-
-                loadServicesForCluster(cluster, (err) => {
-                  if (err) return reject(err);
-
-                  loadTasksForCluster(clusterDef.clusterName, (err, taskDefinitions) => {
-                    if (err) return reject(err);
-
-                    // Loop through the task definitions.
-                    // console.log(`taskDefinitions=`, taskDefinitions);
-                    taskDefinitions.forEach(taskDef => {
-                      // console.log(`Task ${taskDef.taskDefinitionArn}`);
-                      // console.log(`  startedBy:`, taskDef.startedBy);
-                      // console.log(`  Containers:`, taskDef.containers);
-                      // console.log(`  Last status ${taskDef.lastStatus}`);
-
-                      // Get the task name from it's definition. For example, the end of:
-                      // 'arn:aws:ecs:ap-southeast-1:238285074004:task-definition/nbt-trsgms1-authservice:6'
-                      let pos = taskDef.taskDefinitionArn.lastIndexOf('/')
-                      let taskName = taskDef.taskDefinitionArn.substring(pos + 1)
-                      pos = taskName.lastIndexOf(':');
-                      taskName = taskName.substring(0, pos)
-                      // console.log(`task name is ${taskName}`);
-
-                      // See if it was started by a service
-                      // console.log('Looking for service parent');
-                      let parentOfTask = cluster;
-                      if (taskDef.startedBy) {
-                        // console.log('checking services');
-                        cluster.children.forEach(function (childKey) {
-                          let child = graph.findNodeWithKey(childKey);
-                          if (!child) {
-                            console.log(`Unknown cluster child ${childKey}`);
-                          }
-                          if (child && child.type === types.SERVICE) {
-                            let service = child;
-                            let deployments = service.data.deployments;
-                            for (var cnt = 0; cnt < deployments.length; cnt++) {
-                              if (deployments[cnt].id === taskDef.startedBy) {
-                                // Yep, was started by this service.
-                                // console.log('\n\nWas started by ', service);
-                                parentOfTask = service;
-                                break;
-                              }
-                            }//- next deployment
-                          }//- child is a service
-                        })// next child of the cluster
-                      }//- startedBy != null
-
-                      // Define the task, and add it to it's parent.
-                      let task = graph.findNode(types.TASK, taskName, taskDef);
-                      parentOfTask.addChild(task);
-
-                      // Link the task to the containerInstance's EC2 instance.
-                      let instance = instanceForContainer[taskDef.containerInstanceArn];
-                      if (instance) {
-                        task.addChild(instance);
-                      } else {
-                        console.log(`ERROR: task ${taskDef.taskArn} refers to unknown containerInstance ${taskDef.containerInstanceArn}`);
-                      }
-
-                    }); //- next task
-
-                    return nextCluster(index + 1)
-                  }); //- loadTasksForCluster
-                }); //- loadServicesForCluster
-              }); //- loadContainerInstancesForCluster
-            })(0); // next cluster
-          }); //- describeClusters
-        }); //- listClusters
-      } catch (err) {
-        reject(err)
+  /*
+  *   Get the clusters for this region.
+  *
+  *   See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#listClusters-property
+  */
+  if (debug) console.log('  - getting list of clusters');
+  const clusterList = await myAWS.ecs().listClusters({}).promise()
+  console.log(`clusterList=`, clusterList)
+  for (const clusterArn of clusterList.clusterArns) {
+    console.log(`clusterArn=`, clusterArn)
+    // myAWS.ecs().listClusters({}, function (err, clusterList) {
+    //   if (err) return reject(err);
+    if (debug) console.log('  - getting cluster details');
+    var clusterDef = null
+    try {
+      const clusterDefinitions = await myAWS.ecs().describeClusters({
+        // clusters: clusterList.clusterArns}
+        clusters: [clusterArn]
+      }).promise()
+      console.log(`clusterDefinitions=`, clusterDefinitions)
+      clusterDef = clusterDefinitions.clusters[0]
+    } catch (err) {
+      if (err.code === 'AccessDeniedException') {
+        console.log(`IGNORE CLUSTER ${clusterArn}`)
+        // This user role cannot access this cluster
+        continue
       }
-    })()//- call async function immediately
-  })//- Promise
+      throw (err)
+    }
+    // myAWS.ecs().describeClusters({
+    //   clusters: clusterList.clusterArns
+    // }, function (err, clusterDefinitions) {
+    //   if (err) {
 
-  // return new Promise(async (resolve, reject) => {
-  //   // Check the load balancers have been loaded already,
-  //   // as we'll need to link to them from ECS services.
-  //   if (!targetGroupsAreLoaded) {
-  //     if (debug) console.log(`- downloadClusters requires targetGroups`);
-  //     await downloadTargetGroups()
-  //   }
-  //   if (!loadBalancersAreLoaded) {
-  //     if (debug) console.log(`- downloadClusters requires loadBalancers`);
-  //     await downloadLoadBalancers()
-  //   }
-  //   if (!instancesAreLoaded) {
-  //     if (debug) console.log(`- downloadClusters requires instances`);
-  //     await downloadInstances()
-  //   }
+    //     return reject(err);
+    //   }
 
-  //   let describe = (node) => {
-  //     let desc = ''
-  //     let name = node.findTag('Name');
-  //     if (name) {
-  //       desc += '  Name: ' + name + '\n'
-  //     }
-  //     return desc
-  //   }
+    // console.log('clusterDefinitions: ', clusterDefinitions);
+    // return resolve(null)
 
-  //   /*
-  //   *   Get the clusters for this region.
-  //   *
-  //   *   See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#listClusters-property
-  //   */
-  //   if (debug) console.log('  - getting list of clusters');
-  //   myAWS.ecs().listClusters({}, function (err, clusterList) {
-  //     if (err) return reject(err);
-  //     if (debug) console.log('  - getting cluster details');
-  //     myAWS.ecs().describeClusters({
-  //       clusters: clusterList.clusterArns
-  //     }, function (err, clusterDefinitions) {
-  //       if (err) return reject(err);
+    // Loop through the clusters.
+    // for (const clusterDef of clusterDefinitions.clusters) {
+    // (function nextCluster(index) {
+    //   // Past the last cluster?
+    //   if (index >= clusterDefinitions.clusters.length) {
+    //     return resolve(null)
+    //   }
 
-  //       // console.log('clusterDefinitions: ', clusterDefinitions);
-  //       // return resolve(null)
-
-  //       // Loop through the clusters.
-  //       (function nextCluster(index) {
-  //         // Past the last cluster?
-  //         if (index >= clusterDefinitions.clusters.length) {
-  //           return resolve(null)
-  //         }
-
-  //         // Next Cluster
-  //         let clusterDef = clusterDefinitions.clusters[index]
-  //         let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
-  //         // console.log('Got cluster ' + clusterDef.clusterName);
-  //         // console.log('Got cluster ' + cluster);
+    // Next Cluster
+    // let clusterDef = clusterDefinitions.clusters[index]
+    let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
+    // console.log('Got cluster ' + clusterDef.clusterName);
+    // console.log('Got cluster ' + cluster);
 
 
-  //         /*
-  //         *   Get the container instances for this cluster.
-  //         */
-  //         loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
-  //           if (err) return reject(err);
+    /*
+    *   Get the container instances for this cluster.
+    */
+    const instanceForContainer = await loadContainerInstancesForCluster(cluster)
+    // loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
+    // if (err) return reject(err);
 
-  //           loadServicesForCluster(cluster, (err) => {
-  //             if (err) return reject(err);
+    await loadServicesForCluster(cluster)
+    // loadServicesForCluster(cluster, (err) => {
+    // if (err) return reject(err);
 
-  //             loadTasksForCluster(clusterDef.clusterName, (err, taskDefinitions) => {
-  //               if (err) return reject(err);
+    const taskDefinitions = await loadTasksForCluster(clusterDef.clusterName)
+    // if (err) return reject(err);
 
-  //               // Loop through the task definitions.
-  //               // console.log(`taskDefinitions=`, taskDefinitions);
-  //               taskDefinitions.forEach(taskDef => {
-  //                 // console.log(`Task ${taskDef.taskDefinitionArn}`);
-  //                 // console.log(`  startedBy:`, taskDef.startedBy);
-  //                 // console.log(`  Containers:`, taskDef.containers);
-  //                 // console.log(`  Last status ${taskDef.lastStatus}`);
+    // Loop through the task definitions.
+    // console.log(`taskDefinitions=`, taskDefinitions);
+    taskDefinitions.forEach(taskDef => {
+      // console.log(`Task ${taskDef.taskDefinitionArn}`);
+      // console.log(`  startedBy:`, taskDef.startedBy);
+      // console.log(`  Containers:`, taskDef.containers);
+      // console.log(`  Last status ${taskDef.lastStatus}`);
 
-  //                 // Get the task name from it's definition. For example, the end of:
-  //                 // 'arn:aws:ecs:ap-southeast-1:238285074004:task-definition/nbt-trsgms1-authservice:6'
-  //                 let pos = taskDef.taskDefinitionArn.lastIndexOf('/')
-  //                 let taskName = taskDef.taskDefinitionArn.substring(pos + 1)
-  //                 pos = taskName.lastIndexOf(':');
-  //                 taskName = taskName.substring(0, pos)
-  //                 // console.log(`task name is ${taskName}`);
+      // Get the task name from it's definition. For example, the end of:
+      // 'arn:aws:ecs:ap-southeast-1:238285074004:task-definition/nbt-trsgms1-authservice:6'
+      let pos = taskDef.taskDefinitionArn.lastIndexOf('/')
+      let taskName = taskDef.taskDefinitionArn.substring(pos + 1)
+      pos = taskName.lastIndexOf(':');
+      taskName = taskName.substring(0, pos)
+      // console.log(`task name is ${taskName}`);
 
-  //                 // See if it was started by a service
-  //                 // console.log('Looking for service parent');
-  //                 let parentOfTask = cluster;
-  //                 if (taskDef.startedBy) {
-  //                   // console.log('checking services');
-  //                   cluster.children.forEach(function (childKey) {
-  //                     let child = graph.findNodeWithKey(childKey);
-  //                     if (!child) {
-  //                       console.log(`Unknown cluster child ${childKey}`);
-  //                     }
-  //                     if (child && child.type === types.SERVICE) {
-  //                       let service = child;
-  //                       let deployments = service.data.deployments;
-  //                       for (var cnt = 0; cnt < deployments.length; cnt++) {
-  //                         if (deployments[cnt].id === taskDef.startedBy) {
-  //                           // Yep, was started by this service.
-  //                           // console.log('\n\nWas started by ', service);
-  //                           parentOfTask = service;
-  //                           break;
-  //                         }
-  //                       }//- next deployment
-  //                     }//- child is a service
-  //                   })// next child of the cluster
-  //                 }//- startedBy != null
+      // See if it was started by a service
+      // console.log('Looking for service parent');
+      let parentOfTask = cluster;
+      if (taskDef.startedBy) {
+        // console.log('checking services');
+        cluster.children.forEach(function (childKey) {
+          let child = graph.findNodeWithKey(childKey);
+          if (!child) {
+            console.log(`Unknown cluster child ${childKey}`);
+          }
+          if (child && child.type === types.SERVICE) {
+            let service = child;
+            let deployments = service.data.deployments;
+            for (var cnt = 0; cnt < deployments.length; cnt++) {
+              if (deployments[cnt].id === taskDef.startedBy) {
+                // Yep, was started by this service.
+                // console.log('\n\nWas started by ', service);
+                parentOfTask = service;
+                break;
+              }
+            }//- next deployment
+          }//- child is a service
+        })// next child of the cluster
+      }//- startedBy != null
 
-  //                 // Define the task, and add it to it's parent.
-  //                 let task = graph.findNode(types.TASK, taskName, taskDef);
-  //                 parentOfTask.addChild(task);
+      // Define the task, and add it to it's parent.
+      let task = graph.findNode(types.TASK, taskName, taskDef);
+      parentOfTask.addChild(task);
 
-  //                 // Link the task to the containerInstance's EC2 instance.
-  //                 let instance = instanceForContainer[taskDef.containerInstanceArn];
-  //                 if (instance) {
-  //                   task.addChild(instance);
-  //                 } else {
-  //                   console.log(`ERROR: task ${taskDef.taskArn} refers to unknown containerInstance ${taskDef.containerInstanceArn}`);
-  //                 }
+      // Link the task to the containerInstance's EC2 instance.
+      let instance = instanceForContainer[taskDef.containerInstanceArn];
+      if (instance) {
+        task.addChild(instance);
+      } else {
+        console.log(`ERROR: task ${taskDef.taskArn} refers to unknown containerInstance ${taskDef.containerInstanceArn}`);
+      }
 
-  //               }); //- next task
-
-  //               return nextCluster(index + 1)
-  //             }); //- loadTasksForCluster
-  //           }); //- loadServicesForCluster
-  //         }); //- loadContainerInstancesForCluster
-  //       })(0); // next cluster
-  //     }); //- describeClusters
-  //   }); //- listClusters
-
-  // })//- Promise
+    }); //- next task
+  }
 
 }
 
-// // Get the services and tasks for clusters
-// async function downloadClusterDetails() {
-//   if (debug) console.log('  downloadClusterDetails()');
-
-//   let clusters = graph.nodes().filter(node => (node.type === types.CLUSTER))
-
-//   // Loop through the clusters.
-//   (function nextCluster(index) {
-//     // Past the last cluster?
-//     if (index >= clusters.length) {
-//       return resolve(null)
-//     }
-
-//     // Next Cluster
-//     let clusterDef = clusterDefinitions.clusters[index]
-//     let cluster = graph.findNode(types.CLUSTER, clusterDef.clusterName, clusterDef)
-//     // console.log('Got cluster ' + clusterDef.clusterName);
-
-//     /*
-//     *   Get the container instances for this cluster.
-//     */
-//     loadContainerInstancesForCluster(cluster, (err, instanceForContainer) => {
-//       if (err) return reject(err);
-
-//         loadServicesForCluster(cluster, (err) => {
-//           if (err) return reject(err);
-
-//             loadTasksForCluster(clusterDef.clusterName, (err, taskDefinitions) => {
-//               if (err) return reject(err);
-
-//                 // Loop through the task definitions.
-//                 // console.log(`taskDefinitions=`, taskDefinitions);
-//                 taskDefinitions.forEach(taskDef => {
-//                   // console.log(`Task ${taskDef.taskDefinitionArn}`);
-//                   // console.log(`  startedBy:`, taskDef.startedBy);
-//                   // console.log(`  Containers:`, taskDef.containers);
-//                   // console.log(`  Last status ${taskDef.lastStatus}`);
-
-//                   // Get the task name from it's definition. For example, the end of:
-//                   // 'arn:aws:ecs:ap-southeast-1:238285074004:task-definition/nbt-trsgms1-authservice:6'
-//                   let pos = taskDef.taskDefinitionArn.lastIndexOf('/')
-//                   let taskName = taskDef.taskDefinitionArn.substring(pos + 1)
-//                   pos = taskName.lastIndexOf(':');
-//                   taskName = taskName.substring(0, pos)
-//                   // console.log(`task name is ${taskName}`);
-
-//                   // See if it was started by a service
-//                   // console.log('Looking for service parent');
-//                   let parentOfTask = cluster;
-//                   if (taskDef.startedBy) {
-//                     // console.log('checking services');
-//                     cluster.children.forEach(function(childKey) {
-//                       let child = graph.findNodeWithKey(childKey);
-//                       if (!child) {
-//                         console.log(`Unknown cluster child ${childKey}`);
-//                       }
-//                       if (child && child.type === types.SERVICE) {
-//                         let service = child;
-//                         let deployments = service.data.deployments;
-//                         for (var cnt = 0; cnt < deployments.length; cnt++) {
-//                           if (deployments[cnt].id === taskDef.startedBy) {
-//                             // Yep, was started by this service.
-//                             // console.log('\n\nWas started by ', service);
-//                             parentOfTask = service;
-//                             break;
-//                           }
-//                         }//- next deployment
-//                       }//- child is a service
-//                     })// next child of the cluster
-//                   }//- startedBy != null
-
-//                   // Define the task, and add it to it's parent.
-//                   let task = graph.findNode(types.TASK, taskName, taskDef);
-//                   parentOfTask.addChild(task);
-
-//                   // Link the task to the containerInstance's EC2 instance.
-//                   let instance = instanceForContainer[taskDef.containerInstanceArn];
-//                   if (instance) {
-//                     task.addChild(instance);
-//                   } else {
-//                     console.log(`ERROR: task ${taskDef.taskArn} refers to unknown containerInstance ${taskDef.containerInstanceArn}`);
-//                   }
-
-//                 }); //- next task
-
-//                 return nextCluster(index + 1)
-//             }); //- loadTasksForCluster
-//         }); //- loadServicesForCluster
-//     }); //- loadContainerInstancesForCluster
-//   })(0); // next cluster
-
-// }//- downloadClusterDetails
 
 async function downloadDatabases() {
   if (debug) console.log('  downloadDatabases()');
